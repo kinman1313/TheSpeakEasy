@@ -19,8 +19,8 @@ const server = http.createServer(app);
 // Configure CORS
 const allowedOrigins = [
     'http://localhost:3000',
-    'https://lies-client.onrender.com',
-    'https://lies-client.onrender.com/'
+    'lies-client-9ayj.onrender.com',
+    'lies-client-9ayj.onrender.com/'
 ];
 
 // CORS middleware configuration

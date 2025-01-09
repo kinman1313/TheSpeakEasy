@@ -1,8 +1,7 @@
 services:
   - type: web
-    name: lies-server
+    name: lies-Server-9ayj
     env: node
-    region: ohio
     plan: free
     buildCommand: cd server && npm install
     startCommand: cd server && node server.js
@@ -15,8 +14,8 @@ services:
         value: 8080
 
   - type: web
-    name: lies-client
-    env: static
+    name: lies-client-9ayj
+    env: Production
     buildCommand: cd client && rm -rf node_modules && npm install && npm run build
     staticPublishPath: ./client/build
     routes:
@@ -25,4 +24,4 @@ services:
         destination: /index.html
     envVars:
       - key: REACT_APP_API_URL
-        value: https://lies-server.onrender.com 
+        value: https:/lies-server-9ayj.onrender.com
