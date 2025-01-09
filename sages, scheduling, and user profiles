@@ -1,0 +1,10 @@
+[33mf467634[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m Reset to working checkpoint
+[33mf685d93[m Fix password reset and improve password handling
+[33ma5d362a[m Add detailed logging for authentication and fix password comparison
+[33m7c6201c[m Fix login route to use User model methods
+[33m21f2154[m Improve error handling and logging for login process
+[33mf60fcc0[m Add login and register routes
+[33mdfab395[m Fix API_URL in ResetPassword component
+[33m59c1742[m Fix config imports and update Chat component
+[33m36b1cc0[m Fix config exports and API_URL configuration
+[33m31da06d[m Fix password reset functionality and add auth routes

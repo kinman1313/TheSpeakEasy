@@ -1,0 +1,29 @@
+[33mcommit 06bb5e02d2ba0577b41c9b47d9e502b645c6d227[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m
+Author: Kevin <kevin@kevinrockwell.dev>
+Date:   Sun Jan 5 20:35:13 2025 -0600
+
+    Add mobile responsiveness to sidebar and fix GIF rendering in messages
+
+[33mcommit 6224f335edc9f348966bce23f2062cc863e06844[m
+Author: Kevin <kevin@kevinrockwell.dev>
+Date:   Sun Jan 5 20:23:55 2025 -0600
+
+    Add TypingIndicator and MessageBubble components
+
+[33mcommit f730f85577db7f5ffece384f1624098301268062[m
+Author: Kevin <kevin@kevinrockwell.dev>
+Date:   Sun Jan 5 20:22:17 2025 -0600
+
+    Add GifPicker, VoiceMessage, and MessageScheduler overlays to chat interface
+
+[33mcommit 721244f3e6b5a727399a567423638b265b22a10c[m
+Author: Kevin <kevin@kevinrockwell.dev>
+Date:   Sun Jan 5 20:20:43 2025 -0600
+
+    Fix chat layout with proper AppBar, drawer, and message input
+
+[33mcommit e54a148c8ab9d0638761f94333275f8feb8506ba[m
+Author: Kevin <kevin@kevinrockwell.dev>
+Date:   Sun Jan 5 20:15:11 2025 -0600
+
+    Make UserProfile collapsible and more compact

@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: lies-server
+    env: node
+    region: ohio
+    plan: free
+    buildCommand: cd server && npm install
+    startCommand: cd server && node server.js
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: PORT
+        value: 8080
+
+  - type: web
+    name: lies-client
+    env: static
+    buildCommand: cd client && rm -rf node_modules && npm install && npm run build
+    staticPublishPath: ./client/build
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: REACT_APP_API_URL
+        value: https://lies-server.onrender.com 
