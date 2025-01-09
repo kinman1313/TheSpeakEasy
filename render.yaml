@@ -12,6 +12,8 @@ services:
         sync: false
       - key: PORT
         value: 8080
+      - key: CLIENT_URL
+        value: https://lies-client-9ayj.onrender.com
 
   - type: web
     name: lies-client-9ayj
@@ -25,3 +27,17 @@ services:
     envVars:
       - key: REACT_APP_API_URL
         value: https:/lies-server-9ayj.onrender.com
+
+envVarGroups:
+  - name: chat-app-env
+    envVars:
+      - key: SMTP_HOST
+        value: smtp.gmail.com  # or your SMTP server
+      - key: SMTP_PORT
+        value: 587
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: FROM_EMAIL
+        sync: false

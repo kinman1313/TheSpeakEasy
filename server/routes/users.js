@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const User = require('../models/User');
 const auth = require('../middleware/auth');
+const { sendResetPasswordEmail } = require('../services/emailService');
 const router = express.Router();
 
 // Register a new user
@@ -115,14 +116,16 @@ router.post('/reset-password', async (req, res) => {
         user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
         await user.save();
 
-        // TODO: Send email with reset token
-        // For now, we'll just return the token in the response
+        // Send email with reset token
+        await sendResetPasswordEmail(email, resetToken);
+
         res.json({
             message: 'Password reset email sent.',
-            // Remove this in production
+            // Remove in production
             resetToken: resetToken
         });
     } catch (error) {
+        console.error('Password reset error:', error);
         res.status(500).json({ error: 'Error processing your request.' });
     }
 });
