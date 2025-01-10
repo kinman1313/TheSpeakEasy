@@ -7,18 +7,31 @@ const createTransporter = () => {
             user: process.env.SMTP_USER,
             pass: process.env.SMTP_PASS
         },
-        debug: true
+        debug: true,
+        tls: {
+            rejectUnauthorized: false
+        },
+        connectionTimeout: 5000,
+        greetingTimeout: 5000,
+        socketTimeout: 5000
     });
 };
 
 const sendResetPasswordEmail = async (email, resetToken) => {
     try {
+        console.log('Creating transporter...');
         const transporter = createTransporter();
         const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
 
-        // Verify SMTP connection
-        await transporter.verify();
+        console.log('Verifying SMTP connection...');
+        try {
+            await transporter.verify();
+        } catch (verifyError) {
+            console.error('SMTP Verification failed:', verifyError);
+            throw new Error(`SMTP Verification failed: ${verifyError.message}`);
+        }
 
+        console.log('Preparing email...');
         const mailOptions = {
             from: process.env.FROM_EMAIL,
             to: email,
@@ -32,11 +45,17 @@ const sendResetPasswordEmail = async (email, resetToken) => {
             `
         };
 
+        console.log('Sending email...');
         const info = await transporter.sendMail(mailOptions);
-        console.log('Email sent:', info.response);
+        console.log('Email sent successfully:', info.response);
         return info;
     } catch (error) {
-        console.error('Email service error:', error);
+        console.error('Email service detailed error:', {
+            error: error.message,
+            stack: error.stack,
+            code: error.code,
+            command: error.command
+        });
         throw new Error(`Failed to send email: ${error.message}`);
     }
 };

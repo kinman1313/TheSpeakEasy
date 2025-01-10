@@ -34,6 +34,7 @@ mongoose.connect(process.env.MONGODB_URI, {
 
 const app = express();
 const server = http.createServer(app);
+const io = socketIO(server);
 
 // Add request logging middleware
 app.use((req, res, next) => {
@@ -48,16 +49,6 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
 }));
-
-// Socket.IO configuration
-const io = socketIO(server, {
-    cors: {
-        origin: ['https://lies-client-9ayj.onrender.com', 'http://localhost:3000'],
-        methods: ["GET", "POST"],
-        allowedHeaders: ["Content-Type", "Authorization"],
-        credentials: true
-    }
-});
 
 app.use(express.json());
 
