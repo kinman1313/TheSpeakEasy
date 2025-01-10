@@ -1,6 +1,32 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { createTheme } from '@mui/material/styles';
-import baseTheme from '../theme';
+
+const baseTheme = {
+    palette: {
+        primary: {
+            main: '#7C4DFF',
+            light: '#B47CFF',
+            dark: '#3F1DCB',
+        },
+        secondary: {
+            main: '#FF4081',
+            light: '#FF79B0',
+            dark: '#C60055',
+        }
+    },
+    typography: {
+        fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+    },
+    components: {
+        MuiButton: {
+            styleOverrides: {
+                root: {
+                    textTransform: 'none',
+                }
+            }
+        }
+    }
+};
 
 const ThemeContext = createContext();
 
