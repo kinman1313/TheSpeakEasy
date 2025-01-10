@@ -34,17 +34,21 @@ mongoose.connect(process.env.MONGODB_URI, {
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIO(server);
 
-// Add request logging middleware
-app.use((req, res, next) => {
-    console.log(`${req.method} ${req.path}`);
-    next();
+// Configure Socket.IO with CORS
+const io = socketIO(server, {
+    cors: {
+        origin: ["https://lies-client-9ayj.onrender.com", "http://localhost:3000"],
+        methods: ["GET", "POST"],
+        credentials: true,
+        allowedHeaders: ["Content-Type", "Authorization"]
+    },
+    transports: ['websocket', 'polling']
 });
 
-// CORS configuration
+// CORS for Express
 app.use(cors({
-    origin: ['https://lies-client-9ayj.onrender.com', 'http://localhost:3000'],
+    origin: ["https://lies-client-9ayj.onrender.com", "http://localhost:3000"],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
@@ -83,35 +87,57 @@ io.on('connection', (socket) => {
     console.log('New client connected');
 
     socket.on('join', (username) => {
+        socket.username = username;
         users.set(socket.id, username);
         io.emit('userJoined', { username, users: Array.from(users.values()) });
     });
 
-    socket.on('message', (message) => {
-        const username = users.get(socket.id);
-        const messageData = {
-            text: message,
-            username,
-            timestamp: new Date().toISOString(),
-            reactions: []
-        };
-        io.emit('message', messageData);
+    socket.on('message', (data) => {
+        const { handleMessage } = require('./socket/messageHandlers');
+        handleMessage(io, socket, data);
     });
 
-    socket.on('typing', ({ username }) => {
-        io.emit('typing', { username });
+    socket.on('pinMessage', (data) => {
+        const { handlePinMessage } = require('./socket/messageHandlers');
+        handlePinMessage(io, socket, data);
+    });
+
+    socket.on('createDM', (data) => {
+        const { handleCreateDM } = require('./socket/messageHandlers');
+        handleCreateDM(io, socket, data);
+    });
+
+    socket.on('getHistory', (data) => {
+        const { handleGetHistory } = require('./socket/messageHandlers');
+        handleGetHistory(socket, data);
+    });
+
+    socket.on('typing', (data) => {
+        const { handleTyping } = require('./socket/messageHandlers');
+        handleTyping(io, socket, data);
     });
 
     socket.on('stopTyping', ({ username }) => {
-        io.emit('stopTyping', { username });
+        const { handleTyping } = require('./socket/messageHandlers');
+        handleTyping(io, socket, {
+            roomId: 'default',
+            isTyping: false
+        });
     });
 
-    socket.on('reaction', ({ messageId, emoji, username }) => {
-        io.emit('reaction', { messageId, emoji, username });
+    socket.on('reaction', (data) => {
+        const { handleReaction } = require('./socket/messageHandlers');
+        handleReaction(io, socket, data);
     });
 
-    socket.on('removeReaction', ({ messageId, emoji, username }) => {
-        io.emit('removeReaction', { messageId, emoji, username });
+    socket.on('removeReaction', (data) => {
+        const { handleRemoveReaction } = require('./socket/messageHandlers');
+        handleRemoveReaction(io, socket, data);
+    });
+
+    socket.on('getRooms', () => {
+        const { handleGetRooms } = require('./socket/messageHandlers');
+        handleGetRooms(socket);
     });
 
     socket.on('disconnect', () => {

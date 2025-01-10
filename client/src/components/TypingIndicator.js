@@ -1,44 +1,58 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const TypingDots = () => (
+    <Box component="span" sx={{ display: 'inline-flex', gap: 0.5, ml: 0.5 }}>
+        {[0, 1, 2].map((i) => (
+            <motion.span
+                key={i}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{
+                    repeat: Infinity,
+                    duration: 0.5,
+                    delay: i * 0.2,
+                }}
+                style={{ display: 'inline-block' }}
+            >
+                .
+            </motion.span>
+        ))}
+    </Box>
+);
 
 const TypingIndicator = ({ users }) => {
-    if (!users || users.length === 0) return null;
-
-    const text = users.length === 1
-        ? `${users[0]} is typing...`
-        : users.length === 2
-            ? `${users[0]} and ${users[1]} are typing...`
-            : `${users[0]} and ${users.length - 1} others are typing...`;
+    if (!users.size) return null;
 
     return (
-        <Box sx={{ p: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+        <AnimatePresence>
             <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                exit={{ scale: 0 }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                transition={{ duration: 0.2 }}
             >
-                <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{ display: 'flex', alignItems: 'center' }}
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        bottom: 80,
+                        left: 16,
+                        backgroundColor: 'background.paper',
+                        borderRadius: 1,
+                        boxShadow: 1,
+                        p: 1,
+                    }}
                 >
-                    {text}
-                    <motion.span
-                        initial={{ opacity: 0 }}
-                        animate={{
-                            opacity: [0, 1, 0],
-                            transition: {
-                                duration: 1.5,
-                                repeat: Infinity,
-                            },
-                        }}
-                    >
-                        ...
-                    </motion.span>
-                </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                        {Array.from(users).join(', ')}
+                        {users.size === 1 ? ' is' : ' are'} typing
+                        <TypingDots />
+                    </Typography>
+                </Box>
             </motion.div>
-        </Box>
+        </AnimatePresence>
     );
 };
 

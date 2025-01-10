@@ -286,4 +286,29 @@ router.get('/test', (req, res) => {
     res.json({ message: 'User routes are working' });
 });
 
+// Add user search endpoint
+router.get('/search', auth, async (req, res) => {
+    try {
+        const { q } = req.query;
+        if (!q) {
+            return res.json({ users: [] });
+        }
+
+        const users = await User.find({
+            $or: [
+                { username: { $regex: q, $options: 'i' } },
+                { email: { $regex: q, $options: 'i' } }
+            ],
+            _id: { $ne: req.user._id } // Exclude current user
+        })
+            .select('username email')
+            .limit(10);
+
+        res.json({ users });
+    } catch (error) {
+        console.error('User search error:', error);
+        res.status(500).json({ error: 'Error searching users' });
+    }
+});
+
 module.exports = router; 

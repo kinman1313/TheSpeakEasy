@@ -31,46 +31,6 @@ const memberSchema = new mongoose.Schema({
     }
 });
 
-const invitationSchema = new mongoose.Schema({
-    invitedBy: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
-    },
-    invitedUser: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
-    },
-    status: {
-        type: String,
-        enum: ['pending', 'accepted', 'rejected'],
-        default: 'pending'
-    },
-    expiresAt: Date,
-    createdAt: {
-        type: Date,
-        default: Date.now
-    }
-});
-
-const pinnedMessageSchema = new mongoose.Schema({
-    message: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Message',
-        required: true
-    },
-    pinnedBy: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
-    },
-    pinnedAt: {
-        type: Date,
-        default: Date.now
-    }
-});
-
 const roomSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -90,17 +50,29 @@ const roomSchema = new mongoose.Schema({
         url: String,
         color: String
     },
-    categories: [{
-        type: String,
-        trim: true
-    }],
-    tags: [{
-        type: String,
-        trim: true
+    participants: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
     }],
     members: [memberSchema],
-    invitations: [invitationSchema],
-    pinnedMessages: [pinnedMessageSchema],
+    lastMessage: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Message'
+    },
+    pinnedMessages: [{
+        messageId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Message'
+        },
+        pinnedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User'
+        },
+        pinnedAt: {
+            type: Date,
+            default: Date.now
+        }
+    }],
     settings: {
         allowInvites: {
             type: Boolean,
@@ -142,11 +114,12 @@ const roomSchema = new mongoose.Schema({
             type: Number,
             default: 0
         },
-        lastActivity: Date,
-        createdBy: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'User'
-        }
+        lastActivity: Date
+    },
+    createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
     }
 }, {
     timestamps: true
@@ -154,11 +127,57 @@ const roomSchema = new mongoose.Schema({
 
 // Indexes for faster queries
 roomSchema.index({ name: 'text', description: 'text' });
-roomSchema.index({ categories: 1 });
-roomSchema.index({ tags: 1 });
-roomSchema.index({ 'members.user': 1 });
+roomSchema.index({ participants: 1 });
 roomSchema.index({ type: 1 });
-roomSchema.index({ 'invitations.invitedUser': 1 });
+roomSchema.index({ 'members.user': 1 });
+roomSchema.index({ createdBy: 1 });
 
-const Room = mongoose.model('Room', roomSchema);
-module.exports = Room; 
+// Pre-save middleware to update lastActivity
+roomSchema.pre('save', function (next) {
+    if (this.isModified('lastMessage')) {
+        this.metadata.lastActivity = new Date();
+    }
+    next();
+});
+
+// Method to check if a user is a member
+roomSchema.methods.isMember = function (userId) {
+    return this.members.some(member => member.user.toString() === userId.toString());
+};
+
+// Method to check if a user has a specific role
+roomSchema.methods.hasRole = function (userId, role) {
+    const member = this.members.find(m => m.user.toString() === userId.toString());
+    return member && member.role === role;
+};
+
+// Method to add a member
+roomSchema.methods.addMember = async function (userId, role = 'member') {
+    if (!this.isMember(userId)) {
+        this.members.push({
+            user: userId,
+            role: role
+        });
+        await this.save();
+    }
+    return this;
+};
+
+// Method to remove a member
+roomSchema.methods.removeMember = async function (userId) {
+    this.members = this.members.filter(member => member.user.toString() !== userId.toString());
+    await this.save();
+    return this;
+};
+
+// Method to update member role
+roomSchema.methods.updateMemberRole = async function (userId, newRole) {
+    const member = this.members.find(m => m.user.toString() === userId.toString());
+    if (member) {
+        member.role = newRole;
+        await this.save();
+    }
+    return this;
+};
+
+module.exports = mongoose.model('Room', roomSchema); 

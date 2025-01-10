@@ -1,92 +1,84 @@
-import React, { useState, useRef } from 'react';
-import {
-    Box,
-    TextField,
-    IconButton,
-    Popover
-} from '@mui/material';
-import {
-    Send as SendIcon,
-    Gif as GifIcon
-} from '@mui/icons-material';
-import GifPicker from './GifPicker';
+import React, { useState, useRef, useCallback } from 'react';
+import { Box, TextField, IconButton } from '@mui/material';
+import { Send as SendIcon, Gif as GifIcon, Mic as MicIcon, Schedule as ScheduleIcon, EmojiEmotions as EmojiIcon } from '@mui/icons-material';
+import debounce from 'lodash/debounce';
 
-const ChatInput = ({ onSendMessage }) => {
+const ChatInput = React.forwardRef(({ onSend, onGifClick, onVoiceClick, onScheduleClick, onEmojiClick, onTyping }, ref) => {
     const [message, setMessage] = useState('');
-    const [gifAnchorEl, setGifAnchorEl] = useState(null);
-    const inputRef = useRef(null);
+    const isTypingRef = useRef(false);
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
+    // Debounce the stopTyping event
+    const debouncedStopTyping = useCallback(
+        debounce(() => {
+            if (isTypingRef.current) {
+                isTypingRef.current = false;
+                onTyping?.(false);
+            }
+        }, 1000),
+        [onTyping]
+    );
+
+    const handleTyping = () => {
+        if (!isTypingRef.current) {
+            isTypingRef.current = true;
+            onTyping?.(true);
+        }
+        debouncedStopTyping();
+    };
+
+    const handleSend = () => {
         if (message.trim()) {
-            onSendMessage({ type: 'text', content: message });
+            onSend(message.trim());
             setMessage('');
+            isTypingRef.current = false;
+            onTyping?.(false);
+            debouncedStopTyping.cancel();
         }
     };
 
-    const handleGifSelect = (gif) => {
-        onSendMessage({
-            type: 'gif',
-            content: gif.url,
-            metadata: {
-                width: gif.width,
-                height: gif.height
-            }
-        });
-        setGifAnchorEl(null);
-    };
-
     return (
-        <Box sx={{ p: 2, backgroundColor: 'background.paper' }}>
-            <form onSubmit={handleSubmit} style={{ display: 'flex', gap: 8 }}>
-                <TextField
-                    fullWidth
-                    multiline
-                    maxRows={4}
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Type a message..."
-                    ref={inputRef}
-                    sx={{
-                        '& .MuiOutlinedInput-root': {
-                            borderRadius: 2
-                        }
-                    }}
-                />
-                <IconButton
-                    color="primary"
-                    onClick={(e) => setGifAnchorEl(e.currentTarget)}
-                >
-                    <GifIcon />
-                </IconButton>
-                <IconButton type="submit" color="primary" disabled={!message.trim()}>
-                    <SendIcon />
-                </IconButton>
-            </form>
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+            <IconButton onClick={onGifClick}>
+                <GifIcon />
+            </IconButton>
+            <IconButton onClick={onVoiceClick}>
+                <MicIcon />
+            </IconButton>
+            <IconButton onClick={onScheduleClick}>
+                <ScheduleIcon />
+            </IconButton>
+            <IconButton onClick={onEmojiClick}>
+                <EmojiIcon />
+            </IconButton>
 
-            <Popover
-                open={Boolean(gifAnchorEl)}
-                anchorEl={gifAnchorEl}
-                onClose={() => setGifAnchorEl(null)}
-                anchorOrigin={{
-                    vertical: 'top',
-                    horizontal: 'center',
+            <TextField
+                fullWidth
+                value={message}
+                onChange={(e) => {
+                    setMessage(e.target.value);
+                    handleTyping();
                 }}
-                transformOrigin={{
-                    vertical: 'bottom',
-                    horizontal: 'center',
+                onKeyPress={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSend();
+                    }
                 }}
-                sx={{
-                    mt: -2
-                }}
+                placeholder="Type a message..."
+                multiline
+                maxRows={4}
+                ref={ref}
+            />
+
+            <IconButton
+                color="primary"
+                onClick={handleSend}
+                disabled={!message.trim()}
             >
-                <GifPicker
-                    onSelect={handleGifSelect}
-                    onClose={() => setGifAnchorEl(null)}
-                />
-            </Popover>
+                <SendIcon />
+            </IconButton>
         </Box>
     );
-};
+});
 
 export default ChatInput; 
