@@ -18,14 +18,13 @@ export const SocketProvider = ({ children }) => {
             const newSocket = io(process.env.REACT_APP_API_URL, {
                 transports: ['websocket', 'polling'],
                 withCredentials: true,
-                extraHeaders: {
-                    'Access-Control-Allow-Origin': window.location.origin
-                },
+                autoConnect: true,
                 forceNew: true,
                 reconnection: true,
-                reconnectionAttempts: 5,
+                reconnectionAttempts: Infinity,
                 reconnectionDelay: 1000,
-                timeout: 20000,
+                reconnectionDelayMax: 5000,
+                timeout: 60000, // 60 seconds
                 auth: {
                     token: user.token
                 }
@@ -33,22 +32,34 @@ export const SocketProvider = ({ children }) => {
 
             // Socket event listeners
             newSocket.on('connect', () => {
-                console.log('Socket connected');
+                console.log('Socket connected successfully');
             });
 
             newSocket.on('connect_error', (error) => {
                 console.error('Socket connection error:', error);
+                // Try to reconnect with polling if websocket fails
+                if (newSocket.io.opts.transports.includes('websocket')) {
+                    console.log('Falling back to polling transport');
+                    newSocket.io.opts.transports = ['polling'];
+                }
             });
 
             newSocket.on('disconnect', (reason) => {
                 console.log('Socket disconnected:', reason);
+                if (reason === 'io server disconnect') {
+                    // Server initiated disconnect, try reconnecting
+                    newSocket.connect();
+                }
             });
 
             setSocket(newSocket);
 
             // Cleanup on unmount
             return () => {
-                newSocket.close();
+                if (newSocket) {
+                    newSocket.removeAllListeners();
+                    newSocket.close();
+                }
             };
         }
     }, [user]);

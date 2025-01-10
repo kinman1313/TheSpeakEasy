@@ -7,15 +7,37 @@ const AuthContext = createContext(null);
 export const useAuth = () => useContext(AuthContext);
 
 // Configure axios defaults
-axios.defaults.timeout = 10000; // 10 second timeout
+axios.defaults.timeout = 30000; // 30 second timeout
+axios.defaults.withCredentials = true;
+
+// Add request interceptor for authentication
+axios.interceptors.request.use(
+    config => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+    },
+    error => Promise.reject(error)
+);
+
+// Add response interceptor for error handling
 axios.interceptors.response.use(
     response => response,
     error => {
         if (error.code === 'ECONNABORTED') {
+            console.error('Request timeout:', error);
             throw new Error('Request timed out. Please check your connection and try again.');
         }
         if (!error.response) {
+            console.error('Network error:', error);
             throw new Error('Network error. Please check your connection and try again.');
+        }
+        if (error.response.status === 401) {
+            // Clear token on authentication error
+            localStorage.removeItem('token');
+            delete axios.defaults.headers.common['Authorization'];
         }
         throw error;
     }
@@ -28,7 +50,6 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (token) {
-            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
             checkAuth();
         } else {
             setLoading(false);
@@ -57,11 +78,10 @@ export const AuthProvider = ({ children }) => {
             });
             const { token, user } = response.data;
             localStorage.setItem('token', token);
-            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
             setUser(user);
             return user;
         } catch (error) {
-            console.error('Login failed:', error.message);
+            console.error('Login failed:', error);
             if (error.response?.status === 401) {
                 throw new Error('Invalid email or password');
             }
@@ -78,11 +98,10 @@ export const AuthProvider = ({ children }) => {
             });
             const { token, user } = response.data;
             localStorage.setItem('token', token);
-            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
             setUser(user);
             return user;
         } catch (error) {
-            console.error('Registration failed:', error.message);
+            console.error('Registration failed:', error);
             if (error.response?.status === 409) {
                 throw new Error('Email already exists');
             }
