@@ -53,11 +53,17 @@ export default function Chat() {
     const [showNotificationSettings, setShowNotificationSettings] = useState(false);
     const [notificationSound, setNotificationSound] = useState(true);
     const [desktopNotifications, setDesktopNotifications] = useState(true);
+    const [userMenuAnchor, setUserMenuAnchor] = useState(null);
+    const [showProfileSettings, setShowProfileSettings] = useState(false);
+
+    // Add missing state variables
+    const [onlineUsers, setOnlineUsers] = useState([]);
+    const [scheduledMessages, setScheduledMessages] = useState([]);
+    const [showScheduler, setShowScheduler] = useState(false);
+
     const messagesEndRef = useRef(null);
     const messagesContainerRef = useRef(null);
     const messageInputRef = useRef(null);
-    const [userMenuAnchor, setUserMenuAnchor] = useState(null);
-    const [showProfileSettings, setShowProfileSettings] = useState(false);
 
     useEffect(() => {
         if (socket) {
