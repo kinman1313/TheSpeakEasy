@@ -1,14 +1,18 @@
-// Message notification sounds
-const messageDefault = new Audio('/sounds/message-default.mp3');
-const messageSubtle = new Audio('/sounds/message-subtle.mp3');
+// Import sound files
+import messageDefaultSound from '../assets/sounds/message-default.mp3';
+import messageSubtleSound from '../assets/sounds/message-subtle.mp3';
+import notificationDefaultSound from '../assets/sounds/notification-default.mp3';
+import notificationSubtleSound from '../assets/sounds/notification-subtle.mp3';
+import roomJoinSound from '../assets/sounds/room-join.mp3';
+import roomLeaveSound from '../assets/sounds/room-leave.mp3';
 
-// Notification sounds
-const notificationDefault = new Audio('/sounds/notification-default.mp3');
-const notificationSubtle = new Audio('/sounds/notification-subtle.mp3');
-
-// Room join/leave sounds
-const roomJoin = new Audio('/sounds/room-join.mp3');
-const roomLeave = new Audio('/sounds/room-leave.mp3');
+// Create audio instances
+const messageDefault = new Audio(messageDefaultSound);
+const messageSubtle = new Audio(messageSubtleSound);
+const notificationDefault = new Audio(notificationDefaultSound);
+const notificationSubtle = new Audio(notificationSubtleSound);
+const roomJoin = new Audio(roomJoinSound);
+const roomLeave = new Audio(roomLeaveSound);
 
 // Preload all sounds
 [messageDefault, messageSubtle, notificationDefault, notificationSubtle, roomJoin, roomLeave].forEach(sound => {

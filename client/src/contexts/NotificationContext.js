@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
+import { playSound } from '../utils/sounds';
 
 const NotificationContext = createContext();
 
@@ -37,27 +38,45 @@ export const NotificationProvider = ({ children }) => {
         // await updateUserPreferences({ notifications: newSettings });
     };
 
-    const playSound = (type) => {
-        if (!settings.soundEnabled || settings.doNotDisturb) return;
+    const handleNotification = (type, data) => {
+        if (!settings.enabled || settings.doNotDisturb) return;
+        if (settings.mentionsOnly && !data.isMention) return;
 
-        const soundMap = {
-            message: settings.messageSound,
-            mention: settings.mentionSound,
-            joinLeave: settings.joinLeaveSound
-        };
+        // Play sound notification
+        if (settings.soundEnabled) {
+            const soundType = type === 'mention' ? 'mention' :
+                type === 'message' ? 'message' :
+                    type === 'join' ? 'roomJoin' :
+                        type === 'leave' ? 'roomLeave' : 'notification';
 
-        const variant = soundMap[type] || 'default';
-        if (variant === 'none') return;
+            const variant = settings[`${soundType}Sound`] || 'default';
+            playSound(soundType, variant);
+        }
 
-        const sound = new Audio(`/sounds/${type}-${variant}.mp3`);
-        sound.volume = settings.volume;
-        sound.play().catch(err => console.log('Sound play failed:', err));
+        // Show desktop notification if enabled
+        if (settings.desktopNotifications && 'Notification' in window) {
+            if (Notification.permission === 'granted') {
+                new Notification(data.title, {
+                    body: data.message,
+                    icon: data.icon || '/logo192.png'
+                });
+            } else if (Notification.permission !== 'denied') {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        new Notification(data.title, {
+                            body: data.message,
+                            icon: data.icon || '/logo192.png'
+                        });
+                    }
+                });
+            }
+        }
     };
 
     const value = {
         settings,
         updateSettings,
-        playSound
+        notify: handleNotification
     };
 
     return (
