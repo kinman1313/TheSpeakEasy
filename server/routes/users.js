@@ -7,10 +7,53 @@ const { sendResetPasswordEmail } = require('../services/emailService');
 const router = express.Router();
 const nodemailer = require('nodemailer');
 const cors = require('cors');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs').promises;
+const { v4: uuidv4 } = require('uuid');
+
+// Configure multer for file upload
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'uploads/avatars/');
+    },
+    filename: function (req, file, cb) {
+        const uniqueId = uuidv4();
+        cb(null, `${uniqueId}${path.extname(file.originalname)}`);
+    }
+});
+
+const upload = multer({
+    storage: storage,
+    limits: {
+        fileSize: 5 * 1024 * 1024 // 5MB limit
+    },
+    fileFilter: (req, file, cb) => {
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        if (!allowedTypes.includes(file.mimetype)) {
+            cb(new Error('Invalid file type. Only JPEG, PNG and GIF are allowed.'));
+            return;
+        }
+        cb(null, true);
+    }
+});
+
+// Ensure upload directory exists
+const ensureUploadDir = async () => {
+    const dir = 'uploads/avatars';
+    try {
+        await fs.access(dir);
+    } catch {
+        await fs.mkdir(dir, { recursive: true });
+    }
+};
+
+ensureUploadDir();
 
 // Register a new user
 router.post('/register', async (req, res) => {
     try {
+        console.log('Register attempt:', req.body);
         const { username, email, password } = req.body;
 
         // Check if username or email already exists
@@ -31,6 +74,8 @@ router.post('/register', async (req, res) => {
             expiresIn: '7d'
         });
 
+        console.log('User registered successfully:', { id: user._id, username: user.username });
+
         res.status(201).json({
             user: {
                 id: user._id,
@@ -40,6 +85,7 @@ router.post('/register', async (req, res) => {
             token
         });
     } catch (error) {
+        console.error('Registration error:', error);
         res.status(400).json({ error: error.message });
     }
 });
@@ -47,21 +93,43 @@ router.post('/register', async (req, res) => {
 // Login user
 router.post('/login', async (req, res) => {
     try {
+        console.log('Login attempt:', { email: req.body.email });
         const { email, password } = req.body;
-        const user = await User.findByCredentials(email, password);
+
+        if (!email || !password) {
+            return res.status(400).json({ error: 'Email and password are required' });
+        }
+
+        const user = await User.findOne({ email: email.toLowerCase() });
+
+        if (!user) {
+            console.log('User not found:', email);
+            return res.status(401).json({ error: 'Invalid login credentials' });
+        }
+
+        const isMatch = await user.comparePassword(password);
+        if (!isMatch) {
+            console.log('Invalid password for user:', email);
+            return res.status(401).json({ error: 'Invalid login credentials' });
+        }
+
         const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
             expiresIn: '7d'
         });
+
+        console.log('Login successful:', { id: user._id, username: user.username });
 
         res.json({
             user: {
                 id: user._id,
                 username: user.username,
-                email: user.email
+                email: user.email,
+                avatarUrl: user.avatarUrl
             },
             token
         });
     } catch (error) {
+        console.error('Login error:', error);
         res.status(400).json({ error: 'Invalid login credentials' });
     }
 });

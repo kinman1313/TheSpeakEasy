@@ -127,7 +127,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Import and mount routes
-const userRoutes = require('./routes/userRoutes');
+const userRoutes = require('./routes/users');
 app.use('/api/users', userRoutes);
 
 // Add a root test route
