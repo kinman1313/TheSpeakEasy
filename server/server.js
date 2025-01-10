@@ -16,35 +16,18 @@ mongoose.connect(process.env.MONGODB_URI, {
 const app = express();
 const server = http.createServer(app);
 
-// Configure CORS
-const allowedOrigins = [
-    'http://localhost:3000',
-    'lies-client-9ayj.onrender.com',
-    'lies-client-9ayj.onrender.com/'
-];
-
-// CORS middleware configuration
+// CORS configuration
 app.use(cors({
-    origin: function (origin, callback) {
-        // Allow requests with no origin (like mobile apps or curl requests)
-        if (!origin) return callback(null, true);
-
-        if (allowedOrigins.indexOf(origin) !== -1) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    origin: ['https://lies-client-9ayj.onrender.com', 'http://localhost:3000'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true,
-    optionsSuccessStatus: 200
+    credentials: true
 }));
 
 // Socket.IO CORS configuration
 const io = socketIO(server, {
     cors: {
-        origin: allowedOrigins,
+        origin: ['https://lies-client-9ayj.onrender.com', 'http://localhost:3000'],
         methods: ["GET", "POST"],
         allowedHeaders: ["Content-Type", "Authorization"],
         credentials: true
