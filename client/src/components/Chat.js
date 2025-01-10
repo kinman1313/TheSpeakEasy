@@ -6,7 +6,9 @@ import {
     Gif as GifIcon,
     Mic as MicIcon,
     Schedule as ScheduleIcon,
-    EmojiEmotions as EmojiIcon
+    EmojiEmotions as EmojiIcon,
+    AccessTime as AccessTimeIcon,
+    Favorite as FavoriteIcon
 } from '@mui/icons-material';
 import RoomList from './RoomList';
 import MessageThread from './MessageThread';
@@ -20,12 +22,14 @@ import { useSocket } from '../contexts/SocketContext';
 import { useAuth } from '../contexts/AuthContext';
 import Picker from '@emoji-mart/react';
 import data from '@emoji-mart/data';
+import { useTheme } from '@mui/material/styles';
 
 const drawerWidth = 240;
 
 export default function Chat() {
     const { socket } = useSocket();
     const { user } = useAuth();
+    const theme = useTheme();
     const [rooms, setRooms] = useState([]);
     const [activeRoom, setActiveRoom] = useState(null);
     const [messages, setMessages] = useState([]);
@@ -41,6 +45,10 @@ export default function Chat() {
     const [showScheduler, setShowScheduler] = useState(false);
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const [scheduledMessages, setScheduledMessages] = useState([]);
+    const [frequentEmojis, setFrequentEmojis] = useState(() => {
+        const saved = localStorage.getItem('frequentEmojis');
+        return saved ? JSON.parse(saved) : [];
+    });
 
     useEffect(() => {
         if (socket) {
@@ -192,6 +200,17 @@ export default function Chat() {
         }
     };
 
+    const updateFrequentEmojis = (emoji) => {
+        setFrequentEmojis(prev => {
+            const newFrequent = [
+                emoji,
+                ...prev.filter(e => e !== emoji)
+            ].slice(0, 16); // Keep top 16 most recent
+            localStorage.setItem('frequentEmojis', JSON.stringify(newFrequent));
+            return newFrequent;
+        });
+    };
+
     return (
         <Box sx={{ display: 'flex' }}>
             <Drawer
@@ -292,16 +311,68 @@ export default function Chat() {
                         position: 'absolute',
                         bottom: 80,
                         right: 16,
-                        zIndex: 1000
+                        zIndex: 1000,
+                        '& em-emoji-picker': {
+                            '--border-radius': '12px',
+                            '--category-icon-size': '20px',
+                            '--font-family': theme.typography.fontFamily,
+                            '--rgb-accent': theme.palette.primary.main.replace(
+                                /^#([A-Fa-f0-9]{6})/,
+                                (_, hex) => {
+                                    const r = parseInt(hex.slice(0, 2), 16);
+                                    const g = parseInt(hex.slice(2, 4), 16);
+                                    const b = parseInt(hex.slice(4, 6), 16);
+                                    return `${r}, ${g}, ${b}`;
+                                }
+                            ),
+                            '--rgb-background': theme.palette.mode === 'dark' ? '32, 33, 36' : '255, 255, 255',
+                            '--rgb-input': theme.palette.mode === 'dark' ? '255, 255, 255' : '0, 0, 0',
+                            boxShadow: theme.shadows[8],
+                            maxHeight: '350px'
+                        }
                     }}
                 >
                     <Picker
                         data={data}
                         onEmojiSelect={(emoji) => {
                             handleSendMessage(emoji.native);
+                            updateFrequentEmojis(emoji.native);
                             setShowEmojiPicker(false);
                         }}
                         theme={theme.palette.mode}
+                        previewPosition="none"
+                        skinTonePosition="search"
+                        searchPosition="sticky"
+                        categories={[
+                            'frequent',
+                            'smileys_people',
+                            'animals_nature',
+                            'food_drink',
+                            'activities',
+                            'travel_places',
+                            'objects',
+                            'symbols',
+                            'flags'
+                        ]}
+                        custom={[
+                            {
+                                id: 'reactions',
+                                name: 'Common Reactions',
+                                emojis: ['👍', '❤️', '😂', '🎉', '🤔', '👀', '🔥', '✨']
+                            }
+                        ]}
+                        dynamicWidth={true}
+                        emojiSize={22}
+                        emojiButtonSize={28}
+                        maxFrequentRows={2}
+                        navPosition="bottom"
+                        perLine={8}
+                        icons={{
+                            categories: {
+                                frequent: <AccessTimeIcon fontSize="small" />,
+                                reactions: <FavoriteIcon fontSize="small" />
+                            }
+                        }}
                     />
                 </Box>
             )}
