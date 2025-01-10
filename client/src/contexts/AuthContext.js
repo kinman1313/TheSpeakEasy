@@ -7,8 +7,9 @@ const AuthContext = createContext(null);
 export const useAuth = () => useContext(AuthContext);
 
 // Configure axios defaults
-axios.defaults.timeout = 30000; // 30 second timeout
+axios.defaults.timeout = 60000; // Increase timeout to 60 seconds
 axios.defaults.withCredentials = true;
+axios.defaults.headers.common['Content-Type'] = 'application/json';
 
 // Add request interceptor for authentication
 axios.interceptors.request.use(
@@ -17,6 +18,11 @@ axios.interceptors.request.use(
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
+        // Add timestamp to prevent caching
+        config.params = {
+            ...config.params,
+            _t: Date.now()
+        };
         return config;
     },
     error => Promise.reject(error)
@@ -26,20 +32,24 @@ axios.interceptors.request.use(
 axios.interceptors.response.use(
     response => response,
     error => {
+        console.error('API Error:', error);
+
         if (error.code === 'ECONNABORTED') {
-            console.error('Request timeout:', error);
             throw new Error('Request timed out. Please check your connection and try again.');
         }
+
         if (!error.response) {
-            console.error('Network error:', error);
             throw new Error('Network error. Please check your connection and try again.');
         }
+
         if (error.response.status === 401) {
-            // Clear token on authentication error
             localStorage.removeItem('token');
             delete axios.defaults.headers.common['Authorization'];
         }
-        throw error;
+
+        // Handle specific error messages from the server
+        const errorMessage = error.response?.data?.error || error.message;
+        throw new Error(errorMessage);
     }
 );
 
@@ -72,14 +82,38 @@ export const AuthProvider = ({ children }) => {
     const login = async (email, password) => {
         try {
             console.log('Attempting login to:', `${config.API_URL}/api/users/login`);
-            const response = await axios.post(`${config.API_URL}/api/users/login`, {
-                email,
-                password
-            });
-            const { token, user } = response.data;
-            localStorage.setItem('token', token);
-            setUser(user);
-            return user;
+
+            // Add retry logic
+            let retries = 2;
+            let lastError;
+
+            while (retries >= 0) {
+                try {
+                    const response = await axios.post(`${config.API_URL}/api/users/login`, {
+                        email,
+                        password
+                    });
+
+                    const { token, user } = response.data;
+                    localStorage.setItem('token', token);
+                    setUser(user);
+                    return user;
+                } catch (err) {
+                    lastError = err;
+                    if (err.response?.status === 401) {
+                        // Don't retry on authentication errors
+                        throw err;
+                    }
+                    retries--;
+                    if (retries >= 0) {
+                        // Wait before retrying
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        console.log('Retrying login attempt...');
+                    }
+                }
+            }
+
+            throw lastError;
         } catch (error) {
             console.error('Login failed:', error);
             if (error.response?.status === 401) {

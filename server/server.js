@@ -36,7 +36,7 @@ mongoose.connect(process.env.MONGODB_URI, {
 const app = express();
 const server = http.createServer(app);
 
-// Configure Socket.IO with CORS
+// Configure Socket.IO with CORS and timeout settings
 const io = socketIO(server, {
     cors: {
         origin: ["https://lies-client-9ayj.onrender.com", "http://localhost:3000"],
@@ -51,20 +51,21 @@ const io = socketIO(server, {
     allowEIO3: true,
     pingTimeout: 60000,
     pingInterval: 25000,
-    connectTimeout: 45000,
+    connectTimeout: 60000,
     // Add error handling for socket.io
     handlePreflightRequest: (req, res) => {
         const headers = {
             "Access-Control-Allow-Headers": "Content-Type, Authorization",
             "Access-Control-Allow-Origin": req.headers.origin,
-            "Access-Control-Allow-Credentials": true
+            "Access-Control-Allow-Credentials": true,
+            "Access-Control-Max-Age": "1728000"
         };
         res.writeHead(200, headers);
         res.end();
     }
 });
 
-// CORS middleware for Express
+// CORS middleware for Express with extended timeout
 app.use(cors({
     origin: ["https://lies-client-9ayj.onrender.com", "http://localhost:3000"],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
@@ -72,13 +73,17 @@ app.use(cors({
     credentials: true,
     preflightContinue: false,
     optionsSuccessStatus: 204,
-    exposedHeaders: ['Access-Control-Allow-Origin']
+    exposedHeaders: ['Access-Control-Allow-Origin'],
+    maxAge: 1728000 // 20 days
 }));
+
+// Increase server timeout
+server.timeout = 60000; // 60 seconds
 
 // Add OPTIONS handling for preflight requests
 app.options('*', cors());
 
-// Add CORS headers middleware
+// Add CORS headers middleware with improved error handling
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', req.headers.origin);
     res.header('Access-Control-Allow-Credentials', true);
@@ -90,6 +95,7 @@ app.use((req, res, next) => {
         'Access-Control-Allow-Methods',
         'GET, POST, PUT, DELETE, PATCH, OPTIONS'
     );
+    res.header('Access-Control-Max-Age', '1728000');
 
     // Modified CSP to be more permissive
     res.header(
@@ -105,10 +111,17 @@ app.use((req, res, next) => {
         "font-src * data:;"
     );
 
-    next();
+    // Handle preflight
+    if (req.method === 'OPTIONS') {
+        res.sendStatus(204);
+    } else {
+        next();
+    }
 });
 
-app.use(express.json());
+// Add body parser with increased limit
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Serve static files from the uploads directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

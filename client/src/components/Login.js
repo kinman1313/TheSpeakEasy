@@ -19,6 +19,7 @@ export default function Login() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [retryCount, setRetryCount] = useState(0);
     const { login } = useAuth();
     const navigate = useNavigate();
 
@@ -27,7 +28,7 @@ export default function Login() {
         setError('');
         setLoading(true);
 
-        console.log('Login attempt:', { email, apiUrl: config.API_URL });
+        console.log('Login attempt:', { email, apiUrl: config.API_URL, retryCount });
 
         try {
             const user = await login(email, password);
@@ -35,15 +36,24 @@ export default function Login() {
             navigate('/chat');
         } catch (err) {
             console.error('Login error:', err);
-            if (err.message === 'Network Error') {
-                setError('Unable to connect to server. Please check your connection.');
+            let errorMessage = err.message;
+
+            if (err.message.includes('timeout') || err.message.includes('Network Error')) {
+                if (retryCount < 2) {
+                    setRetryCount(prev => prev + 1);
+                    setError(`Connection issue. Retrying... (Attempt ${retryCount + 1}/2)`);
+                    setTimeout(() => handleSubmit(e), 1000);
+                    return;
+                }
+                errorMessage = 'Unable to connect to server. Please check your connection and try again.';
             } else if (err.response?.status === 401) {
-                setError('Invalid email or password');
-            } else if (err.message.includes('timeout')) {
-                setError('Request timed out. Please try again.');
-            } else {
-                setError(err.message || 'An error occurred during login');
+                errorMessage = 'Invalid email or password';
+            } else if (err.response?.status === 429) {
+                errorMessage = 'Too many login attempts. Please try again later.';
             }
+
+            setError(errorMessage);
+            setRetryCount(0);
         } finally {
             setLoading(false);
         }
@@ -58,7 +68,10 @@ export default function Login() {
                     </Typography>
 
                     {error && (
-                        <Alert severity="error" sx={{ mb: 2 }}>
+                        <Alert
+                            severity={error.includes('Retrying') ? 'info' : 'error'}
+                            sx={{ mb: 2 }}
+                        >
                             {error}
                         </Alert>
                     )}
@@ -74,6 +87,7 @@ export default function Login() {
                             required
                             autoComplete="email"
                             disabled={loading}
+                            error={!!error && !error.includes('Retrying')}
                         />
 
                         <TextField
@@ -86,6 +100,7 @@ export default function Login() {
                             required
                             autoComplete="current-password"
                             disabled={loading}
+                            error={!!error && !error.includes('Retrying')}
                         />
 
                         <LoadingButton
@@ -96,7 +111,11 @@ export default function Login() {
                             loading={loading}
                             sx={{ mt: 3, mb: 2 }}
                         >
-                            {loading ? 'Logging in...' : 'Login'}
+                            {loading ? (
+                                error?.includes('Retrying') ? 'Retrying...' : 'Logging in...'
+                            ) : (
+                                'Login'
+                            )}
                         </LoadingButton>
 
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
