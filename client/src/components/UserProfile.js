@@ -40,6 +40,7 @@ import {
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
+import NotificationSettings from './NotificationSettings';
 
 const UserProfile = ({
     user,
@@ -163,6 +164,7 @@ const UserProfile = ({
                 >
                     <Tab label="Profile" />
                     <Tab label="Preferences" />
+                    <Tab label="Notifications" />
                 </Tabs>
             </Box>
 
@@ -383,6 +385,16 @@ const UserProfile = ({
                                 Save Preferences
                             </Button>
                         </Box>
+                    </motion.div>
+                )}
+
+                {activeTab === 2 && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.2 }}
+                    >
+                        <NotificationSettings />
                     </motion.div>
                 )}
             </Box>

@@ -14,7 +14,7 @@ export const ThemeProvider = ({ children }) => {
         return savedMode || 'system';
     });
 
-    const [systemTheme, setSystemTheme] = useState(() => 
+    const [systemTheme, setSystemTheme] = useState(() =>
         window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
     );
 
@@ -33,6 +33,27 @@ export const ThemeProvider = ({ children }) => {
         palette: {
             ...baseTheme.palette,
             mode: mode === 'system' ? systemTheme : mode,
+            ...(mode === 'system' ?
+                (systemTheme === 'dark' ? {
+                    background: {
+                        default: '#121212',
+                        paper: '#1E1E1E',
+                    },
+                    text: {
+                        primary: '#FFFFFF',
+                        secondary: '#B0B0B0',
+                    },
+                } : {}) :
+                (mode === 'dark' ? {
+                    background: {
+                        default: '#121212',
+                        paper: '#1E1E1E',
+                    },
+                    text: {
+                        primary: '#FFFFFF',
+                        secondary: '#B0B0B0',
+                    },
+                } : {}))
         },
     });
 
