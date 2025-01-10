@@ -17,22 +17,27 @@ services:
 
   - type: web
     name: lies-client-9ayj
-    env: Production
-    buildCommand: cd client && rm -rf node_modules && npm install && npm run build
+    env: static
+    buildCommand: cd client && npm install && npm run build
     staticPublishPath: ./client/build
+    pullRequestPreviewsEnabled: true
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: no-cache
     routes:
       - type: rewrite
         source: /*
         destination: /index.html
     envVars:
       - key: REACT_APP_API_URL
-        value: https:/lies-server-9ayj.onrender.com
+        value: https://lies-server-9ayj.onrender.com
 
 envVarGroups:
   - name: chat-app-env
     envVars:
       - key: SMTP_HOST
-        value: smtp.gmail.com  # or your SMTP server
+        value: smtp.gmail.com
       - key: SMTP_PORT
         value: 587
       - key: SMTP_USER
