@@ -53,23 +53,28 @@ export default function ProfilePicture({ size = 40, showEditButton = true, onClo
             const formData = new FormData();
             formData.append('avatar', selectedFile);
 
-            const response = await fetch('/api/upload-avatar', {
+            const response = await fetch('/api/users/upload-avatar', {
                 method: 'POST',
                 body: formData,
                 credentials: 'include'
             });
 
+            const data = await response.json();
+
             if (!response.ok) {
-                throw new Error('Failed to upload avatar');
+                throw new Error(data.message || 'Failed to upload avatar');
             }
 
-            const { avatarUrl } = await response.json();
-            await updateProfile({ avatarUrl });
+            if (!data.success) {
+                throw new Error(data.message || 'Failed to upload avatar');
+            }
 
+            await updateProfile({ avatarUrl: data.avatarUrl });
             setOpen(false);
             if (onClose) onClose();
         } catch (err) {
-            setError(err.message);
+            console.error('Avatar upload error:', err);
+            setError(err.message || 'Failed to upload avatar');
         } finally {
             setLoading(false);
         }

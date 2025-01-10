@@ -170,6 +170,43 @@ router.patch('/me', auth, async (req, res) => {
     }
 });
 
+// Upload avatar
+router.post('/upload-avatar', auth, upload.single('avatar'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: 'No file uploaded' });
+        }
+
+        // Generate the URL for the uploaded file
+        const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+
+        // Update user's avatarUrl in the database
+        req.user.avatarUrl = avatarUrl;
+        await req.user.save();
+
+        // Return the new avatar URL
+        res.json({
+            success: true,
+            avatarUrl: avatarUrl,
+            message: 'Avatar uploaded successfully'
+        });
+    } catch (error) {
+        console.error('Avatar upload error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to upload avatar',
+            message: error.message
+        });
+    }
+}, (error, req, res, next) => {
+    // Error handling middleware for multer errors
+    res.status(400).json({
+        success: false,
+        error: 'File upload error',
+        message: error.message
+    });
+});
+
 // Request password reset
 router.post('/reset-password', cors(), async (req, res) => {
     try {

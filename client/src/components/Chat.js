@@ -286,11 +286,14 @@ export default function Chat() {
     };
 
     const handleSubmit = (e) => {
-        e.preventDefault();
+        if (e) {
+            e.preventDefault();
+        }
         const messageText = messageInputRef.current?.value?.trim();
         if (messageText) {
             handleSendMessage(messageText);
             messageInputRef.current.value = '';
+            messageInputRef.current.focus();
         }
     };
 
@@ -652,7 +655,7 @@ export default function Chat() {
                             <TimerIcon />
                         </IconButton>
 
-                        <form onSubmit={handleSubmit} style={{ display: 'flex', flex: 1, gap: '8px' }}>
+                        <Box sx={{ display: 'flex', flex: 1, gap: '8px' }}>
                             <TextField
                                 inputRef={messageInputRef}
                                 fullWidth
@@ -677,9 +680,15 @@ export default function Chat() {
                                         },
                                     },
                                 }}
+                                onKeyPress={(e) => {
+                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                        e.preventDefault();
+                                        handleSubmit(e);
+                                    }
+                                }}
                             />
                             <IconButton
-                                type="submit"
+                                onClick={handleSubmit}
                                 sx={{
                                     color: '#f3d77f',
                                     '&:hover': { bgcolor: 'rgba(243, 215, 127, 0.1)' }
@@ -687,29 +696,57 @@ export default function Chat() {
                             >
                                 <SendIcon />
                             </IconButton>
-                        </form>
+                        </Box>
                     </Box>
 
                     {/* Emoji Picker */}
                     {showEmojiPicker && (
                         <Box sx={{
                             position: 'absolute',
-                            bottom: '80px',
+                            bottom: '100%',
                             right: '16px',
-                            zIndex: 1000
+                            zIndex: 9999,
+                            marginBottom: '8px',
+                            backgroundColor: 'rgba(10, 25, 41, 0.95)',
+                            borderRadius: '8px',
+                            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+                            border: '1px solid rgba(243, 215, 127, 0.2)',
+                            backdropFilter: 'blur(10px)',
+                            '& .emoji-mart': {
+                                backgroundColor: 'transparent !important',
+                                border: 'none !important'
+                            },
+                            '& .emoji-mart-bar': {
+                                borderColor: 'rgba(243, 215, 127, 0.2) !important'
+                            },
+                            '& .emoji-mart-category-label': {
+                                backgroundColor: 'transparent !important',
+                                color: '#f3d77f !important'
+                            },
+                            '& .emoji-mart-search input': {
+                                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                border: '1px solid rgba(243, 215, 127, 0.2)',
+                                color: 'white'
+                            },
+                            '& .emoji-mart-scroll': {
+                                height: '250px'
+                            }
                         }}>
-                            <Paper sx={{
-                                bgcolor: 'rgba(10, 25, 41, 0.95)',
-                                backdropFilter: 'blur(10px)',
-                                border: '1px solid rgba(243, 215, 127, 0.1)',
-                            }}>
-                                <Picker
-                                    data={data}
-                                    onEmojiSelect={handleEmojiSelect}
-                                    theme="dark"
-                                    previewPosition="none"
-                                />
-                            </Paper>
+                            <Picker
+                                data={data}
+                                onEmojiSelect={handleEmojiSelect}
+                                theme="dark"
+                                previewPosition="none"
+                                perLine={8}
+                                emojiSize={24}
+                                showPreview={false}
+                                showSkinTones={false}
+                                style={{
+                                    width: '350px',
+                                    backgroundColor: 'transparent',
+                                    border: 'none'
+                                }}
+                            />
                         </Box>
                     )}
 
