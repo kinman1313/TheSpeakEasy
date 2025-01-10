@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Box, Typography, Paper, Avatar, Tooltip, Badge, IconButton, Slider } from '@mui/material';
 import { ReactionButton } from './ReactionPicker';
-import { PlayArrow as PlayArrowIcon, Stop as StopIcon } from '@mui/icons-material';
+import { PlayArrow as PlayArrowIcon, Stop as StopIcon, Timer as TimerIcon } from '@mui/icons-material';
 
 const MessageReactions = ({ reactions, onRemoveReaction, currentUser }) => {
     // Group reactions by emoji
@@ -132,10 +132,28 @@ const MessageThread = ({
     onRemoveReaction
 }) => {
     const isOwnMessage = message.sender === currentUser;
+    const [timeLeft, setTimeLeft] = useState(null);
 
     useEffect(() => {
-        console.log('Rendering message:', message); // Debug log
-    }, [message]);
+        if (message.metadata?.vanishTime) {
+            const messageTime = new Date(message.timestamp).getTime();
+            const vanishTime = messageTime + (message.metadata.vanishTime * 60 * 1000);
+
+            const updateTimer = () => {
+                const now = Date.now();
+                const remaining = Math.max(0, vanishTime - now);
+                if (remaining === 0) return;
+
+                const minutes = Math.floor(remaining / 60000);
+                const seconds = Math.floor((remaining % 60000) / 1000);
+                setTimeLeft(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+            };
+
+            updateTimer();
+            const interval = setInterval(updateTimer, 1000);
+            return () => clearInterval(interval);
+        }
+    }, [message.timestamp, message.metadata?.vanishTime]);
 
     const renderMessageContent = () => {
         console.log('Rendering message type:', message.type); // Debug log
@@ -222,7 +240,7 @@ const MessageThread = ({
                     }
                 }}
             >
-                <Box sx={{ mb: 0.5 }}>
+                <Box sx={{ mb: 0.5, display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Typography variant="caption" sx={{
                         color: isOwnMessage ? 'rgba(243, 215, 127, 0.9)' : 'rgba(255, 255, 255, 0.7)'
                     }}>
@@ -238,6 +256,18 @@ const MessageThread = ({
                             </span>
                         )}
                     </Typography>
+                    {timeLeft && (
+                        <Box sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 0.5,
+                            color: isOwnMessage ? 'rgba(243, 215, 127, 0.7)' : 'rgba(255, 255, 255, 0.5)',
+                            fontSize: '0.75rem'
+                        }}>
+                            <TimerIcon sx={{ fontSize: '0.875rem' }} />
+                            {timeLeft}
+                        </Box>
+                    )}
                 </Box>
 
                 {renderMessageContent()}

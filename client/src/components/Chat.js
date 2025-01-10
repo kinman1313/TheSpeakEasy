@@ -12,7 +12,9 @@ import {
     Settings as SettingsIcon,
     People as PeopleIcon,
     AccountCircle as AccountIcon,
-    Logout as LogoutIcon
+    Logout as LogoutIcon,
+    Timer as TimerIcon,
+    Check as CheckIcon
 } from '@mui/icons-material';
 import RoomList from './RoomList';
 import MessageThread from './MessageThread';
@@ -44,6 +46,7 @@ export default function Chat() {
     const [isNewChatOpen, setIsNewChatOpen] = useState(false);
     const [typingUsers, setTypingUsers] = useState(new Set());
     const messagesEndRef = useRef(null);
+    const messagesContainerRef = useRef(null);
     const messageInputRef = useRef(null);
     const [userMenuAnchor, setUserMenuAnchor] = useState(null);
     const [showProfileSettings, setShowProfileSettings] = useState(false);
@@ -55,6 +58,8 @@ export default function Chat() {
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const [scheduledMessages, setScheduledMessages] = useState([]);
     const [onlineUsers, setOnlineUsers] = useState([]);
+    const [messageVanishTime, setMessageVanishTime] = useState(null);
+    const [messageSettingsAnchor, setMessageSettingsAnchor] = useState(null);
 
     useEffect(() => {
         if (socket) {
@@ -199,15 +204,17 @@ export default function Chat() {
         const message = {
             type,
             content,
-            metadata,
+            metadata: {
+                ...metadata,
+                vanishTime: messageVanishTime
+            },
             sender: user.username,
             timestamp: new Date().toISOString()
         };
 
-        console.log('Sending message:', message); // Debug log
+        console.log('Sending message:', message);
         socket.emit('message', message);
 
-        // Optimistically add message to UI
         setMessages(prevMessages => [...prevMessages, {
             _id: Date.now(),
             ...message
@@ -223,6 +230,55 @@ export default function Chat() {
     const handleProfileSettings = () => {
         setUserMenuAnchor(null);
         setShowProfileSettings(true);
+    };
+
+    useEffect(() => {
+        if (messageVanishTime) {
+            const now = Date.now();
+            const timeouts = messages.map(message => {
+                const messageTime = new Date(message.timestamp).getTime();
+                const timeLeft = messageTime + (messageVanishTime * 60 * 1000) - now;
+
+                if (timeLeft > 0) {
+                    return setTimeout(() => {
+                        setMessages(prev => prev.filter(m => m._id !== message._id));
+                    }, timeLeft);
+                }
+                return null;
+            }).filter(Boolean);
+
+            return () => timeouts.forEach(timeout => clearTimeout(timeout));
+        }
+    }, [messageVanishTime, messages]);
+
+    const handleVanishTimeSelect = (minutes) => {
+        setMessageVanishTime(minutes);
+        setMessageSettingsAnchor(null);
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        const messageText = messageInputRef.current?.value?.trim();
+        if (messageText) {
+            handleSendMessage(messageText);
+            messageInputRef.current.value = '';
+        }
+    };
+
+    const handleReaction = (messageId, emoji) => {
+        socket?.emit('reaction', {
+            messageId,
+            emoji,
+            username: user.username
+        });
+    };
+
+    const handleRemoveReaction = (messageId, emoji) => {
+        socket?.emit('removeReaction', {
+            messageId,
+            emoji,
+            username: user.username
+        });
     };
 
     return (
@@ -522,6 +578,85 @@ export default function Chat() {
                         }}
                     >
                         <ScheduleIcon />
+                    </IconButton>
+                    <IconButton
+                        onClick={(e) => setMessageSettingsAnchor(e.currentTarget)}
+                        sx={{
+                            color: messageVanishTime ? '#f3d77f' : 'rgba(243, 215, 127, 0.5)',
+                            '&:hover': {
+                                bgcolor: 'rgba(243, 215, 127, 0.1)',
+                                backdropFilter: 'blur(5px)'
+                            }
+                        }}
+                    >
+                        <TimerIcon />
+                    </IconButton>
+
+                    <Menu
+                        anchorEl={messageSettingsAnchor}
+                        open={Boolean(messageSettingsAnchor)}
+                        onClose={() => setMessageSettingsAnchor(null)}
+                        PaperProps={{
+                            sx: {
+                                bgcolor: 'rgba(10, 25, 41, 0.95)',
+                                backdropFilter: 'blur(10px)',
+                                border: '1px solid rgba(243, 215, 127, 0.1)',
+                                boxShadow: '0 4px 32px rgba(0, 0, 0, 0.2)',
+                                '& .MuiMenuItem-root': {
+                                    color: 'white',
+                                    gap: 1.5,
+                                    '&:hover': {
+                                        bgcolor: 'rgba(243, 215, 127, 0.1)'
+                                    }
+                                }
+                            }
+                        }}
+                    >
+                        <MenuItem onClick={() => handleVanishTimeSelect(null)}>
+                            {!messageVanishTime && <CheckIcon sx={{ color: '#f3d77f' }} />}
+                            <span style={{ marginLeft: messageVanishTime ? '24px' : '0' }}>Never (Default)</span>
+                        </MenuItem>
+                        {[5, 10, 20, 30].map(minutes => (
+                            <MenuItem key={minutes} onClick={() => handleVanishTimeSelect(minutes)}>
+                                {messageVanishTime === minutes && <CheckIcon sx={{ color: '#f3d77f' }} />}
+                                <span style={{ marginLeft: messageVanishTime === minutes ? '0' : '24px' }}>
+                                    {minutes} minutes
+                                </span>
+                            </MenuItem>
+                        ))}
+                    </Menu>
+
+                    <Box sx={{ flexGrow: 1, position: 'relative' }}>
+                        <input
+                            ref={messageInputRef}
+                            type="text"
+                            placeholder="Type your message..."
+                            style={{
+                                width: '100%',
+                                background: 'transparent',
+                                border: 'none',
+                                color: 'white',
+                                fontSize: '1rem',
+                                padding: '8px',
+                                outline: 'none',
+                                '&::placeholder': {
+                                    color: 'rgba(255, 255, 255, 0.5)'
+                                }
+                            }}
+                        />
+                    </Box>
+
+                    <IconButton
+                        type="submit"
+                        sx={{
+                            color: '#f3d77f',
+                            '&:hover': {
+                                bgcolor: 'rgba(243, 215, 127, 0.1)',
+                                backdropFilter: 'blur(5px)'
+                            }
+                        }}
+                    >
+                        <SendIcon />
                     </IconButton>
                 </Paper>
             </Box>
