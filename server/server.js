@@ -39,20 +39,47 @@ const server = http.createServer(app);
 const io = socketIO(server, {
     cors: {
         origin: ["https://lies-client-9ayj.onrender.com", "http://localhost:3000"],
-        methods: ["GET", "POST"],
+        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         credentials: true,
-        allowedHeaders: ["Content-Type", "Authorization"]
+        allowedHeaders: ["Content-Type", "Authorization"],
+        preflightContinue: false,
+        optionsSuccessStatus: 204,
+        exposedHeaders: ['Access-Control-Allow-Origin']
     },
-    transports: ['websocket', 'polling']
+    transports: ['websocket', 'polling'],
+    allowEIO3: true,
+    pingTimeout: 60000,
+    pingInterval: 25000
 });
 
-// CORS for Express
+// CORS middleware for Express
 app.use(cors({
     origin: ["https://lies-client-9ayj.onrender.com", "http://localhost:3000"],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true
+    credentials: true,
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
+    exposedHeaders: ['Access-Control-Allow-Origin']
 }));
+
+// Add OPTIONS handling for preflight requests
+app.options('*', cors());
+
+// Add CORS headers middleware
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', req.headers.origin);
+    res.header('Access-Control-Allow-Credentials', true);
+    res.header(
+        'Access-Control-Allow-Headers',
+        'Origin, X-Requested-With, Content-Type, Accept, Authorization'
+    );
+    res.header(
+        'Access-Control-Allow-Methods',
+        'GET, POST, PUT, DELETE, PATCH, OPTIONS'
+    );
+    next();
+});
 
 app.use(express.json());
 
@@ -152,6 +179,20 @@ io.on('connection', (socket) => {
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).send('Something broke!');
+});
+
+// Error handler for CORS issues
+app.use((err, req, res, next) => {
+    if (err.name === 'CORSError') {
+        console.error('CORS Error:', err);
+        res.status(403).json({
+            error: 'CORS Error',
+            message: err.message,
+            origin: req.headers.origin
+        });
+    } else {
+        next(err);
+    }
 });
 
 const PORT = process.env.PORT || 8080;

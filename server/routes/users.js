@@ -6,6 +6,7 @@ const auth = require('../middleware/auth');
 const { sendResetPasswordEmail } = require('../services/emailService');
 const router = express.Router();
 const nodemailer = require('nodemailer');
+const cors = require('cors');
 
 // Register a new user
 router.post('/register', async (req, res) => {
@@ -102,7 +103,7 @@ router.patch('/me', auth, async (req, res) => {
 });
 
 // Request password reset
-router.post('/reset-password', async (req, res) => {
+router.post('/reset-password', cors(), async (req, res) => {
     try {
         const { email } = req.body;
         console.log('Reset password request received for:', email);
@@ -154,8 +155,8 @@ router.post('/reset-password', async (req, res) => {
     }
 });
 
-// Add route to verify token and reset password
-router.post('/reset-password/:token', async (req, res) => {
+// Verify token and reset password
+router.post('/reset-password/:token', cors(), async (req, res) => {
     try {
         const { password } = req.body;
         const { token } = req.params;
