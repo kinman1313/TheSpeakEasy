@@ -89,6 +89,37 @@ export default function Chat() {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
 
+    const handleGifSelect = (gif) => {
+        handleSendMessage(gif.url, 'gif', {
+            preview: gif.preview?.url,
+            height: gif.height,
+            width: gif.width
+        });
+        setShowGifPicker(false);
+    };
+
+    const handleVoiceMessage = (audioBlob) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+            handleSendMessage(reader.result, 'voice', {
+                duration: audioBlob.duration,
+                type: audioBlob.type
+            });
+        };
+        reader.readAsDataURL(audioBlob);
+        setShowVoiceMessage(false);
+    };
+
+    const handleScheduleMessage = (message, scheduledTime) => {
+        const scheduledMsg = {
+            content: message,
+            scheduledTime,
+            id: Date.now()
+        };
+        setScheduledMessages(prev => [...prev, scheduledMsg]);
+        setShowScheduler(false);
+    };
+
     const handleSendMessage = (content, type = 'text', metadata = {}) => {
         if (socket) {
             socket.emit('message', {
