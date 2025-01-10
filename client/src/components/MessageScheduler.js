@@ -1,27 +1,19 @@
 import React, { useState } from 'react';
 import {
-    Box,
-    IconButton,
     Dialog,
     DialogTitle,
     DialogContent,
     DialogActions,
     Button,
     TextField,
-    Typography,
     List,
     ListItem,
     ListItemText,
-    ListItemSecondaryAction,
-    Tooltip,
-    Paper,
-    Switch,
-    FormControlLabel,
-    Divider
+    IconButton
 } from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
 import {
     Schedule as ScheduleIcon,
-    Delete as DeleteIcon,
     Edit as EditIcon,
     CalendarToday as CalendarIcon,
     AccessTime as TimeIcon,

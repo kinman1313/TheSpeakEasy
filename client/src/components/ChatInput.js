@@ -1,55 +1,70 @@
-import React, { useState, useRef, useCallback } from 'react';
-import { Box, TextField, IconButton } from '@mui/material';
-import { Send as SendIcon, Gif as GifIcon, Mic as MicIcon, Schedule as ScheduleIcon, EmojiEmotions as EmojiIcon } from '@mui/icons-material';
-import debounce from 'lodash/debounce';
+import React, { useState, useRef, forwardRef } from 'react';
+import { Box, TextField, IconButton, Tooltip } from '@mui/material';
+import {
+    Send as SendIcon,
+    Gif as GifIcon,
+    Mic as MicIcon,
+    Schedule as ScheduleIcon,
+    EmojiEmotions as EmojiIcon
+} from '@mui/icons-material';
 
-const ChatInput = React.forwardRef(({ onSend, onGifClick, onVoiceClick, onScheduleClick, onEmojiClick, onTyping }, ref) => {
+const ChatInput = forwardRef(({ onSendMessage, onGifClick, onVoiceClick, onScheduleClick, onEmojiClick, onTyping }, ref) => {
     const [message, setMessage] = useState('');
     const isTypingRef = useRef(false);
-
-    // Debounce the stopTyping event
-    const debouncedStopTyping = useCallback(
-        debounce(() => {
-            if (isTypingRef.current) {
-                isTypingRef.current = false;
-                onTyping?.(false);
-            }
-        }, 1000),
-        [onTyping]
-    );
+    const typingTimeoutRef = useRef(null);
 
     const handleTyping = () => {
         if (!isTypingRef.current) {
             isTypingRef.current = true;
             onTyping?.(true);
         }
-        debouncedStopTyping();
+
+        // Clear existing timeout
+        if (typingTimeoutRef.current) {
+            clearTimeout(typingTimeoutRef.current);
+        }
+
+        // Set new timeout
+        typingTimeoutRef.current = setTimeout(() => {
+            isTypingRef.current = false;
+            onTyping?.(false);
+        }, 2000);
     };
 
     const handleSend = () => {
         if (message.trim()) {
-            onSend(message.trim());
+            onSendMessage(message.trim());
             setMessage('');
             isTypingRef.current = false;
             onTyping?.(false);
-            debouncedStopTyping.cancel();
+            if (typingTimeoutRef.current) {
+                clearTimeout(typingTimeoutRef.current);
+            }
         }
     };
 
     return (
         <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-            <IconButton onClick={onGifClick}>
-                <GifIcon />
-            </IconButton>
-            <IconButton onClick={onVoiceClick}>
-                <MicIcon />
-            </IconButton>
-            <IconButton onClick={onScheduleClick}>
-                <ScheduleIcon />
-            </IconButton>
-            <IconButton onClick={onEmojiClick}>
-                <EmojiIcon />
-            </IconButton>
+            <Tooltip title="Send GIF">
+                <IconButton onClick={onGifClick}>
+                    <GifIcon />
+                </IconButton>
+            </Tooltip>
+            <Tooltip title="Voice Message">
+                <IconButton onClick={onVoiceClick}>
+                    <MicIcon />
+                </IconButton>
+            </Tooltip>
+            <Tooltip title="Schedule Message">
+                <IconButton onClick={onScheduleClick}>
+                    <ScheduleIcon />
+                </IconButton>
+            </Tooltip>
+            <Tooltip title="Emoji">
+                <IconButton onClick={onEmojiClick}>
+                    <EmojiIcon />
+                </IconButton>
+            </Tooltip>
 
             <TextField
                 fullWidth
@@ -68,15 +83,22 @@ const ChatInput = React.forwardRef(({ onSend, onGifClick, onVoiceClick, onSchedu
                 multiline
                 maxRows={4}
                 ref={ref}
+                sx={{
+                    '& .MuiOutlinedInput-root': {
+                        borderRadius: 2
+                    }
+                }}
             />
 
-            <IconButton
-                color="primary"
-                onClick={handleSend}
-                disabled={!message.trim()}
-            >
-                <SendIcon />
-            </IconButton>
+            <Tooltip title="Send">
+                <IconButton
+                    color="primary"
+                    onClick={handleSend}
+                    disabled={!message.trim()}
+                >
+                    <SendIcon />
+                </IconButton>
+            </Tooltip>
         </Box>
     );
 });

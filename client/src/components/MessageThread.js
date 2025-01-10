@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Typography, Paper, IconButton, Tooltip, Badge } from '@mui/material';
+import { Box, Typography, Paper, Avatar, Tooltip, Badge } from '@mui/material';
 import { ReactionButton } from './ReactionPicker';
 
 const MessageReactions = ({ reactions, onRemoveReaction, currentUser }) => {
@@ -43,6 +43,23 @@ const MessageReactions = ({ reactions, onRemoveReaction, currentUser }) => {
                     </Badge>
                 </Tooltip>
             ))}
+        </Box>
+    );
+};
+
+const VoiceMessage = ({ audioUrl }) => {
+    return (
+        <Box sx={{ width: '100%', maxWidth: 300 }}>
+            <audio
+                controls
+                src={audioUrl}
+                style={{
+                    width: '100%',
+                    height: 40,
+                    borderRadius: 8,
+                    backgroundColor: 'rgba(0,0,0,0.05)'
+                }}
+            />
         </Box>
     );
 };
@@ -93,7 +110,7 @@ const MessageThread = ({
                 )}
 
                 {message.type === 'voice' && (
-                    <audio controls src={message.content} style={{ width: '100%' }} />
+                    <VoiceMessage audioUrl={message.content} />
                 )}
 
                 <MessageReactions
