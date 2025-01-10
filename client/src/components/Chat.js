@@ -29,6 +29,18 @@ import { useTheme } from '../contexts/ThemeContext';
 
 const drawerWidth = 240;
 
+const hexToRgb = (hex) => {
+    // Remove the hash if present
+    hex = hex.replace(/^#/, '');
+
+    // Parse the hex values
+    const r = parseInt(hex.slice(0, 2), 16);
+    const g = parseInt(hex.slice(2, 4), 16);
+    const b = parseInt(hex.slice(4, 6), 16);
+
+    return `${r}, ${g}, ${b}`;
+};
+
 export default function Chat() {
     const { socket } = useSocket();
     const { user } = useAuth();
@@ -394,15 +406,7 @@ export default function Chat() {
                             '--border-radius': '12px',
                             '--category-icon-size': '20px',
                             '--font-family': theme.typography.fontFamily,
-                            '--rgb-accent': theme.palette.primary.main.replace(
-                                /^#([A-Fa-f0-9]{6})/,
-                                (_, hex) => {
-                                    const r = parseInt(hex.slice(0, 2), 16);
-                                    const g = parseInt(hex.slice(2, 4), 16);
-                                    const b = parseInt(hex.slice(4, 6), 16);
-                                    return `${r}, ${g}, ${b}`;
-                                }
-                            ),
+                            '--rgb-accent': hexToRgb(theme.palette.primary.main),
                             '--rgb-background': theme.palette.mode === 'dark' ? '32, 33, 36' : '255, 255, 255',
                             '--rgb-input': theme.palette.mode === 'dark' ? '255, 255, 255' : '0, 0, 0',
                             boxShadow: theme.shadows[8],

@@ -9,9 +9,11 @@ import {
     Typography,
     Link,
     Box,
-    Alert
+    Alert,
+    CircularProgress
 } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
+import { config } from '../config';
 
 export default function Login() {
     const [email, setEmail] = useState('');
@@ -23,13 +25,26 @@ export default function Login() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setError('');
+        setLoading(true);
+
+        console.log('Login attempt:', { email, apiUrl: config.API_URL });
+
         try {
-            setError('');
-            setLoading(true);
-            await login(email, password);
+            const user = await login(email, password);
+            console.log('Login successful:', user);
             navigate('/chat');
         } catch (err) {
-            setError(err.response?.data?.error || 'Failed to login');
+            console.error('Login error:', err);
+            if (err.message === 'Network Error') {
+                setError('Unable to connect to server. Please check your connection.');
+            } else if (err.response?.status === 401) {
+                setError('Invalid email or password');
+            } else if (err.message.includes('timeout')) {
+                setError('Request timed out. Please try again.');
+            } else {
+                setError(err.message || 'An error occurred during login');
+            }
         } finally {
             setLoading(false);
         }
@@ -59,6 +74,7 @@ export default function Login() {
                             onChange={(e) => setEmail(e.target.value)}
                             required
                             autoComplete="email"
+                            disabled={loading}
                         />
 
                         <TextField
@@ -70,6 +86,7 @@ export default function Login() {
                             onChange={(e) => setPassword(e.target.value)}
                             required
                             autoComplete="current-password"
+                            disabled={loading}
                         />
 
                         <LoadingButton
@@ -80,7 +97,7 @@ export default function Login() {
                             loading={loading}
                             sx={{ mt: 3, mb: 2 }}
                         >
-                            Login
+                            {loading ? 'Logging in...' : 'Login'}
                         </LoadingButton>
 
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
