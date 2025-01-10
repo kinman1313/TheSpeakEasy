@@ -18,7 +18,8 @@ import TypingIndicator from './TypingIndicator';
 import NewChatDialog from './NewChatDialog';
 import { useSocket } from '../contexts/SocketContext';
 import { useAuth } from '../contexts/AuthContext';
-import EmojiPicker from 'emoji-picker-react';
+import Picker from '@emoji-mart/react';
+import data from '@emoji-mart/data';
 
 const drawerWidth = 240;
 
@@ -294,11 +295,13 @@ export default function Chat() {
                         zIndex: 1000
                     }}
                 >
-                    <EmojiPicker
-                        onEmojiClick={(emoji) => {
-                            handleSendMessage(emoji.emoji);
+                    <Picker
+                        data={data}
+                        onEmojiSelect={(emoji) => {
+                            handleSendMessage(emoji.native);
                             setShowEmojiPicker(false);
                         }}
+                        theme={theme.palette.mode}
                     />
                 </Box>
             )}
