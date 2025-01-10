@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Box, Drawer, IconButton, Divider, Typography } from '@mui/material';
+import { Box, Drawer, IconButton, Divider, Typography, Avatar, Menu, MenuItem, Tooltip } from '@mui/material';
 import {
     Add as AddIcon,
     Send as SendIcon,
@@ -8,7 +8,10 @@ import {
     Schedule as ScheduleIcon,
     EmojiEmotions as EmojiIcon,
     AccessTime as AccessTimeIcon,
-    Favorite as FavoriteIcon
+    Favorite as FavoriteIcon,
+    Menu as MenuIcon,
+    ChevronLeft as ChevronLeftIcon,
+    Settings as SettingsIcon
 } from '@mui/icons-material';
 import RoomList from './RoomList';
 import MessageThread from './MessageThread';
@@ -30,6 +33,8 @@ export default function Chat() {
     const { socket } = useSocket();
     const { user } = useAuth();
     const { theme } = useTheme();
+    const [drawerOpen, setDrawerOpen] = useState(true);
+    const [anchorEl, setAnchorEl] = useState(null);
     const [rooms, setRooms] = useState([]);
     const [activeRoom, setActiveRoom] = useState(null);
     const [messages, setMessages] = useState([]);
@@ -49,6 +54,15 @@ export default function Chat() {
         const saved = localStorage.getItem('frequentEmojis');
         return saved ? JSON.parse(saved) : [];
     });
+
+    // Menu handlers
+    const handleMenuOpen = (event) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleMenuClose = () => {
+        setAnchorEl(null);
+    };
 
     useEffect(() => {
         if (socket) {
@@ -212,23 +226,45 @@ export default function Chat() {
     };
 
     return (
-        <Box sx={{ display: 'flex' }}>
+        <Box sx={{
+            display: 'flex',
+            height: '100vh',
+            bgcolor: theme.palette.background.default,
+            color: theme.palette.text.primary
+        }}>
             <Drawer
                 variant="permanent"
                 sx={{
-                    width: drawerWidth,
+                    width: drawerOpen ? drawerWidth : 0,
                     flexShrink: 0,
                     '& .MuiDrawer-paper': {
                         width: drawerWidth,
                         boxSizing: 'border-box',
+                        bgcolor: theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.8)',
+                        borderRight: `1px solid ${theme.palette.divider}`,
+                        transition: theme.transitions.create('transform', {
+                            easing: theme.transitions.easing.sharp,
+                            duration: theme.transitions.duration.leavingScreen,
+                        }),
+                        transform: drawerOpen ? 'none' : `translateX(-${drawerWidth}px)`,
                     },
                 }}
             >
-                <Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <Typography variant="h6">Chats</Typography>
-                    <IconButton onClick={() => setIsNewChatOpen(true)}>
-                        <AddIcon />
-                    </IconButton>
+                <Box sx={{
+                    p: 2,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                }}>
+                    <Typography variant="h6" sx={{ fontWeight: 600 }}>Chats</Typography>
+                    <Box>
+                        <IconButton onClick={() => setIsNewChatOpen(true)}>
+                            <AddIcon />
+                        </IconButton>
+                        <IconButton onClick={() => setDrawerOpen(false)}>
+                            <ChevronLeftIcon />
+                        </IconButton>
+                    </Box>
                 </Box>
                 <Divider />
                 <RoomList
@@ -238,76 +274,118 @@ export default function Chat() {
                 />
             </Drawer>
 
-            <Box component="main" sx={{ flexGrow: 1, p: 3, position: 'relative' }}>
-                {activeRoom ? (
-                    <>
-                        <Box sx={{ height: 'calc(100vh - 200px)', overflow: 'auto' }}>
-                            {messages.map((message, index) => (
-                                <MessageThread
-                                    key={message._id || index}
-                                    message={message}
-                                    currentUser={user.username}
-                                    onReply={(content) => handleSendMessage(content)}
-                                    onReaction={handleReaction}
-                                    onRemoveReaction={handleRemoveReaction}
-                                />
-                            ))}
-                            <div ref={messagesEndRef} />
-                        </Box>
-
-                        <TypingIndicator users={typingUsers} />
-
-                        <Box sx={{ mt: 2 }}>
-                            <ChatInput
-                                ref={messageInputRef}
-                                onSend={handleSendMessage}
-                                onGifClick={() => setShowGifPicker(true)}
-                                onVoiceClick={() => setShowVoiceMessage(true)}
-                                onScheduleClick={() => setShowScheduler(true)}
-                                onEmojiClick={() => setShowEmojiPicker(true)}
-                                onTyping={(isTyping) => {
-                                    if (socket && activeRoom) {
-                                        socket.emit('typing', {
-                                            roomId: activeRoom._id,
-                                            isTyping
-                                        });
-                                    }
-                                }}
-                            />
-                        </Box>
-                    </>
-                ) : (
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-                        <Typography variant="h6" color="text.secondary">
-                            Select a chat to start messaging
+            <Box component="main" sx={{
+                flexGrow: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                height: '100vh',
+                position: 'relative',
+                bgcolor: theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.9)',
+            }}>
+                {/* Header */}
+                <Box sx={{
+                    p: 2,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    borderBottom: `1px solid ${theme.palette.divider}`,
+                }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        {!drawerOpen && (
+                            <IconButton onClick={() => setDrawerOpen(true)}>
+                                <MenuIcon />
+                            </IconButton>
+                        )}
+                        <Typography variant="h6">
+                            {activeRoom?.name || 'Select a chat'}
                         </Typography>
                     </Box>
-                )}
-            </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Tooltip title="Settings">
+                            <IconButton onClick={handleMenuOpen}>
+                                <SettingsIcon />
+                            </IconButton>
+                        </Tooltip>
+                        <Avatar
+                            src={user.profile?.avatar?.url}
+                            sx={{ width: 40, height: 40, cursor: 'pointer' }}
+                            onClick={handleMenuOpen}
+                        >
+                            {user.username?.[0]?.toUpperCase()}
+                        </Avatar>
+                    </Box>
+                </Box>
 
-            {/* Feature Modals/Popovers */}
-            {showGifPicker && (
-                <GifPicker
-                    onSelect={handleGifSelect}
-                    onClose={() => setShowGifPicker(false)}
-                />
-            )}
-            {showVoiceMessage && (
-                <VoiceMessage
-                    onSend={handleVoiceMessage}
-                    onClose={() => setShowVoiceMessage(false)}
-                />
-            )}
-            {showScheduler && (
-                <MessageScheduler
-                    scheduledMessages={scheduledMessages}
-                    onSchedule={handleScheduleMessage}
-                    onClose={() => setShowScheduler(false)}
-                />
-            )}
-            {showEmojiPicker && (
-                <Box
-                    sx={{
+                {/* Messages Area */}
+                <Box sx={{
+                    flexGrow: 1,
+                    overflow: 'auto',
+                    p: 2,
+                    display: 'flex',
+                    flexDirection: 'column',
+                }}>
+                    {activeRoom ? (
+                        messages.map((message, index) => (
+                            <MessageThread
+                                key={message._id || index}
+                                message={message}
+                                currentUser={user.username}
+                                onReply={(content) => handleSendMessage(content)}
+                                onReaction={handleReaction}
+                                onRemoveReaction={handleRemoveReaction}
+                            />
+                        ))
+                    ) : (
+                        <Box sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            height: '100%',
+                            color: theme.palette.text.secondary
+                        }}>
+                            <Typography variant="h6">Select a chat to start messaging</Typography>
+                        </Box>
+                    )}
+                    <div ref={messagesEndRef} />
+                </Box>
+
+                {/* Input Area */}
+                {activeRoom && (
+                    <Box sx={{
+                        p: 2,
+                        borderTop: `1px solid ${theme.palette.divider}`,
+                        bgcolor: theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.8)',
+                    }}>
+                        <TypingIndicator users={Array.from(typingUsers)} />
+                        <ChatInput
+                            ref={messageInputRef}
+                            onSendMessage={handleSendMessage}
+                            onTyping={(isTyping) => socket?.emit('typing', { isTyping, roomId: activeRoom._id })}
+                            onGifClick={() => setShowGifPicker(true)}
+                            onVoiceClick={() => setShowVoiceMessage(true)}
+                            onScheduleClick={() => setShowScheduler(true)}
+                            onEmojiClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                            frequentEmojis={frequentEmojis}
+                        />
+                    </Box>
+                )}
+
+                {/* Feature Components */}
+                {showGifPicker && (
+                    <GifPicker onSelect={handleGifSelect} onClose={() => setShowGifPicker(false)} />
+                )}
+                {showVoiceMessage && (
+                    <VoiceMessage onSend={handleVoiceMessage} onClose={() => setShowVoiceMessage(false)} />
+                )}
+                {showScheduler && (
+                    <MessageScheduler
+                        onSchedule={handleScheduleMessage}
+                        onClose={() => setShowScheduler(false)}
+                        scheduledMessages={scheduledMessages}
+                    />
+                )}
+                {showEmojiPicker && (
+                    <Box sx={{
                         position: 'absolute',
                         bottom: 80,
                         right: 16,
@@ -330,58 +408,38 @@ export default function Chat() {
                             boxShadow: theme.shadows[8],
                             maxHeight: '350px'
                         }
-                    }}
-                >
-                    <Picker
-                        data={data}
-                        onEmojiSelect={(emoji) => {
-                            handleSendMessage(emoji.native);
-                            updateFrequentEmojis(emoji.native);
-                            setShowEmojiPicker(false);
-                        }}
-                        theme={theme.palette.mode}
-                        previewPosition="none"
-                        skinTonePosition="search"
-                        searchPosition="sticky"
-                        categories={[
-                            'frequent',
-                            'smileys_people',
-                            'animals_nature',
-                            'food_drink',
-                            'activities',
-                            'travel_places',
-                            'objects',
-                            'symbols',
-                            'flags'
-                        ]}
-                        custom={[
-                            {
-                                id: 'reactions',
-                                name: 'Common Reactions',
-                                emojis: ['👍', '❤️', '😂', '🎉', '🤔', '👀', '🔥', '✨']
-                            }
-                        ]}
-                        dynamicWidth={true}
-                        emojiSize={22}
-                        emojiButtonSize={28}
-                        maxFrequentRows={2}
-                        navPosition="bottom"
-                        perLine={8}
-                        icons={{
-                            categories: {
-                                frequent: <AccessTimeIcon fontSize="small" />,
-                                reactions: <FavoriteIcon fontSize="small" />
-                            }
-                        }}
-                    />
-                </Box>
-            )}
+                    }}>
+                        <Picker
+                            data={data}
+                            onEmojiSelect={(emoji) => {
+                                handleSendMessage(emoji.native);
+                                updateFrequentEmojis(emoji.native);
+                                setShowEmojiPicker(false);
+                            }}
+                        />
+                    </Box>
+                )}
 
-            <NewChatDialog
-                open={isNewChatOpen}
-                onClose={() => setIsNewChatOpen(false)}
-                onCreateDM={handleCreateDM}
-            />
+                {/* Dialogs */}
+                <NewChatDialog
+                    open={isNewChatOpen}
+                    onClose={() => setIsNewChatOpen(false)}
+                    onCreateDM={handleCreateDM}
+                />
+
+                {/* User Menu */}
+                <Menu
+                    anchorEl={anchorEl}
+                    open={Boolean(anchorEl)}
+                    onClose={handleMenuClose}
+                    transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                    anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                >
+                    <MenuItem onClick={handleMenuClose}>Profile</MenuItem>
+                    <MenuItem onClick={handleMenuClose}>Settings</MenuItem>
+                    <MenuItem onClick={handleMenuClose}>Logout</MenuItem>
+                </Menu>
+            </Box>
         </Box>
     );
 } 
