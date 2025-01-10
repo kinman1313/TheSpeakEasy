@@ -197,5 +197,20 @@ userSchema.statics.findByCredentials = async (email, password) => {
     return user;
 };
 
+// Add password reset token methods
+userSchema.methods.createPasswordResetToken = function () {
+    const crypto = require('crypto');
+    const resetToken = crypto.randomBytes(32).toString('hex');
+
+    this.resetPasswordToken = crypto
+        .createHash('sha256')
+        .update(resetToken)
+        .digest('hex');
+
+    this.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+
+    return resetToken;
+};
+
 const User = mongoose.model('User', userSchema);
 module.exports = User; 

@@ -5,6 +5,25 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 require('dotenv').config();
 
+// Check for required environment variables first
+const requiredEnvVars = [
+    'MONGODB_URI',
+    'JWT_SECRET',
+    'SMTP_HOST',
+    'SMTP_PORT',
+    'SMTP_USER',
+    'SMTP_PASS',
+    'FROM_EMAIL',
+    'CLIENT_URL'
+];
+
+// Check for required environment variables
+const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
+if (missingEnvVars.length > 0) {
+    console.error('Missing required environment variables:', missingEnvVars);
+    process.exit(1);
+}
+
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
@@ -16,6 +35,12 @@ mongoose.connect(process.env.MONGODB_URI, {
 const app = express();
 const server = http.createServer(app);
 
+// Add request logging middleware
+app.use((req, res, next) => {
+    console.log(`${req.method} ${req.path}`);
+    next();
+});
+
 // CORS configuration
 app.use(cors({
     origin: ['https://lies-client-9ayj.onrender.com', 'http://localhost:3000'],
@@ -24,21 +49,25 @@ app.use(cors({
     credentials: true
 }));
 
-// Socket.IO CORS configuration
-const io = socketIO(server, {
-    cors: {
-        origin: ['https://lies-client-9ayj.onrender.com', 'http://localhost:3000'],
-        methods: ["GET", "POST"],
-        allowedHeaders: ["Content-Type", "Authorization"],
-        credentials: true
-    }
-});
-
 app.use(express.json());
 
-// Import routes
+// Import and mount routes
 const userRoutes = require('./routes/users');
 app.use('/api/users', userRoutes);
+
+// Add a root test route
+app.get('/', (req, res) => {
+    res.json({ message: 'Server is running' });
+});
+
+// Add a catch-all route for debugging
+app.use('*', (req, res) => {
+    res.status(404).json({
+        error: 'Not Found',
+        path: req.originalUrl,
+        method: req.method
+    });
+});
 
 // Health check endpoint
 app.get('/health', (req, res) => {
