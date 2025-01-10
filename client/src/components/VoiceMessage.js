@@ -17,15 +17,20 @@ export default function VoiceMessage({ onSend, onClose }) {
             audioChunks.current = [];
 
             mediaRecorder.current.ondataavailable = (event) => {
-                audioChunks.current.push(event.data);
+                if (event.data.size > 0) {
+                    audioChunks.current.push(event.data);
+                }
             };
 
             mediaRecorder.current.onstop = () => {
-                const audioBlob = new Blob(audioChunks.current, { type: 'audio/mp3' });
+                const audioBlob = new Blob(audioChunks.current, {
+                    type: 'audio/webm;codecs=opus'
+                });
+                console.log('Created audio blob:', audioBlob);
                 setAudioBlob(audioBlob);
             };
 
-            mediaRecorder.current.start();
+            mediaRecorder.current.start(100);
             setIsRecording(true);
             startTimer();
         } catch (error) {
@@ -57,8 +62,7 @@ export default function VoiceMessage({ onSend, onClose }) {
 
     const handleSend = () => {
         if (audioBlob) {
-            const audioUrl = URL.createObjectURL(audioBlob);
-            onSend(audioUrl);
+            onSend(audioBlob);
         }
     };
 

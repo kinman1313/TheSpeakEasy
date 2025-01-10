@@ -65,9 +65,20 @@ const MessageScheduler = ({
     };
 
     const handleSchedule = () => {
+        const messageText = message?.trim() || '';
+        if (!messageText) {
+            // Show error or return early if message is empty
+            return;
+        }
+
+        if (!selectedDate) {
+            // Show error or return early if date is not selected
+            return;
+        }
+
         const scheduleData = {
             id: editingMessage?.id || Date.now(),
-            message,
+            message: messageText,
             scheduledDate: selectedDate,
             repeat: repeat.enabled ? repeat : null,
             status: 'pending'

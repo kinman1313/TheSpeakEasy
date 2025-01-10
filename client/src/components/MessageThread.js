@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
-import { Box, Typography, Paper, Avatar, Tooltip, Badge } from '@mui/material';
+import React, { useEffect, useState, useRef } from 'react';
+import { Box, Typography, Paper, Avatar, Tooltip, Badge, IconButton, Slider } from '@mui/material';
 import { ReactionButton } from './ReactionPicker';
+import { PlayArrow as PlayArrowIcon, Stop as StopIcon } from '@mui/icons-material';
 
 const MessageReactions = ({ reactions, onRemoveReaction, currentUser }) => {
     // Group reactions by emoji
@@ -48,18 +49,77 @@ const MessageReactions = ({ reactions, onRemoveReaction, currentUser }) => {
 };
 
 const VoiceMessage = ({ audioUrl }) => {
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [duration, setDuration] = useState(0);
+    const [currentTime, setCurrentTime] = useState(0);
+    const audioRef = useRef(new Audio());
+
+    useEffect(() => {
+        const audio = audioRef.current;
+        audio.src = audioUrl;
+
+        const handleLoadedMetadata = () => {
+            setDuration(audio.duration);
+        };
+
+        const handleTimeUpdate = () => {
+            setCurrentTime(audio.currentTime);
+        };
+
+        const handleEnded = () => {
+            setIsPlaying(false);
+            setCurrentTime(0);
+        };
+
+        audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+        audio.addEventListener('timeupdate', handleTimeUpdate);
+        audio.addEventListener('ended', handleEnded);
+
+        return () => {
+            audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+            audio.removeEventListener('timeupdate', handleTimeUpdate);
+            audio.removeEventListener('ended', handleEnded);
+            audio.pause();
+            audio.src = '';
+        };
+    }, [audioUrl]);
+
+    const togglePlay = () => {
+        if (isPlaying) {
+            audioRef.current.pause();
+        } else {
+            audioRef.current.play();
+        }
+        setIsPlaying(!isPlaying);
+    };
+
+    const formatTime = (time) => {
+        const minutes = Math.floor(time / 60);
+        const seconds = Math.floor(time % 60);
+        return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    };
+
     return (
         <Box sx={{ width: '100%', maxWidth: 300 }}>
-            <audio
-                controls
-                src={audioUrl}
-                style={{
-                    width: '100%',
-                    height: 40,
-                    borderRadius: 8,
-                    backgroundColor: 'rgba(0,0,0,0.05)'
-                }}
-            />
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <IconButton onClick={togglePlay} size="small">
+                    {isPlaying ? <StopIcon /> : <PlayArrowIcon />}
+                </IconButton>
+                <Box sx={{ flexGrow: 1, mx: 1 }}>
+                    <Slider
+                        size="small"
+                        value={currentTime}
+                        max={duration}
+                        onChange={(_, value) => {
+                            audioRef.current.currentTime = value;
+                            setCurrentTime(value);
+                        }}
+                    />
+                </Box>
+                <Typography variant="caption">
+                    {formatTime(currentTime)} / {formatTime(duration)}
+                </Typography>
+            </Box>
         </Box>
     );
 };
@@ -119,9 +179,12 @@ const MessageThread = ({
         >
             <Avatar
                 sx={{
-                    bgcolor: isOwnMessage ? 'primary.main' : 'secondary.main',
+                    bgcolor: isOwnMessage ? 'rgba(243, 215, 127, 0.2)' : 'rgba(243, 215, 127, 0.15)',
                     width: 32,
-                    height: 32
+                    height: 32,
+                    border: '2px solid rgba(243, 215, 127, 0.3)',
+                    color: '#f3d77f',
+                    boxShadow: '0 0 10px rgba(243, 215, 127, 0.2)'
                 }}
             >
                 {(message.sender || 'U')[0].toUpperCase()}
@@ -132,16 +195,45 @@ const MessageThread = ({
                 sx={{
                     p: 1.5,
                     maxWidth: '70%',
-                    bgcolor: isOwnMessage ? 'primary.light' : 'background.paper',
+                    bgcolor: isOwnMessage ? 'rgba(243, 215, 127, 0.1)' : 'rgba(10, 25, 41, 0.6)',
+                    backdropFilter: 'blur(10px)',
                     borderRadius: 2,
-                    position: 'relative'
+                    position: 'relative',
+                    border: '1px solid rgba(243, 215, 127, 0.1)',
+                    boxShadow: '0 4px 24px rgba(0, 0, 0, 0.1)',
+                    '&::before': {
+                        content: '""',
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        height: '1px',
+                        background: 'linear-gradient(90deg, transparent, rgba(243, 215, 127, 0.2), transparent)'
+                    },
+                    '&::after': {
+                        content: '""',
+                        position: 'absolute',
+                        top: 0,
+                        left: isOwnMessage ? 'auto' : 0,
+                        right: isOwnMessage ? 0 : 'auto',
+                        width: '1px',
+                        height: '100%',
+                        background: 'linear-gradient(180deg, rgba(243, 215, 127, 0.2), transparent)'
+                    }
                 }}
             >
                 <Box sx={{ mb: 0.5 }}>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant="caption" sx={{
+                        color: isOwnMessage ? 'rgba(243, 215, 127, 0.9)' : 'rgba(255, 255, 255, 0.7)'
+                    }}>
                         {message.sender}
                         {message.timestamp && (
-                            <span style={{ marginLeft: '8px', opacity: 0.7 }}>
+                            <span style={{
+                                marginLeft: '8px',
+                                opacity: 0.7,
+                                fontSize: '0.8em',
+                                color: isOwnMessage ? 'rgba(243, 215, 127, 0.7)' : 'rgba(255, 255, 255, 0.5)'
+                            }}>
                                 {new Date(message.timestamp).toLocaleTimeString()}
                             </span>
                         )}
@@ -158,7 +250,16 @@ const MessageThread = ({
                     />
                 )}
 
-                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 0.5 }}>
+                <Box sx={{
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                    mt: 0.5,
+                    opacity: 0,
+                    transition: 'opacity 0.2s ease',
+                    '&:hover': {
+                        opacity: 1
+                    }
+                }}>
                     <ReactionButton
                         onReactionSelect={(emoji) => onReaction?.(message._id, emoji)}
                     />
