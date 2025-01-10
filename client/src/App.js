@@ -2,13 +2,17 @@ import React from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { SocketProvider } from './contexts/SocketContext';
+import { ThemeProvider as CustomThemeProvider } from './contexts/ThemeContext';
+import { ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
 import AppRoutes from './routes/AppRoutes';
-import { ThemeProvider, CssBaseline } from '@mui/material';
-import theme from './theme';
+import { CssBaseline } from '@mui/material';
+import { useTheme } from './contexts/ThemeContext';
 
-function App() {
+const ThemedApp = () => {
+    const { theme } = useTheme();
+    
     return (
-        <ThemeProvider theme={theme}>
+        <MuiThemeProvider theme={theme}>
             <CssBaseline />
             <Router>
                 <AuthProvider>
@@ -17,7 +21,15 @@ function App() {
                     </SocketProvider>
                 </AuthProvider>
             </Router>
-        </ThemeProvider>
+        </MuiThemeProvider>
+    );
+};
+
+function App() {
+    return (
+        <CustomThemeProvider>
+            <ThemedApp />
+        </CustomThemeProvider>
     );
 }
 
