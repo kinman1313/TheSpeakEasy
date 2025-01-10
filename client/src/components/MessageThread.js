@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Box, Typography, Paper, Avatar, Tooltip, Badge } from '@mui/material';
 import { ReactionButton } from './ReactionPicker';
 
@@ -71,7 +71,42 @@ const MessageThread = ({
     onReaction,
     onRemoveReaction
 }) => {
-    const isOwnMessage = message.username === currentUser;
+    const isOwnMessage = message.sender === currentUser;
+
+    useEffect(() => {
+        console.log('Rendering message:', message); // Debug log
+    }, [message]);
+
+    const renderMessageContent = () => {
+        console.log('Rendering message type:', message.type); // Debug log
+
+        switch (message.type) {
+            case 'text':
+                return <Typography>{message.content}</Typography>;
+
+            case 'gif':
+                return (
+                    <Box
+                        component="img"
+                        src={message.content}
+                        alt="GIF"
+                        sx={{
+                            maxWidth: '100%',
+                            borderRadius: 1,
+                            maxHeight: '200px',
+                            objectFit: 'contain'
+                        }}
+                    />
+                );
+
+            case 'voice':
+                return <VoiceMessage audioUrl={message.content} />;
+
+            default:
+                console.warn('Unknown message type:', message.type);
+                return <Typography color="error">Unsupported message type: {message.type}</Typography>;
+        }
+    };
 
     return (
         <Box
@@ -82,46 +117,50 @@ const MessageThread = ({
                 gap: 1,
             }}
         >
+            <Avatar
+                sx={{
+                    bgcolor: isOwnMessage ? 'primary.main' : 'secondary.main',
+                    width: 32,
+                    height: 32
+                }}
+            >
+                {(message.sender || 'U')[0].toUpperCase()}
+            </Avatar>
+
             <Paper
                 elevation={1}
                 sx={{
-                    p: 1,
+                    p: 1.5,
                     maxWidth: '70%',
                     bgcolor: isOwnMessage ? 'primary.light' : 'background.paper',
+                    borderRadius: 2,
+                    position: 'relative'
                 }}
             >
-                {!isOwnMessage && (
+                <Box sx={{ mb: 0.5 }}>
                     <Typography variant="caption" color="text.secondary">
-                        {message.username}
+                        {message.sender}
+                        {message.timestamp && (
+                            <span style={{ marginLeft: '8px', opacity: 0.7 }}>
+                                {new Date(message.timestamp).toLocaleTimeString()}
+                            </span>
+                        )}
                     </Typography>
-                )}
+                </Box>
 
-                {message.type === 'text' && (
-                    <Typography>{message.content}</Typography>
-                )}
+                {renderMessageContent()}
 
-                {message.type === 'gif' && (
-                    <Box
-                        component="img"
-                        src={message.content}
-                        alt="GIF"
-                        sx={{ maxWidth: '100%', borderRadius: 1 }}
+                {message.reactions && message.reactions.length > 0 && (
+                    <MessageReactions
+                        reactions={message.reactions}
+                        onRemoveReaction={(emoji) => onRemoveReaction?.(message._id, emoji)}
+                        currentUser={currentUser}
                     />
                 )}
 
-                {message.type === 'voice' && (
-                    <VoiceMessage audioUrl={message.content} />
-                )}
-
-                <MessageReactions
-                    reactions={message.reactions || []}
-                    onRemoveReaction={(emoji) => onRemoveReaction(message._id, emoji)}
-                    currentUser={currentUser}
-                />
-
                 <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 0.5 }}>
                     <ReactionButton
-                        onReactionSelect={(emoji) => onReaction(message._id, emoji)}
+                        onReactionSelect={(emoji) => onReaction?.(message._id, emoji)}
                     />
                 </Box>
             </Paper>

@@ -150,7 +150,16 @@ const userSchema = new mongoose.Schema({
         },
         device: String,
         lastUsed: Date
-    }]
+    }],
+    avatarUrl: {
+        type: String,
+        default: null
+    },
+    status: {
+        type: String,
+        enum: ['online', 'offline', 'away'],
+        default: 'offline'
+    }
 }, {
     timestamps: true
 });
@@ -210,6 +219,18 @@ userSchema.methods.createPasswordResetToken = function () {
     this.resetPasswordExpires = Date.now() + 3600000; // 1 hour
 
     return resetToken;
+};
+
+// Compare password method
+userSchema.methods.comparePassword = async function (candidatePassword) {
+    return bcrypt.compare(candidatePassword, this.password);
+};
+
+// Method to return user data without sensitive information
+userSchema.methods.toJSON = function () {
+    const user = this.toObject();
+    delete user.password;
+    return user;
 };
 
 const User = mongoose.model('User', userSchema);

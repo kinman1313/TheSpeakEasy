@@ -10,7 +10,9 @@ import {
     Menu as MenuIcon,
     ChevronLeft as ChevronLeftIcon,
     Settings as SettingsIcon,
-    People as PeopleIcon
+    People as PeopleIcon,
+    AccountCircle as AccountIcon,
+    Logout as LogoutIcon
 } from '@mui/icons-material';
 import RoomList from './RoomList';
 import MessageThread from './MessageThread';
@@ -25,6 +27,7 @@ import { useAuth } from '../contexts/AuthContext';
 import Picker from '@emoji-mart/react';
 import data from '@emoji-mart/data';
 import { useTheme } from '../contexts/ThemeContext';
+import ProfilePicture from './ProfilePicture';
 
 const drawerWidth = 280;
 
@@ -42,6 +45,7 @@ export default function Chat() {
     const [typingUsers, setTypingUsers] = useState(new Set());
     const messagesEndRef = useRef(null);
     const messageInputRef = useRef(null);
+    const [userMenuAnchor, setUserMenuAnchor] = useState(null);
 
     // Feature states
     const [showGifPicker, setShowGifPicker] = useState(false);
@@ -53,18 +57,28 @@ export default function Chat() {
 
     useEffect(() => {
         if (socket) {
-            // Join public lobby by default
+            // Connect to the socket and join public lobby
+            socket.connect();
             socket.emit('join', 'public-lobby');
 
-            socket.on('userList', (users) => {
-                setOnlineUsers(users);
-            });
-
-            socket.on('message', (message) => {
-                setMessages((prev) => [...prev, message]);
+            // Handle incoming messages
+            socket.on('message', (newMessage) => {
+                console.log('Received message:', newMessage); // Debug log
+                setMessages(prevMessages => [...prevMessages, {
+                    _id: Date.now(), // Ensure unique ID
+                    ...newMessage,
+                    timestamp: new Date().toISOString()
+                }]);
                 scrollToBottom();
             });
 
+            // Handle user list updates
+            socket.on('userList', (users) => {
+                console.log('Online users:', users); // Debug log
+                setOnlineUsers(users);
+            });
+
+            // Handle typing indicators
             socket.on('typing', ({ username, isTyping }) => {
                 setTypingUsers(prev => {
                     const newSet = new Set(prev);
@@ -77,10 +91,25 @@ export default function Chat() {
                 });
             });
 
+            // Handle connection/disconnection
+            socket.on('connect', () => {
+                console.log('Connected to server');
+                setLoading(false);
+            });
+
+            socket.on('disconnect', () => {
+                console.log('Disconnected from server');
+                setLoading(true);
+            });
+
+            // Cleanup on unmount
             return () => {
                 socket.off('message');
                 socket.off('typing');
                 socket.off('userList');
+                socket.off('connect');
+                socket.off('disconnect');
+                socket.disconnect();
             };
         }
     }, [socket]);
@@ -121,13 +150,30 @@ export default function Chat() {
     };
 
     const handleSendMessage = (content, type = 'text', metadata = {}) => {
-        if (socket) {
-            socket.emit('message', {
-                type,
-                content,
-                metadata
-            });
-        }
+        if (!socket || !content) return;
+
+        const message = {
+            type,
+            content,
+            metadata,
+            sender: user.username,
+            timestamp: new Date().toISOString()
+        };
+
+        console.log('Sending message:', message); // Debug log
+        socket.emit('message', message);
+
+        // Optimistically add message to UI
+        setMessages(prevMessages => [...prevMessages, {
+            _id: Date.now(),
+            ...message
+        }]);
+        scrollToBottom();
+    };
+
+    const handleLogout = () => {
+        // Implement logout logic
+        setUserMenuAnchor(null);
     };
 
     return (
@@ -158,12 +204,44 @@ export default function Chat() {
                     alignItems: 'center',
                     justifyContent: 'space-between',
                 }}>
-                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                        Public Lobby
-                    </Typography>
-                    <IconButton color="inherit">
-                        <PeopleIcon />
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <ProfilePicture size={40} />
+                        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                            {user?.username}
+                        </Typography>
+                    </Box>
+                    <IconButton
+                        color="inherit"
+                        onClick={(e) => setUserMenuAnchor(e.currentTarget)}
+                    >
+                        <MenuIcon />
                     </IconButton>
+
+                    <Menu
+                        anchorEl={userMenuAnchor}
+                        open={Boolean(userMenuAnchor)}
+                        onClose={() => setUserMenuAnchor(null)}
+                        PaperProps={{
+                            sx: {
+                                background: 'rgba(13, 71, 161, 0.95)',
+                                backdropFilter: 'blur(10px)',
+                                border: '1px solid rgba(255, 255, 255, 0.1)',
+                                color: 'white',
+                                '& .MuiMenuItem-root': {
+                                    gap: 1.5
+                                }
+                            }
+                        }}
+                    >
+                        <MenuItem onClick={() => setUserMenuAnchor(null)}>
+                            <AccountIcon />
+                            Profile Settings
+                        </MenuItem>
+                        <MenuItem onClick={handleLogout}>
+                            <LogoutIcon />
+                            Logout
+                        </MenuItem>
+                    </Menu>
                 </Box>
                 <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
 
@@ -205,14 +283,24 @@ export default function Chat() {
                     display: 'flex',
                     flexDirection: 'column',
                 }}>
-                    {messages.map((message, index) => (
-                        <MessageThread
-                            key={message._id || index}
-                            message={message}
-                            currentUser={user.username}
-                            onReply={(content) => handleSendMessage(content)}
-                        />
-                    ))}
+                    {loading ? (
+                        <Typography sx={{ textAlign: 'center', mt: 2 }}>
+                            Connecting to chat...
+                        </Typography>
+                    ) : messages.length === 0 ? (
+                        <Typography sx={{ textAlign: 'center', mt: 2 }}>
+                            No messages yet. Start the conversation!
+                        </Typography>
+                    ) : (
+                        messages.map((message, index) => (
+                            <MessageThread
+                                key={message._id || index}
+                                message={message}
+                                currentUser={user?.username}
+                                onReply={(content) => handleSendMessage(content)}
+                            />
+                        ))
+                    )}
                     <div ref={messagesEndRef} />
                 </Box>
 

@@ -4,6 +4,7 @@ const socketIO = require('socket.io');
 const cors = require('cors');
 const mongoose = require('mongoose');
 require('dotenv').config();
+const path = require('path');
 
 // Check for required environment variables first
 const requiredEnvVars = [
@@ -83,8 +84,11 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 
+// Serve static files from the uploads directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // Import and mount routes
-const userRoutes = require('./routes/users');
+const userRoutes = require('./routes/userRoutes');
 app.use('/api/users', userRoutes);
 
 // Add a root test route
