@@ -50,7 +50,18 @@ const io = socketIO(server, {
     transports: ['websocket', 'polling'],
     allowEIO3: true,
     pingTimeout: 60000,
-    pingInterval: 25000
+    pingInterval: 25000,
+    connectTimeout: 45000,
+    // Add error handling for socket.io
+    handlePreflightRequest: (req, res) => {
+        const headers = {
+            "Access-Control-Allow-Headers": "Content-Type, Authorization",
+            "Access-Control-Allow-Origin": req.headers.origin,
+            "Access-Control-Allow-Credentials": true
+        };
+        res.writeHead(200, headers);
+        res.end();
+    }
 });
 
 // CORS middleware for Express
@@ -79,6 +90,21 @@ app.use((req, res, next) => {
         'Access-Control-Allow-Methods',
         'GET, POST, PUT, DELETE, PATCH, OPTIONS'
     );
+
+    // Modified CSP to be more permissive
+    res.header(
+        'Content-Security-Policy',
+        "default-src * 'unsafe-inline' 'unsafe-eval'; " +
+        "img-src * data: blob: 'unsafe-inline'; " +
+        "media-src * data: blob: 'unsafe-inline'; " +
+        "script-src * 'unsafe-inline' 'unsafe-eval'; " +
+        "style-src * 'unsafe-inline'; " +
+        "connect-src * ws: wss:; " +
+        "worker-src * blob:; " +
+        "frame-src *; " +
+        "font-src * data:;"
+    );
+
     next();
 });
 
@@ -111,72 +137,82 @@ app.get('/health', (req, res) => {
 });
 
 // Store connected users
-const users = new Map();
+const connectedUsers = new Map();
 
 // Socket.IO event handlers
 io.on('connection', (socket) => {
-    console.log('New client connected');
+    console.log('New client connected:', socket.id);
+
+    // Handle errors on the socket
+    socket.on('error', (error) => {
+        console.error('Socket error:', error);
+    });
 
     socket.on('join', (username) => {
-        socket.username = username;
-        users.set(socket.id, username);
-        io.emit('userJoined', { username, users: Array.from(users.values()) });
+        try {
+            console.log('User joined:', username);
+            connectedUsers.set(socket.id, {
+                username,
+                joinedAt: new Date().toISOString()
+            });
+
+            // Broadcast updated user list
+            const userList = Array.from(connectedUsers.values());
+            console.log('Current users:', userList);
+            io.emit('userList', userList);
+        } catch (error) {
+            console.error('Error in join handler:', error);
+            socket.emit('error', 'Failed to join chat');
+        }
     });
 
-    socket.on('message', (data) => {
-        const { handleMessage } = require('./socket/messageHandlers');
-        handleMessage(io, socket, data);
+    socket.on('message', (message) => {
+        try {
+            console.log('Received message:', message);
+            // Add server-generated ID and timestamp
+            const enhancedMessage = {
+                ...message,
+                _id: Date.now().toString(),
+                timestamp: new Date().toISOString(),
+                socketId: socket.id,
+                processed: true // Flag to confirm server processing
+            };
+
+            console.log('Broadcasting message:', enhancedMessage);
+            // Broadcast message to all clients
+            io.emit('message', enhancedMessage);
+        } catch (error) {
+            console.error('Error in message handler:', error);
+            socket.emit('error', 'Failed to send message');
+        }
     });
 
-    socket.on('pinMessage', (data) => {
-        const { handlePinMessage } = require('./socket/messageHandlers');
-        handlePinMessage(io, socket, data);
-    });
-
-    socket.on('createDM', (data) => {
-        const { handleCreateDM } = require('./socket/messageHandlers');
-        handleCreateDM(io, socket, data);
-    });
-
-    socket.on('getHistory', (data) => {
-        const { handleGetHistory } = require('./socket/messageHandlers');
-        handleGetHistory(socket, data);
-    });
-
-    socket.on('typing', (data) => {
-        const { handleTyping } = require('./socket/messageHandlers');
-        handleTyping(io, socket, data);
-    });
-
-    socket.on('stopTyping', ({ username }) => {
-        const { handleTyping } = require('./socket/messageHandlers');
-        handleTyping(io, socket, {
-            roomId: 'default',
-            isTyping: false
-        });
-    });
-
-    socket.on('reaction', (data) => {
-        const { handleReaction } = require('./socket/messageHandlers');
-        handleReaction(io, socket, data);
-    });
-
-    socket.on('removeReaction', (data) => {
-        const { handleRemoveReaction } = require('./socket/messageHandlers');
-        handleRemoveReaction(io, socket, data);
-    });
-
-    socket.on('getRooms', () => {
-        const { handleGetRooms } = require('./socket/messageHandlers');
-        handleGetRooms(socket);
+    socket.on('typing', ({ isTyping, username }) => {
+        try {
+            console.log('Typing event:', { username, isTyping });
+            socket.broadcast.emit('typing', { username, isTyping });
+        } catch (error) {
+            console.error('Error in typing handler:', error);
+        }
     });
 
     socket.on('disconnect', () => {
-        const username = users.get(socket.id);
-        users.delete(socket.id);
-        io.emit('userLeft', { username, users: Array.from(users.values()) });
-        console.log('Client disconnected');
+        try {
+            const user = connectedUsers.get(socket.id);
+            console.log('Client disconnected:', socket.id, user?.username);
+            connectedUsers.delete(socket.id);
+            const userList = Array.from(connectedUsers.values());
+            console.log('Remaining users:', userList);
+            io.emit('userList', userList);
+        } catch (error) {
+            console.error('Error in disconnect handler:', error);
+        }
     });
+});
+
+// Add WebSocket specific error handling
+io.engine.on('connection_error', (err) => {
+    console.error('Connection error:', err);
 });
 
 // Error handling middleware
