@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Box, Drawer, IconButton, Divider, Typography, Avatar, Menu, MenuItem, Tooltip, List, ListItem, ListItemButton, ListItemAvatar, ListItemText, Paper, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button } from '@mui/material';
+import { Box, Drawer, IconButton, Divider, Typography, Avatar, Menu, MenuItem, Tooltip, List, ListItem, ListItemButton, ListItemAvatar, ListItemText, Paper, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, ListItemIcon, Switch } from '@mui/material';
 import {
     Add as AddIcon,
     Send as SendIcon,
@@ -45,21 +45,19 @@ export default function Chat() {
     const [loading, setLoading] = useState(true);
     const [isNewChatOpen, setIsNewChatOpen] = useState(false);
     const [typingUsers, setTypingUsers] = useState(new Set());
+    const [showVoiceMessage, setShowVoiceMessage] = useState(false);
+    const [showGifPicker, setShowGifPicker] = useState(false);
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+    const [messageVanishTime, setMessageVanishTime] = useState(null);
+    const [messageSettingsAnchor, setMessageSettingsAnchor] = useState(null);
+    const [showNotificationSettings, setShowNotificationSettings] = useState(false);
+    const [notificationSound, setNotificationSound] = useState(true);
+    const [desktopNotifications, setDesktopNotifications] = useState(true);
     const messagesEndRef = useRef(null);
     const messagesContainerRef = useRef(null);
     const messageInputRef = useRef(null);
     const [userMenuAnchor, setUserMenuAnchor] = useState(null);
     const [showProfileSettings, setShowProfileSettings] = useState(false);
-
-    // Feature states
-    const [showGifPicker, setShowGifPicker] = useState(false);
-    const [showVoiceMessage, setShowVoiceMessage] = useState(false);
-    const [showScheduler, setShowScheduler] = useState(false);
-    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-    const [scheduledMessages, setScheduledMessages] = useState([]);
-    const [onlineUsers, setOnlineUsers] = useState([]);
-    const [messageVanishTime, setMessageVanishTime] = useState(null);
-    const [messageSettingsAnchor, setMessageSettingsAnchor] = useState(null);
 
     useEffect(() => {
         if (socket) {
@@ -124,44 +122,69 @@ export default function Chat() {
         const container = messagesContainerRef.current;
         if (container) {
             const handleWheel = (event) => {
-                // Your wheel event handling logic here
+                // Smooth scroll behavior
+                const delta = event.deltaY;
+                const currentScroll = container.scrollTop;
+                const maxScroll = container.scrollHeight - container.clientHeight;
+
+                // Prevent overscroll bounce
+                if ((currentScroll <= 0 && delta < 0) ||
+                    (currentScroll >= maxScroll && delta > 0)) {
+                    return;
+                }
             };
 
+            // Add passive wheel event listener
             container.addEventListener('wheel', handleWheel, { passive: true });
+
             return () => {
                 container.removeEventListener('wheel', handleWheel);
             };
         }
     }, []);
 
-    const scrollToBottom = () => {
-        if (messagesEndRef.current) {
-            messagesEndRef.current.scrollIntoView({
-                behavior: 'smooth',
-                block: 'end'
-            });
-        }
-    };
-
     useEffect(() => {
         const container = messagesContainerRef.current;
         if (container) {
-            const handleScroll = (event) => {
-                // Your scroll event handling logic here
+            const handleScroll = () => {
+                // Load more messages when scrolling to top
+                if (container.scrollTop === 0) {
+                    // You can implement loading previous messages here
+                    console.log('Reached top, could load more messages');
+                }
             };
 
+            // Add passive scroll event listener
             container.addEventListener('scroll', handleScroll, { passive: true });
+
             return () => {
                 container.removeEventListener('scroll', handleScroll);
             };
         }
     }, []);
 
+    const scrollToBottom = (behavior = 'smooth') => {
+        if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({
+                behavior,
+                block: 'end',
+            });
+        }
+    };
+
+    // Add this new effect to handle initial scroll and new messages
+    useEffect(() => {
+        if (messages.length > 0) {
+            // Use instant scroll for initial load
+            scrollToBottom(messages.length === 1 ? 'instant' : 'smooth');
+        }
+    }, [messages]);
+
     const handleGifSelect = (gif) => {
         handleSendMessage(gif.url, 'gif', {
-            preview: gif.preview?.url,
+            width: gif.width,
             height: gif.height,
-            width: gif.width
+            title: gif.title
         });
         setShowGifPicker(false);
     };
@@ -279,6 +302,57 @@ export default function Chat() {
             emoji,
             username: user.username
         });
+    };
+
+    // Add handlers for voice, GIF, and emoji features
+    const handleVoiceMessageStart = () => {
+        setShowVoiceMessage(true);
+    };
+
+    const handleVoiceMessageComplete = (audioBlob) => {
+        if (!audioBlob) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+            const audioDataUrl = reader.result;
+            handleSendMessage(audioDataUrl, 'voice', {
+                type: audioBlob.type,
+                size: audioBlob.size
+            });
+        };
+        reader.readAsDataURL(audioBlob);
+        setShowVoiceMessage(false);
+    };
+
+    const handleEmojiSelect = (emoji) => {
+        if (messageInputRef.current) {
+            const start = messageInputRef.current.selectionStart;
+            const end = messageInputRef.current.selectionEnd;
+            const text = messageInputRef.current.value;
+            const before = text.substring(0, start);
+            const after = text.substring(end);
+            const emojiChar = emoji.native || emoji;
+
+            messageInputRef.current.value = before + emojiChar + after;
+            messageInputRef.current.selectionStart = messageInputRef.current.selectionEnd = start + emojiChar.length;
+            messageInputRef.current.focus();
+        }
+        setShowEmojiPicker(false);
+    };
+
+    const handleNotificationSettingsChange = (setting, value) => {
+        switch (setting) {
+            case 'sound':
+                setNotificationSound(value);
+                break;
+            case 'desktop':
+                setDesktopNotifications(value);
+                if (value) {
+                    Notification.requestPermission();
+                }
+                break;
+            default:
+                break;
+        }
     };
 
     return (
@@ -531,67 +605,147 @@ export default function Chat() {
                         }
                     }}
                 >
-                    <IconButton
-                        onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                        sx={{
-                            color: '#f3d77f',
-                            '&:hover': {
-                                bgcolor: 'rgba(243, 215, 127, 0.1)',
-                                backdropFilter: 'blur(5px)'
-                            }
-                        }}
-                    >
-                        <EmojiIcon />
-                    </IconButton>
-                    <IconButton
-                        onClick={() => setShowGifPicker(!showGifPicker)}
-                        sx={{
-                            color: '#f3d77f',
-                            '&:hover': {
-                                bgcolor: 'rgba(243, 215, 127, 0.1)',
-                                backdropFilter: 'blur(5px)'
-                            }
-                        }}
-                    >
-                        <GifIcon />
-                    </IconButton>
-                    <IconButton
-                        onClick={() => setShowVoiceMessage(true)}
-                        sx={{
-                            color: '#f3d77f',
-                            '&:hover': {
-                                bgcolor: 'rgba(243, 215, 127, 0.1)',
-                                backdropFilter: 'blur(5px)'
-                            }
-                        }}
-                    >
-                        <MicIcon />
-                    </IconButton>
-                    <IconButton
-                        onClick={() => setShowScheduler(true)}
-                        sx={{
-                            color: '#f3d77f',
-                            '&:hover': {
-                                bgcolor: 'rgba(243, 215, 127, 0.1)',
-                                backdropFilter: 'blur(5px)'
-                            }
-                        }}
-                    >
-                        <ScheduleIcon />
-                    </IconButton>
-                    <IconButton
-                        onClick={(e) => setMessageSettingsAnchor(e.currentTarget)}
-                        sx={{
-                            color: messageVanishTime ? '#f3d77f' : 'rgba(243, 215, 127, 0.5)',
-                            '&:hover': {
-                                bgcolor: 'rgba(243, 215, 127, 0.1)',
-                                backdropFilter: 'blur(5px)'
-                            }
-                        }}
-                    >
-                        <TimerIcon />
-                    </IconButton>
+                    <Box sx={{ display: 'flex', gap: 1, p: 2, borderTop: '1px solid rgba(243, 215, 127, 0.1)' }}>
+                        <IconButton
+                            onClick={() => setShowEmojiPicker(true)}
+                            sx={{
+                                color: showEmojiPicker ? '#f3d77f' : 'rgba(243, 215, 127, 0.7)',
+                                '&:hover': { bgcolor: 'rgba(243, 215, 127, 0.1)' }
+                            }}
+                        >
+                            <EmojiIcon />
+                        </IconButton>
 
+                        <IconButton
+                            onClick={() => setShowGifPicker(true)}
+                            sx={{
+                                color: showGifPicker ? '#f3d77f' : 'rgba(243, 215, 127, 0.7)',
+                                '&:hover': { bgcolor: 'rgba(243, 215, 127, 0.1)' }
+                            }}
+                        >
+                            <GifIcon />
+                        </IconButton>
+
+                        <IconButton
+                            onClick={handleVoiceMessageStart}
+                            sx={{
+                                color: showVoiceMessage ? '#f3d77f' : 'rgba(243, 215, 127, 0.7)',
+                                '&:hover': { bgcolor: 'rgba(243, 215, 127, 0.1)' }
+                            }}
+                        >
+                            <MicIcon />
+                        </IconButton>
+
+                        <IconButton
+                            onClick={(e) => setMessageSettingsAnchor(e.currentTarget)}
+                            sx={{
+                                color: messageVanishTime ? '#f3d77f' : 'rgba(243, 215, 127, 0.7)',
+                                '&:hover': { bgcolor: 'rgba(243, 215, 127, 0.1)' }
+                            }}
+                        >
+                            <TimerIcon />
+                        </IconButton>
+
+                        <form onSubmit={handleSubmit} style={{ display: 'flex', flex: 1, gap: '8px' }}>
+                            <TextField
+                                inputRef={messageInputRef}
+                                fullWidth
+                                placeholder="Type a message..."
+                                variant="outlined"
+                                size="small"
+                                sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                        color: 'white',
+                                        bgcolor: 'rgba(255, 255, 255, 0.05)',
+                                        '&:hover': {
+                                            bgcolor: 'rgba(255, 255, 255, 0.08)',
+                                        },
+                                        '& fieldset': {
+                                            borderColor: 'rgba(243, 215, 127, 0.2)',
+                                        },
+                                        '&:hover fieldset': {
+                                            borderColor: 'rgba(243, 215, 127, 0.3)',
+                                        },
+                                        '&.Mui-focused fieldset': {
+                                            borderColor: '#f3d77f',
+                                        },
+                                    },
+                                }}
+                            />
+                            <IconButton
+                                type="submit"
+                                sx={{
+                                    color: '#f3d77f',
+                                    '&:hover': { bgcolor: 'rgba(243, 215, 127, 0.1)' }
+                                }}
+                            >
+                                <SendIcon />
+                            </IconButton>
+                        </form>
+                    </Box>
+
+                    {/* Emoji Picker */}
+                    {showEmojiPicker && (
+                        <Box sx={{
+                            position: 'absolute',
+                            bottom: '80px',
+                            right: '16px',
+                            zIndex: 1000
+                        }}>
+                            <Paper sx={{
+                                bgcolor: 'rgba(10, 25, 41, 0.95)',
+                                backdropFilter: 'blur(10px)',
+                                border: '1px solid rgba(243, 215, 127, 0.1)',
+                            }}>
+                                <Picker
+                                    data={data}
+                                    onEmojiSelect={handleEmojiSelect}
+                                    theme="dark"
+                                    previewPosition="none"
+                                />
+                            </Paper>
+                        </Box>
+                    )}
+
+                    {/* GIF Picker */}
+                    {showGifPicker && (
+                        <Dialog
+                            open={showGifPicker}
+                            onClose={() => setShowGifPicker(false)}
+                            maxWidth="md"
+                            PaperProps={{
+                                sx: {
+                                    bgcolor: 'rgba(10, 25, 41, 0.95)',
+                                    backdropFilter: 'blur(10px)',
+                                    border: '1px solid rgba(243, 215, 127, 0.1)',
+                                }
+                            }}
+                        >
+                            <GifPicker onSelect={handleGifSelect} onClose={() => setShowGifPicker(false)} />
+                        </Dialog>
+                    )}
+
+                    {/* Voice Message */}
+                    {showVoiceMessage && (
+                        <Dialog
+                            open={showVoiceMessage}
+                            onClose={() => setShowVoiceMessage(false)}
+                            PaperProps={{
+                                sx: {
+                                    bgcolor: 'rgba(10, 25, 41, 0.95)',
+                                    backdropFilter: 'blur(10px)',
+                                    border: '1px solid rgba(243, 215, 127, 0.1)',
+                                }
+                            }}
+                        >
+                            <VoiceMessage
+                                onSend={handleVoiceMessageComplete}
+                                onClose={() => setShowVoiceMessage(false)}
+                            />
+                        </Dialog>
+                    )}
+
+                    {/* Message Settings Menu */}
                     <Menu
                         anchorEl={messageSettingsAnchor}
                         open={Boolean(messageSettingsAnchor)}
@@ -601,63 +755,60 @@ export default function Chat() {
                                 bgcolor: 'rgba(10, 25, 41, 0.95)',
                                 backdropFilter: 'blur(10px)',
                                 border: '1px solid rgba(243, 215, 127, 0.1)',
-                                boxShadow: '0 4px 32px rgba(0, 0, 0, 0.2)',
-                                '& .MuiMenuItem-root': {
-                                    color: 'white',
-                                    gap: 1.5,
-                                    '&:hover': {
-                                        bgcolor: 'rgba(243, 215, 127, 0.1)'
-                                    }
-                                }
+                                color: 'white'
                             }
                         }}
                     >
                         <MenuItem onClick={() => handleVanishTimeSelect(null)}>
-                            {!messageVanishTime && <CheckIcon sx={{ color: '#f3d77f' }} />}
-                            <span style={{ marginLeft: messageVanishTime ? '24px' : '0' }}>Never (Default)</span>
+                            <ListItemIcon>
+                                {!messageVanishTime && <CheckIcon sx={{ color: '#f3d77f' }} />}
+                            </ListItemIcon>
+                            Never
                         </MenuItem>
-                        {[5, 10, 20, 30].map(minutes => (
+                        {[1, 5, 10, 30, 60].map(minutes => (
                             <MenuItem key={minutes} onClick={() => handleVanishTimeSelect(minutes)}>
-                                {messageVanishTime === minutes && <CheckIcon sx={{ color: '#f3d77f' }} />}
-                                <span style={{ marginLeft: messageVanishTime === minutes ? '0' : '24px' }}>
-                                    {minutes} minutes
-                                </span>
+                                <ListItemIcon>
+                                    {messageVanishTime === minutes && <CheckIcon sx={{ color: '#f3d77f' }} />}
+                                </ListItemIcon>
+                                {minutes} {minutes === 1 ? 'minute' : 'minutes'}
                             </MenuItem>
                         ))}
                     </Menu>
 
-                    <Box sx={{ flexGrow: 1, position: 'relative' }}>
-                        <input
-                            ref={messageInputRef}
-                            type="text"
-                            placeholder="Type your message..."
-                            style={{
-                                width: '100%',
-                                background: 'transparent',
-                                border: 'none',
-                                color: 'white',
-                                fontSize: '1rem',
-                                padding: '8px',
-                                outline: 'none',
-                                '&::placeholder': {
-                                    color: 'rgba(255, 255, 255, 0.5)'
-                                }
-                            }}
-                        />
-                    </Box>
-
-                    <IconButton
-                        type="submit"
-                        sx={{
-                            color: '#f3d77f',
-                            '&:hover': {
-                                bgcolor: 'rgba(243, 215, 127, 0.1)',
-                                backdropFilter: 'blur(5px)'
+                    {/* Notification Settings Dialog */}
+                    <Dialog
+                        open={showNotificationSettings}
+                        onClose={() => setShowNotificationSettings(false)}
+                        PaperProps={{
+                            sx: {
+                                bgcolor: 'rgba(10, 25, 41, 0.95)',
+                                backdropFilter: 'blur(10px)',
+                                border: '1px solid rgba(243, 215, 127, 0.1)',
                             }
                         }}
                     >
-                        <SendIcon />
-                    </IconButton>
+                        <DialogTitle sx={{ color: '#f3d77f' }}>Notification Settings</DialogTitle>
+                        <DialogContent>
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 300 }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <Typography sx={{ color: 'white' }}>Sound</Typography>
+                                    <Switch
+                                        checked={notificationSound}
+                                        onChange={(e) => handleNotificationSettingsChange('sound', e.target.checked)}
+                                        sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: '#f3d77f' } }}
+                                    />
+                                </Box>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <Typography sx={{ color: 'white' }}>Desktop Notifications</Typography>
+                                    <Switch
+                                        checked={desktopNotifications}
+                                        onChange={(e) => handleNotificationSettingsChange('desktop', e.target.checked)}
+                                        sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: '#f3d77f' } }}
+                                    />
+                                </Box>
+                            </Box>
+                        </DialogContent>
+                    </Dialog>
                 </Paper>
             </Box>
 
