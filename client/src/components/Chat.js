@@ -22,14 +22,14 @@ import { useSocket } from '../contexts/SocketContext';
 import { useAuth } from '../contexts/AuthContext';
 import Picker from '@emoji-mart/react';
 import data from '@emoji-mart/data';
-import { useTheme } from '@mui/material/styles';
+import { useTheme } from '../contexts/ThemeContext';
 
 const drawerWidth = 240;
 
 export default function Chat() {
     const { socket } = useSocket();
     const { user } = useAuth();
-    const theme = useTheme();
+    const { theme } = useTheme();
     const [rooms, setRooms] = useState([]);
     const [activeRoom, setActiveRoom] = useState(null);
     const [messages, setMessages] = useState([]);
