@@ -49,6 +49,16 @@ app.use(cors({
     credentials: true
 }));
 
+// Socket.IO configuration
+const io = socketIO(server, {
+    cors: {
+        origin: ['https://lies-client-9ayj.onrender.com', 'http://localhost:3000'],
+        methods: ["GET", "POST"],
+        allowedHeaders: ["Content-Type", "Authorization"],
+        credentials: true
+    }
+});
+
 app.use(express.json());
 
 // Import and mount routes
@@ -77,6 +87,7 @@ app.get('/health', (req, res) => {
 // Store connected users
 const users = new Map();
 
+// Socket.IO event handlers
 io.on('connection', (socket) => {
     console.log('New client connected');
 
