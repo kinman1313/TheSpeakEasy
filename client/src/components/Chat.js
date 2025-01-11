@@ -178,21 +178,27 @@ export default function Chat() {
 
             // Handle incoming messages
             socket.on('message', (newMessage) => {
-                console.log('Received message:', newMessage); // Debug log
+                console.log('Received message:', newMessage);
                 setMessages(prevMessages => {
-                    // Check if message already exists to prevent duplicates
+                    // Check if message already exists
                     const messageExists = prevMessages.some(msg =>
                         msg.timestamp === newMessage.timestamp &&
                         msg.sender === newMessage.sender &&
                         msg.content === newMessage.content
                     );
-                    if (messageExists) return prevMessages;
 
-                    return [...prevMessages, {
-                        _id: Date.now(), // Ensure unique ID
-                        ...newMessage,
-                        timestamp: newMessage.timestamp || new Date().toISOString()
+                    if (messageExists) {
+                        console.log('Duplicate message detected, skipping');
+                        return prevMessages;
+                    }
+
+                    const updatedMessages = [...prevMessages, {
+                        _id: newMessage._id || Date.now(),
+                        ...newMessage
                     }];
+
+                    console.log('Updated messages:', updatedMessages);
+                    return updatedMessages;
                 });
                 scrollToBottom();
             });
@@ -343,7 +349,15 @@ export default function Chat() {
     };
 
     const handleSendMessage = (content, type = 'text', metadata = {}) => {
-        if (!socket || !content) return;
+        if (!socket || !content) {
+            console.error('Cannot send message: socket not connected or empty content');
+            return;
+        }
+
+        if (!activeRoom) {
+            console.error('Cannot send message: no active room selected');
+            return;
+        }
 
         const message = {
             type,
@@ -353,11 +367,36 @@ export default function Chat() {
                 vanishTime: messageVanishTime
             },
             sender: user.username,
+            roomId: activeRoom,
             timestamp: new Date().toISOString()
         };
 
         console.log('Sending message:', message);
-        socket.emit('message', message);
+
+        // Add message to local state first
+        setMessages(prevMessages => [...prevMessages, {
+            _id: Date.now(),
+            ...message
+        }]);
+
+        // Then emit to socket
+        socket.emit('message', message, (error) => {
+            if (error) {
+                console.error('Error sending message:', error);
+                // Remove message from local state if there was an error
+                setMessages(prevMessages => prevMessages.filter(msg =>
+                    msg.timestamp !== message.timestamp ||
+                    msg.sender !== message.sender
+                ));
+            } else {
+                console.log('Message sent successfully');
+            }
+        });
+
+        // Clear input if it's a text message
+        if (type === 'text' && messageInputRef.current) {
+            messageInputRef.current.value = '';
+        }
     };
 
     const handleLogout = () => {
@@ -447,8 +486,11 @@ export default function Chat() {
             const after = text.substring(end);
             const emojiChar = emoji.native || emoji;
 
-            messageInputRef.current.value = before + emojiChar + after;
-            messageInputRef.current.selectionStart = messageInputRef.current.selectionEnd = start + emojiChar.length;
+            const newText = before + emojiChar + after;
+            messageInputRef.current.value = newText;
+            const newCursorPos = start + emojiChar.length;
+            messageInputRef.current.selectionStart = newCursorPos;
+            messageInputRef.current.selectionEnd = newCursorPos;
             messageInputRef.current.focus();
         }
         setShowEmojiPicker(false);
@@ -773,9 +815,10 @@ export default function Chat() {
         <Box
             sx={{
                 display: 'flex',
+                flexDirection: { xs: 'column', md: 'row' },
                 minHeight: '100vh',
-                padding: { xs: 2, md: 3 },
-                gap: 3,
+                padding: { xs: 1, md: 3 },
+                gap: { xs: 1, md: 3 },
                 background: `
                     linear-gradient(135deg, rgba(17, 25, 40, 0.97) 0%, rgba(31, 38, 135, 0.97) 100%),
                     radial-gradient(circle at 50% 50%, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 50%),
@@ -785,110 +828,81 @@ export default function Chat() {
                 overflow: 'hidden'
             }}
         >
-            {/* Left floating box - User list and chat menu */}
-            <Box
+            {/* Mobile AppBar */}
+            <AppBar
+                position="fixed"
+                color="transparent"
                 sx={{
-                    width: { xs: '100%', md: 280 },
-                    display: { xs: 'none', md: 'flex' },
-                    flexDirection: 'column',
-                    gap: 2,
-                    height: 'calc(100vh - 48px)',
-                    backdropFilter: 'blur(25px) saturate(200%)',
-                    WebkitBackdropFilter: 'blur(25px) saturate(200%)',
-                    backgroundColor: 'rgba(255, 255, 255, 0.03)',
-                    borderRadius: '24px',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
-                    boxShadow: `
-                        0 4px 24px -1px rgba(0, 0, 0, 0.3),
-                        0 0 16px -2px rgba(0, 0, 0, 0.2),
-                        0 0 1px 0 rgba(255, 255, 255, 0.2) inset,
-                        0 0 20px 0 rgba(255, 255, 255, 0.1)
-                    `,
-                    position: 'relative',
-                    overflow: 'hidden',
-                    animation: 'fadeIn 0.6s ease-out',
-                    transition: 'all 0.3s ease-in-out',
-                    '&:hover': {
-                        transform: 'translateY(-5px)',
-                        boxShadow: `
-                            0 8px 32px -1px rgba(0, 0, 0, 0.4),
-                            0 0 16px -2px rgba(0, 0, 0, 0.3),
-                            0 0 1px 0 rgba(255, 255, 255, 0.3) inset,
-                            0 0 25px 0 rgba(255, 255, 255, 0.15)
-                        `,
-                        backgroundColor: 'rgba(255, 255, 255, 0.04)'
-                    },
-                    '&::before': {
-                        content: '""',
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        height: '100%',
-                        background: 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 100%)',
-                        pointerEvents: 'none'
-                    },
-                    '&::after': {
-                        content: '""',
-                        position: 'absolute',
-                        top: -200,
-                        left: -200,
-                        right: -200,
-                        height: '200%',
-                        background: 'linear-gradient(45deg, transparent 45%, rgba(255,255,255,0.1) 48%, rgba(255,255,255,0.1) 52%, transparent 55%)',
-                        animation: 'shine 8s infinite',
-                        transform: 'rotate(35deg)',
-                        pointerEvents: 'none'
+                    display: { md: 'none' },
+                    backdropFilter: 'blur(20px) saturate(200%)',
+                    WebkitBackdropFilter: 'blur(20px) saturate(200%)',
+                    backgroundColor: 'rgba(17, 25, 40, 0.8)',
+                    borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                    boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)'
+                }}
+            >
+                <Toolbar>
+                    <IconButton
+                        color="inherit"
+                        edge="start"
+                        onClick={handleDrawerToggle}
+                    >
+                        <MenuIcon />
+                    </IconButton>
+                    <Typography variant="h6" sx={{ flexGrow: 1, color: 'white' }}>
+                        {activeRoomDetails?.name || 'Chat'}
+                    </Typography>
+                    <IconButton
+                        color="inherit"
+                        onClick={(e) => setUserMenuAnchor(e.currentTarget)}
+                    >
+                        <AccountIcon />
+                    </IconButton>
+                </Toolbar>
+            </AppBar>
+
+            {/* Mobile Drawer */}
+            <Drawer
+                variant="temporary"
+                anchor="left"
+                open={mobileOpen}
+                onClose={handleDrawerToggle}
+                ModalProps={{
+                    keepMounted: true
+                }}
+                sx={{
+                    display: { xs: 'block', md: 'none' },
+                    '& .MuiDrawer-paper': {
+                        width: drawerWidth.xs,
+                        backdropFilter: 'blur(20px) saturate(200%)',
+                        WebkitBackdropFilter: 'blur(20px) saturate(200%)',
+                        backgroundColor: 'rgba(17, 25, 40, 0.9)',
+                        borderRight: '1px solid rgba(255, 255, 255, 0.1)',
+                        boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)'
                     }
                 }}
             >
                 {drawerContent}
-            </Box>
+            </Drawer>
 
-            {/* Center floating box - Chat area */}
+            {/* Update the center chat box for mobile */}
             <Box
                 sx={{
                     flex: 1,
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: 3,
-                    height: 'calc(100vh - 48px)',
+                    gap: 2,
+                    height: { xs: 'calc(100vh - 56px)', md: 'calc(100vh - 48px)' },
+                    mt: { xs: '56px', md: 0 },
                     backdropFilter: 'blur(20px) saturate(200%)',
                     WebkitBackdropFilter: 'blur(20px) saturate(200%)',
                     backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                    borderRadius: '24px',
+                    borderRadius: { xs: '16px', md: '24px' },
                     border: '1px solid rgba(255, 255, 255, 0.1)',
-                    boxShadow: `
-                        0 4px 24px -1px rgba(0, 0, 0, 0.2),
-                        0 0 16px -2px rgba(0, 0, 0, 0.1),
-                        0 0 1px 0 rgba(255, 255, 255, 0.2) inset,
-                        0 0 15px 0 rgba(255, 255, 255, 0.05)
-                    `,
+                    boxShadow: '0 4px 24px -1px rgba(0, 0, 0, 0.2)',
                     position: 'relative',
                     overflow: 'hidden',
-                    padding: 3,
-                    '&::before': {
-                        content: '""',
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        height: '100%',
-                        background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%)',
-                        pointerEvents: 'none'
-                    },
-                    '&::after': {
-                        content: '""',
-                        position: 'absolute',
-                        top: -200,
-                        left: -200,
-                        right: -200,
-                        height: '200%',
-                        background: 'linear-gradient(45deg, transparent 45%, rgba(255,255,255,0.1) 48%, rgba(255,255,255,0.1) 52%, transparent 55%)',
-                        animation: 'shine 8s infinite',
-                        transform: 'rotate(35deg)',
-                        pointerEvents: 'none'
-                    }
+                    padding: { xs: 1, md: 3 }
                 }}
             >
                 {/* Chat header */}
@@ -1266,6 +1280,8 @@ export default function Chat() {
                 open={showGifPicker}
                 onClose={() => setShowGifPicker(false)}
                 maxWidth="md"
+                keepMounted={false}
+                disablePortal={false}
                 PaperProps={{
                     sx: {
                         backdropFilter: 'blur(25px) saturate(200%)',
@@ -1275,6 +1291,13 @@ export default function Chat() {
                         border: '1px solid rgba(255, 255, 255, 0.08)',
                         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
                         overflow: 'hidden'
+                    },
+                    role: 'dialog',
+                    'aria-modal': 'true'
+                }}
+                slotProps={{
+                    backdrop: {
+                        sx: { backgroundColor: 'rgba(0, 0, 0, 0.8)' }
                     }
                 }}
             >
@@ -1288,6 +1311,8 @@ export default function Chat() {
             <Dialog
                 open={showVoiceMessage}
                 onClose={() => setShowVoiceMessage(false)}
+                keepMounted={false}
+                disablePortal={false}
                 PaperProps={{
                     sx: {
                         backdropFilter: 'blur(25px) saturate(200%)',
@@ -1296,6 +1321,13 @@ export default function Chat() {
                         borderRadius: '24px',
                         border: '1px solid rgba(255, 255, 255, 0.08)',
                         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
+                    },
+                    role: 'dialog',
+                    'aria-modal': 'true'
+                }}
+                slotProps={{
+                    backdrop: {
+                        sx: { backgroundColor: 'rgba(0, 0, 0, 0.8)' }
                     }
                 }}
             >
@@ -1306,31 +1338,40 @@ export default function Chat() {
             </Dialog>
 
             {/* Message Scheduler Dialog */}
-            <Dialog
-                open={showScheduler}
-                onClose={() => setShowScheduler(false)}
-                PaperProps={{
-                    sx: {
-                        backdropFilter: 'blur(25px) saturate(200%)',
-                        WebkitBackdropFilter: 'blur(25px) saturate(200%)',
-                        backgroundColor: 'rgba(255, 255, 255, 0.02)',
-                        borderRadius: '24px',
-                        border: '1px solid rgba(255, 255, 255, 0.08)',
-                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
-                    }
-                }}
-            >
-                <DialogTitle>Schedule Message</DialogTitle>
-                <DialogContent>
-                    <MessageScheduler onSchedule={handleScheduleMessage} />
-                </DialogContent>
-            </Dialog>
+            {showScheduler && (
+                <Dialog
+                    open={showScheduler}
+                    onClose={() => setShowScheduler(false)}
+                    aria-labelledby="scheduler-dialog-title"
+                    keepMounted={false}
+                    disablePortal={false}
+                    PaperProps={{
+                        sx: {
+                            backgroundColor: 'rgba(17, 25, 40, 0.8)',
+                            backdropFilter: 'blur(20px)',
+                            border: '1px solid rgba(255, 255, 255, 0.125)',
+                            borderRadius: 2,
+                            boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)'
+                        }
+                    }}
+                >
+                    <DialogTitle id="scheduler-dialog-title">Schedule Message</DialogTitle>
+                    <DialogContent>
+                        <MessageScheduler
+                            onSchedule={handleScheduleMessage}
+                            onClose={() => setShowScheduler(false)}
+                        />
+                    </DialogContent>
+                </Dialog>
+            )}
 
             {/* Vanishing Message Timer Menu */}
             <Menu
                 anchorEl={messageSettingsAnchor}
                 open={Boolean(messageSettingsAnchor)}
                 onClose={() => setMessageSettingsAnchor(null)}
+                keepMounted={false}
+                disablePortal={false}
                 PaperProps={{
                     sx: {
                         backdropFilter: 'blur(25px) saturate(200%)',
@@ -1346,6 +1387,13 @@ export default function Chat() {
                                 backgroundColor: 'rgba(255, 255, 255, 0.1)'
                             }
                         }
+                    },
+                    role: 'menu',
+                    'aria-label': 'Message vanish timer options'
+                }}
+                slotProps={{
+                    backdrop: {
+                        sx: { backgroundColor: 'rgba(0, 0, 0, 0.8)' }
                     }
                 }}
             >
@@ -1367,8 +1415,8 @@ export default function Chat() {
             {showEmojiPicker && (
                 <Box
                     sx={{
-                        position: 'absolute',
-                        bottom: '100%',
+                        position: 'fixed',
+                        bottom: '80px',
                         left: '16px',
                         zIndex: 9999,
                         transform: 'translateY(-8px)',
@@ -1389,11 +1437,14 @@ export default function Chat() {
                         }
                     }}
                 >
-                    <Picker
-                        data={data}
-                        onEmojiSelect={handleEmojiSelect}
-                        theme={theme.mode}
-                    />
+                    <div onMouseDown={(e) => e.preventDefault()}>
+                        <Picker
+                            data={data}
+                            onEmojiSelect={handleEmojiSelect}
+                            theme={theme.mode}
+                            onClickOutside={() => setShowEmojiPicker(false)}
+                        />
+                    </div>
                 </Box>
             )}
 
