@@ -817,28 +817,38 @@ export default function Chat() {
                 display: 'flex',
                 flexDirection: { xs: 'column', md: 'row' },
                 minHeight: '100vh',
-                padding: { xs: 1, md: 3 },
-                gap: { xs: 1, md: 3 },
+                maxHeight: '100vh',
+                padding: { xs: 0, md: 3 },
+                gap: { xs: 0, md: 3 },
                 background: `
-                    linear-gradient(135deg, rgba(17, 25, 40, 0.97) 0%, rgba(31, 38, 135, 0.97) 100%),
-                    radial-gradient(circle at 50% 50%, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 50%),
-                    url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")
+                    linear-gradient(135deg, rgba(17, 25, 40, 0.7) 0%, rgba(31, 38, 135, 0.7) 100%),
+                    radial-gradient(at 50% 0%, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 50%),
+                    radial-gradient(at 50% 100%, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 50%)
                 `,
-                backgroundBlendMode: 'overlay',
-                overflow: 'hidden'
+                overflow: 'hidden',
+                position: 'relative'
             }}
         >
-            {/* Mobile AppBar */}
+            {/* Mobile AppBar with enhanced glass effect */}
             <AppBar
                 position="fixed"
-                color="transparent"
                 sx={{
                     display: { md: 'none' },
                     backdropFilter: 'blur(20px) saturate(200%)',
                     WebkitBackdropFilter: 'blur(20px) saturate(200%)',
-                    backgroundColor: 'rgba(17, 25, 40, 0.8)',
+                    backgroundColor: 'rgba(17, 25, 40, 0.5)',
                     borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-                    boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)'
+                    boxShadow: '0 4px 30px rgba(0, 0, 0, 0.2)',
+                    '&::before': {
+                        content: '""',
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%)',
+                        pointerEvents: 'none'
+                    }
                 }}
             >
                 <Toolbar>
@@ -861,7 +871,7 @@ export default function Chat() {
                 </Toolbar>
             </AppBar>
 
-            {/* Mobile Drawer */}
+            {/* Mobile Drawer with enhanced glass effect */}
             <Drawer
                 variant="temporary"
                 anchor="left"
@@ -873,68 +883,58 @@ export default function Chat() {
                 sx={{
                     display: { xs: 'block', md: 'none' },
                     '& .MuiDrawer-paper': {
-                        width: drawerWidth.xs,
+                        width: '80%',
+                        maxWidth: '360px',
                         backdropFilter: 'blur(20px) saturate(200%)',
                         WebkitBackdropFilter: 'blur(20px) saturate(200%)',
-                        backgroundColor: 'rgba(17, 25, 40, 0.9)',
+                        backgroundColor: 'rgba(17, 25, 40, 0.6)',
                         borderRight: '1px solid rgba(255, 255, 255, 0.1)',
-                        boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)'
+                        boxShadow: '0 4px 30px rgba(0, 0, 0, 0.2)',
+                        '&::before': {
+                            content: '""',
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%)',
+                            pointerEvents: 'none'
+                        }
                     }
                 }}
             >
                 {drawerContent}
             </Drawer>
 
-            {/* Update the center chat box for mobile */}
+            {/* Messages container with enhanced glass effect */}
             <Box
                 sx={{
                     flex: 1,
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: 2,
                     height: { xs: 'calc(100vh - 56px)', md: 'calc(100vh - 48px)' },
                     mt: { xs: '56px', md: 0 },
                     backdropFilter: 'blur(20px) saturate(200%)',
                     WebkitBackdropFilter: 'blur(20px) saturate(200%)',
                     backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                    borderRadius: { xs: '16px', md: '24px' },
+                    borderRadius: { xs: '0', md: '24px' },
                     border: '1px solid rgba(255, 255, 255, 0.1)',
-                    boxShadow: '0 4px 24px -1px rgba(0, 0, 0, 0.2)',
-                    position: 'relative',
+                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
                     overflow: 'hidden',
-                    padding: { xs: 1, md: 3 }
+                    position: 'relative',
+                    '&::before': {
+                        content: '""',
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%)',
+                        pointerEvents: 'none'
+                    }
                 }}
             >
-                {/* Chat header */}
-                <Box
-                    sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        p: 2,
-                        backdropFilter: 'blur(20px) saturate(200%)',
-                        WebkitBackdropFilter: 'blur(20px) saturate(200%)',
-                        backgroundColor: 'rgba(255, 255, 255, 0.03)',
-                        borderRadius: '16px',
-                        border: '1px solid rgba(255, 255, 255, 0.05)',
-                        boxShadow: '0 4px 12px -1px rgba(0, 0, 0, 0.1)',
-                    }}
-                >
-                    <Typography variant="h6" sx={{ color: 'white' }}>
-                        {activeRoomDetails?.name || 'Select a Room'}
-                    </Typography>
-                    {activeRoom && (
-                        <IconButton
-                            color="inherit"
-                            onClick={() => setShowRoomSettings(true)}
-                            title="Room Settings"
-                        >
-                            <SettingsIcon />
-                        </IconButton>
-                    )}
-                </Box>
-
-                {/* Messages area */}
+                {/* Messages area with enhanced scrollbar */}
                 <Box
                     ref={messagesContainerRef}
                     sx={{
@@ -943,36 +943,21 @@ export default function Chat() {
                         display: 'flex',
                         flexDirection: 'column',
                         gap: 2,
-                        p: 2,
-                        backdropFilter: 'blur(20px) saturate(200%)',
-                        WebkitBackdropFilter: 'blur(20px) saturate(200%)',
-                        backgroundColor: 'rgba(255, 255, 255, 0.02)',
-                        borderRadius: '16px',
-                        border: '1px solid rgba(255, 255, 255, 0.05)',
-                        boxShadow: '0 4px 12px -1px rgba(0, 0, 0, 0.1)',
-                        scrollbarWidth: 'thin',
-                        scrollbarColor: 'rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.05)',
+                        p: { xs: 1, md: 3 },
                         '&::-webkit-scrollbar': {
-                            width: '6px',
-                            height: '6px'
+                            width: '6px'
                         },
                         '&::-webkit-scrollbar-track': {
-                            background: 'rgba(255, 255, 255, 0.02)',
-                            borderRadius: '3px',
-                            margin: '10px'
+                            background: 'rgba(255, 255, 255, 0.05)',
+                            borderRadius: '3px'
                         },
                         '&::-webkit-scrollbar-thumb': {
                             background: 'rgba(255, 255, 255, 0.2)',
                             borderRadius: '3px',
                             border: '1px solid rgba(255, 255, 255, 0.1)',
-                            transition: 'all 0.3s ease',
                             '&:hover': {
-                                background: 'rgba(255, 255, 255, 0.3)',
-                                boxShadow: '0 0 10px rgba(255, 255, 255, 0.2)'
+                                background: 'rgba(255, 255, 255, 0.3)'
                             }
-                        },
-                        '&::-webkit-scrollbar-corner': {
-                            background: 'transparent'
                         }
                     }}
                 >
@@ -1016,7 +1001,7 @@ export default function Chat() {
                     <div ref={messagesEndRef} />
                 </Box>
 
-                {/* Message input area */}
+                {/* Message input area with enhanced glass effect */}
                 <Paper
                     component="form"
                     onSubmit={(e) => {
@@ -1024,31 +1009,25 @@ export default function Chat() {
                         handleSubmit();
                     }}
                     sx={{
-                        p: { xs: 1, sm: 2 },
+                        p: { xs: 1, md: 2 },
+                        m: { xs: 1, md: 2 },
                         display: 'flex',
                         gap: 1,
                         alignItems: 'center',
-                        backdropFilter: 'blur(25px) saturate(200%)',
-                        WebkitBackdropFilter: 'blur(25px) saturate(200%)',
-                        backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                        backdropFilter: 'blur(20px) saturate(200%)',
+                        WebkitBackdropFilter: 'blur(20px) saturate(200%)',
+                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
                         borderRadius: '16px',
-                        border: '1px solid rgba(255, 255, 255, 0.08)',
-                        boxShadow: '0 4px 12px -1px rgba(0, 0, 0, 0.2)',
-                        position: 'relative',
-                        transition: 'all 0.3s ease-in-out',
-                        '&:hover': {
-                            backgroundColor: 'rgba(255, 255, 255, 0.03)',
-                            boxShadow: '0 8px 16px -1px rgba(0, 0, 0, 0.3)',
-                            border: '1px solid rgba(255, 255, 255, 0.12)'
-                        },
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)',
                         '&::before': {
                             content: '""',
                             position: 'absolute',
                             top: 0,
                             left: 0,
                             right: 0,
-                            height: '100%',
-                            background: 'linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0) 100%)',
+                            bottom: 0,
+                            background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%)',
                             borderRadius: '16px',
                             pointerEvents: 'none'
                         }
@@ -1165,113 +1144,121 @@ export default function Chat() {
                 </Paper>
             </Box>
 
-            {/* Right floating box - User profile and settings */}
+            {/* Hide the right box on mobile */}
             <Box
                 sx={{
                     width: { xs: '100%', md: 280 },
-                    display: { xs: 'none', md: 'flex' },
-                    flexDirection: 'column',
-                    gap: 2,
-                    height: 'calc(100vh - 48px)',
-                    backdropFilter: 'blur(20px) saturate(200%)',
-                    WebkitBackdropFilter: 'blur(20px) saturate(200%)',
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                    borderRadius: '24px',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    boxShadow: `
-                        0 4px 24px -1px rgba(0, 0, 0, 0.2),
-                        0 0 16px -2px rgba(0, 0, 0, 0.1),
-                        0 0 1px 0 rgba(255, 255, 255, 0.2) inset,
-                        0 0 15px 0 rgba(255, 255, 255, 0.05)
-                    `,
-                    position: 'relative',
-                    overflow: 'hidden',
-                    padding: 3,
-                    '&::before': {
-                        content: '""',
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        height: '100%',
-                        background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%)',
-                        pointerEvents: 'none'
-                    },
-                    '&::after': {
-                        content: '""',
-                        position: 'absolute',
-                        top: -200,
-                        left: -200,
-                        right: -200,
-                        height: '200%',
-                        background: 'linear-gradient(45deg, transparent 45%, rgba(255,255,255,0.1) 48%, rgba(255,255,255,0.1) 52%, transparent 55%)',
-                        animation: 'shine 8s infinite',
-                        transform: 'rotate(35deg)',
-                        pointerEvents: 'none'
-                    }
+                    display: { xs: 'none', md: 'flex' }
                 }}
             >
-                {/* User profile section */}
-                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-                    <ProfilePicture size={120} />
-                    <Typography variant="h6" sx={{ color: 'white' }}>{user?.username}</Typography>
-                    <Box sx={{ display: 'flex', gap: 1 }}>
-                        <Button
-                            variant="contained"
-                            onClick={handleProfileSettings}
-                            sx={{
-                                backdropFilter: 'blur(20px)',
-                                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                                '&:hover': {
-                                    backgroundColor: 'rgba(255, 255, 255, 0.2)'
-                                }
-                            }}
-                        >
-                            Settings
-                        </Button>
-                        <Button
-                            variant="contained"
-                            onClick={handleLogout}
-                            sx={{
-                                backdropFilter: 'blur(20px)',
-                                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                                '&:hover': {
-                                    backgroundColor: 'rgba(255, 255, 255, 0.2)'
-                                }
-                            }}
-                        >
-                            Logout
-                        </Button>
-                    </Box>
-                </Box>
-
-                {/* Online users section */}
+                {/* Right floating box - User profile and settings */}
                 <Box
                     sx={{
-                        mt: 3,
-                        flex: 1,
-                        overflowY: 'auto',
-                        backdropFilter: 'blur(20px)',
-                        backgroundColor: 'rgba(255, 255, 255, 0.02)',
-                        borderRadius: '16px',
-                        border: '1px solid rgba(255, 255, 255, 0.05)',
-                        p: 2
+                        width: '100%',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 2,
+                        height: 'calc(100vh - 48px)',
+                        backdropFilter: 'blur(20px) saturate(200%)',
+                        WebkitBackdropFilter: 'blur(20px) saturate(200%)',
+                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                        borderRadius: '24px',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        boxShadow: `
+                            0 4px 24px -1px rgba(0, 0, 0, 0.2),
+                            0 0 16px -2px rgba(0, 0, 0, 0.1),
+                            0 0 1px 0 rgba(255, 255, 255, 0.2) inset,
+                            0 0 15px 0 rgba(255, 255, 255, 0.05)
+                        `,
+                        position: 'relative',
+                        overflow: 'hidden',
+                        padding: 3,
+                        '&::before': {
+                            content: '""',
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            height: '100%',
+                            background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%)',
+                            pointerEvents: 'none'
+                        },
+                        '&::after': {
+                            content: '""',
+                            position: 'absolute',
+                            top: -200,
+                            left: -200,
+                            right: -200,
+                            height: '200%',
+                            background: 'linear-gradient(45deg, transparent 45%, rgba(255,255,255,0.1) 48%, rgba(255,255,255,0.1) 52%, transparent 55%)',
+                            animation: 'shine 8s infinite',
+                            transform: 'rotate(35deg)',
+                            pointerEvents: 'none'
+                        }
                     }}
                 >
-                    <Typography variant="subtitle1" sx={{ color: 'white', mb: 2 }}>Online Users</Typography>
-                    <List>
-                        {onlineUsers.map(user => (
-                            <ListItem key={user.id}>
-                                <ListItemAvatar>
-                                    <Avatar src={user.avatar} />
-                                </ListItemAvatar>
-                                <ListItemText
-                                    primary={user.username}
-                                    sx={{ color: 'white' }}
-                                />
-                            </ListItem>
-                        ))}
-                    </List>
+                    {/* User profile section */}
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                        <ProfilePicture size={120} />
+                        <Typography variant="h6" sx={{ color: 'white' }}>{user?.username}</Typography>
+                        <Box sx={{ display: 'flex', gap: 1 }}>
+                            <Button
+                                variant="contained"
+                                onClick={handleProfileSettings}
+                                sx={{
+                                    backdropFilter: 'blur(20px)',
+                                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(255, 255, 255, 0.2)'
+                                    }
+                                }}
+                            >
+                                Settings
+                            </Button>
+                            <Button
+                                variant="contained"
+                                onClick={handleLogout}
+                                sx={{
+                                    backdropFilter: 'blur(20px)',
+                                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(255, 255, 255, 0.2)'
+                                    }
+                                }}
+                            >
+                                Logout
+                            </Button>
+                        </Box>
+                    </Box>
+
+                    {/* Online users section */}
+                    <Box
+                        sx={{
+                            mt: 3,
+                            flex: 1,
+                            overflowY: 'auto',
+                            backdropFilter: 'blur(20px)',
+                            backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                            borderRadius: '16px',
+                            border: '1px solid rgba(255, 255, 255, 0.05)',
+                            p: 2
+                        }}
+                    >
+                        <Typography variant="subtitle1" sx={{ color: 'white', mb: 2 }}>Online Users</Typography>
+                        <List>
+                            {onlineUsers.map(user => (
+                                <ListItem key={user.id}>
+                                    <ListItemAvatar>
+                                        <Avatar src={user.avatar} />
+                                    </ListItemAvatar>
+                                    <ListItemText
+                                        primary={user.username}
+                                        sx={{ color: 'white' }}
+                                    />
+                                </ListItem>
+                            ))}
+                        </List>
+                    </Box>
                 </Box>
             </Box>
 
@@ -1416,11 +1403,14 @@ export default function Chat() {
                 <Box
                     sx={{
                         position: 'fixed',
-                        bottom: '80px',
-                        left: '16px',
-                        zIndex: 9999,
-                        transform: 'translateY(-8px)',
+                        bottom: { xs: '70px', md: '80px' },
+                        left: { xs: '0px', md: '16px' },
+                        right: { xs: '0px', md: 'auto' },
+                        zIndex: 1250,
+                        transform: 'none',
                         '& em-emoji-picker': {
+                            width: '100% !important',
+                            height: '300px !important',
                             '--background-rgb': '17, 25, 40',
                             '--border-radius': '16px',
                             '--category-icon-size': '24px',
