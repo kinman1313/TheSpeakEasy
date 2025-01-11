@@ -14,7 +14,8 @@ import {
     AccountCircle as AccountIcon,
     Logout as LogoutIcon,
     Timer as TimerIcon,
-    Check as CheckIcon
+    Check as CheckIcon,
+    FormatPaint as FormatPaintIcon
 } from '@mui/icons-material';
 import RoomList from './RoomList';
 import MessageThread from './MessageThread';
@@ -30,6 +31,7 @@ import Picker from '@emoji-mart/react';
 import data from '@emoji-mart/data';
 import { useTheme } from '../contexts/ThemeContext';
 import ProfilePicture from './ProfilePicture';
+import ChatBubbleCustomizer from './ChatBubbleCustomizer';
 
 const drawerWidth = 280;
 
@@ -55,6 +57,16 @@ export default function Chat() {
     const [desktopNotifications, setDesktopNotifications] = useState(true);
     const [userMenuAnchor, setUserMenuAnchor] = useState(null);
     const [showProfileSettings, setShowProfileSettings] = useState(false);
+    const [showBubbleCustomizer, setShowBubbleCustomizer] = useState(false);
+    const [bubbleSettings, setBubbleSettings] = useState({
+        type: 'solid',
+        color1: '#1a1a40',
+        color2: '#4a4a80',
+        gradientDirection: '135deg',
+        opacity: 0.75,
+        blur: 16,
+        border: 'rgba(255, 255, 255, 0.125)'
+    });
 
     // Add missing state variables
     const [onlineUsers, setOnlineUsers] = useState([]);
@@ -361,6 +373,11 @@ export default function Chat() {
         }
     };
 
+    const handleBubbleSettingsSave = (newSettings) => {
+        setBubbleSettings(newSettings);
+        setShowBubbleCustomizer(false);
+    };
+
     return (
         <Box sx={{
             display: 'flex',
@@ -513,6 +530,7 @@ export default function Chat() {
                             currentUser={user.username}
                             onReaction={handleReaction}
                             onRemoveReaction={handleRemoveReaction}
+                            bubbleSettings={bubbleSettings}
                         />
                     ))}
                     <div ref={messagesEndRef} />
@@ -715,6 +733,15 @@ export default function Chat() {
                     </ListItemIcon>
                     Profile Settings
                 </MenuItem>
+                <MenuItem onClick={() => {
+                    setShowBubbleCustomizer(true);
+                    setUserMenuAnchor(null);
+                }}>
+                    <ListItemIcon>
+                        <FormatPaintIcon sx={{ color: 'white' }} />
+                    </ListItemIcon>
+                    Customize Chat Bubbles
+                </MenuItem>
                 <MenuItem onClick={handleLogout}>
                     <ListItemIcon>
                         <LogoutIcon sx={{ color: 'white' }} />
@@ -857,6 +884,13 @@ export default function Chat() {
                     </DialogActions>
                 </Dialog>
             )}
+
+            <ChatBubbleCustomizer
+                open={showBubbleCustomizer}
+                onClose={() => setShowBubbleCustomizer(false)}
+                onSave={handleBubbleSettingsSave}
+                initialSettings={bubbleSettings}
+            />
         </Box>
     );
 } 

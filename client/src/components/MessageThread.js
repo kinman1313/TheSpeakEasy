@@ -124,13 +124,7 @@ const VoiceMessage = ({ audioUrl }) => {
     );
 };
 
-const MessageThread = ({
-    message,
-    currentUser,
-    onReply,
-    onReaction,
-    onRemoveReaction
-}) => {
+export default function MessageThread({ message, currentUser, onReaction, onRemoveReaction, bubbleSettings }) {
     const isOwnMessage = message.sender === currentUser;
     const [timeLeft, setTimeLeft] = useState(null);
 
@@ -186,60 +180,49 @@ const MessageThread = ({
         }
     };
 
-    return (
-        <Box
-            sx={{
-                display: 'flex',
-                flexDirection: isOwnMessage ? 'row-reverse' : 'row',
-                mb: 2,
-                gap: 1,
-            }}
-        >
-            <Avatar
-                sx={{
-                    bgcolor: isOwnMessage ? 'rgba(243, 215, 127, 0.2)' : 'rgba(243, 215, 127, 0.15)',
-                    width: 32,
-                    height: 32,
-                    border: '2px solid rgba(243, 215, 127, 0.3)',
-                    color: '#f3d77f',
-                    boxShadow: '0 0 10px rgba(243, 215, 127, 0.2)'
-                }}
-            >
-                {(message.sender || 'U')[0].toUpperCase()}
-            </Avatar>
+    const getBubbleStyle = (isCurrentUser) => {
+        const baseStyle = {
+            backdropFilter: `blur(${bubbleSettings?.blur || 16}px) saturate(180%)`,
+            WebkitBackdropFilter: `blur(${bubbleSettings?.blur || 16}px) saturate(180%)`,
+            border: `1px solid ${bubbleSettings?.border || 'rgba(255, 255, 255, 0.125)'}`,
+            borderRadius: '12px',
+            padding: '12px',
+            maxWidth: '70%',
+            wordBreak: 'break-word'
+        };
 
-            <Paper
-                elevation={1}
-                sx={{
-                    p: 1.5,
-                    maxWidth: '70%',
-                    bgcolor: isOwnMessage ? 'rgba(243, 215, 127, 0.1)' : 'rgba(10, 25, 41, 0.6)',
-                    backdropFilter: 'blur(10px)',
-                    borderRadius: 2,
-                    position: 'relative',
-                    border: '1px solid rgba(243, 215, 127, 0.1)',
-                    boxShadow: '0 4px 24px rgba(0, 0, 0, 0.1)',
-                    '&::before': {
-                        content: '""',
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        height: '1px',
-                        background: 'linear-gradient(90deg, transparent, rgba(243, 215, 127, 0.2), transparent)'
-                    },
-                    '&::after': {
-                        content: '""',
-                        position: 'absolute',
-                        top: 0,
-                        left: isOwnMessage ? 'auto' : 0,
-                        right: isOwnMessage ? 0 : 'auto',
-                        width: '1px',
-                        height: '100%',
-                        background: 'linear-gradient(180deg, rgba(243, 215, 127, 0.2), transparent)'
-                    }
-                }}
-            >
+        if (isCurrentUser) {
+            if (bubbleSettings?.type === 'gradient') {
+                return {
+                    ...baseStyle,
+                    background: `linear-gradient(${bubbleSettings.gradientDirection}, ${bubbleSettings.color1}${Math.round((bubbleSettings.opacity || 0.75) * 255).toString(16).padStart(2, '0')}, ${bubbleSettings.color2}${Math.round((bubbleSettings.opacity || 0.75) * 255).toString(16).padStart(2, '0')})`
+                };
+            } else {
+                return {
+                    ...baseStyle,
+                    backgroundColor: `${bubbleSettings?.color1 || '#1a1a40'}${Math.round((bubbleSettings?.opacity || 0.75) * 255).toString(16).padStart(2, '0')}`
+                };
+            }
+        } else {
+            return {
+                ...baseStyle,
+                backgroundColor: 'rgba(255, 255, 255, 0.1)'
+            };
+        }
+    };
+
+    return (
+        <Box sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: message.sender === currentUser ? 'flex-end' : 'flex-start',
+            gap: 0.5
+        }}>
+            <Box sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                ...getBubbleStyle(message.sender === currentUser)
+            }}>
                 <Box sx={{ mb: 0.5, display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Typography variant="caption" sx={{
                         color: isOwnMessage ? 'rgba(243, 215, 127, 0.9)' : 'rgba(255, 255, 255, 0.7)'
@@ -294,9 +277,7 @@ const MessageThread = ({
                         onReactionSelect={(emoji) => onReaction?.(message._id, emoji)}
                     />
                 </Box>
-            </Paper>
+            </Box>
         </Box>
     );
-};
-
-export default MessageThread; 
+} 
