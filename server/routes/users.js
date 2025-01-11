@@ -12,10 +12,20 @@ const path = require('path');
 const fs = require('fs').promises;
 const { v4: uuidv4 } = require('uuid');
 
+// Define base upload directory based on environment
+const BASE_UPLOAD_DIR = process.env.NODE_ENV === 'production'
+    ? '/opt/render/project/uploads'
+    : path.join(__dirname, '..', 'uploads');
+
 // Configure multer for file upload
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, 'uploads/avatars/');
+        const avatarsDir = path.join(BASE_UPLOAD_DIR, 'avatars');
+        // Ensure the avatars directory exists
+        if (!fs.existsSync(avatarsDir)) {
+            fs.mkdirSync(avatarsDir, { recursive: true });
+        }
+        cb(null, avatarsDir);
     },
     filename: function (req, file, cb) {
         const uniqueId = uuidv4();

@@ -22,28 +22,38 @@ router.post('/rooms', auth, async (req, res) => {
 
         const room = new Room({
             name: name.toLowerCase(),
-            topic,
-            isPrivate,
+            topic: topic || '',
+            isPrivate: isPrivate || false,
             password,
             creator: req.user._id,
             members: [req.user._id],
-            admins: [req.user._id]
+            admins: [req.user._id],
+            memberCount: 1,
+            lastActivity: new Date()
         });
 
         await room.save();
 
-        res.status(201).json({
+        return res.status(201).json({
+            success: true,
             room: {
                 id: room._id,
                 name: room.name,
                 topic: room.topic,
                 isPrivate: room.isPrivate,
-                memberCount: 1
+                memberCount: room.memberCount,
+                members: [req.user._id],
+                admins: [req.user._id],
+                creator: req.user._id
             }
         });
     } catch (error) {
         console.error('Error creating room:', error);
-        res.status(500).json({ error: 'Failed to create room' });
+        return res.status(500).json({
+            success: false,
+            error: 'Failed to create room',
+            message: error.message
+        });
     }
 });
 
