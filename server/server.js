@@ -221,6 +221,123 @@ io.on('connection', (socket) => {
             console.error('Error in disconnect handler:', error);
         }
     });
+
+    // Join room
+    socket.on('join_room', async (roomId) => {
+        try {
+            const room = await Room.findById(roomId);
+            if (!room) {
+                socket.emit('error', { message: 'Room not found' });
+                return;
+            }
+
+            socket.join(roomId);
+            socket.to(roomId).emit('user_joined', {
+                userId: socket.user._id,
+                username: socket.user.username
+            });
+
+            // Get recent messages
+            const messages = await Message.find({ room: roomId })
+                .sort('-createdAt')
+                .limit(50)
+                .populate('sender', 'username avatarUrl')
+                .exec();
+
+            socket.emit('room_messages', {
+                roomId,
+                messages: messages.reverse()
+            });
+        } catch (error) {
+            console.error('Error joining room:', error);
+            socket.emit('error', { message: 'Failed to join room' });
+        }
+    });
+
+    // Leave room
+    socket.on('leave_room', async (roomId) => {
+        try {
+            socket.leave(roomId);
+            socket.to(roomId).emit('user_left', {
+                userId: socket.user._id,
+                username: socket.user.username
+            });
+        } catch (error) {
+            console.error('Error leaving room:', error);
+            socket.emit('error', { message: 'Failed to leave room' });
+        }
+    });
+
+    // Send message to room
+    socket.on('send_message', async ({ roomId, content, type = 'text', vanishTime = null }) => {
+        try {
+            const room = await Room.findById(roomId);
+            if (!room) {
+                socket.emit('error', { message: 'Room not found' });
+                return;
+            }
+
+            if (!room.members.includes(socket.user._id)) {
+                socket.emit('error', { message: 'Not a member of this room' });
+                return;
+            }
+
+            const message = new Message({
+                room: roomId,
+                sender: socket.user._id,
+                content,
+                type,
+                vanishTime
+            });
+
+            await message.save();
+            await room.updateActivity();
+
+            const populatedMessage = await Message.findById(message._id)
+                .populate('sender', 'username avatarUrl')
+                .exec();
+
+            io.to(roomId).emit('new_message', populatedMessage);
+
+            // Handle vanishing messages
+            if (vanishTime) {
+                setTimeout(async () => {
+                    await Message.deleteOne({ _id: message._id });
+                    io.to(roomId).emit('message_vanished', message._id);
+                }, vanishTime * 1000);
+            }
+        } catch (error) {
+            console.error('Error sending message:', error);
+            socket.emit('error', { message: 'Failed to send message' });
+        }
+    });
+
+    // Update room topic
+    socket.on('update_topic', async ({ roomId, topic }) => {
+        try {
+            const room = await Room.findById(roomId);
+            if (!room) {
+                socket.emit('error', { message: 'Room not found' });
+                return;
+            }
+
+            if (!room.admins.includes(socket.user._id)) {
+                socket.emit('error', { message: 'Not authorized to update topic' });
+                return;
+            }
+
+            room.topic = topic;
+            await room.save();
+
+            io.to(roomId).emit('topic_updated', {
+                roomId,
+                topic
+            });
+        } catch (error) {
+            console.error('Error updating topic:', error);
+            socket.emit('error', { message: 'Failed to update topic' });
+        }
+    });
 });
 
 // Add WebSocket specific error handling

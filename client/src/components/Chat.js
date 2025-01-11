@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Box, Drawer, IconButton, Divider, Typography, Avatar, Menu, MenuItem, Tooltip, List, ListItem, ListItemButton, ListItemAvatar, ListItemText, Paper, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, ListItemIcon, Switch, AppBar, Toolbar } from '@mui/material';
+import { Box, Drawer, IconButton, Divider, Typography, Avatar, Menu, MenuItem, Tooltip, List, ListItem, ListItemButton, ListItemAvatar, ListItemText, Paper, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, ListItemIcon, Switch, AppBar, Toolbar, ListSubheader } from '@mui/material';
 import {
     Add as AddIcon,
     Send as SendIcon,
@@ -16,7 +16,8 @@ import {
     Timer as TimerIcon,
     Check as CheckIcon,
     FormatPaint as FormatPaintIcon,
-    Search as SearchIcon
+    Search as SearchIcon,
+    Lock as LockIcon
 } from '@mui/icons-material';
 import RoomList from './RoomList';
 import MessageThread from './MessageThread';
@@ -33,6 +34,8 @@ import data from '@emoji-mart/data';
 import { useTheme } from '../contexts/ThemeContext';
 import ProfilePicture from './ProfilePicture';
 import ChatBubbleCustomizer from './ChatBubbleCustomizer';
+import NewRoomDialog from './NewRoomDialog';
+import RoomSettings from './RoomSettings';
 
 const drawerWidth = {
     xs: '100%',
@@ -88,6 +91,83 @@ export default function Chat() {
     // Add mobile drawer toggle handler
     const handleDrawerToggle = () => {
         setMobileOpen(!mobileOpen);
+    };
+
+    // Add state for showing new room dialog
+    const [showNewRoomDialog, setShowNewRoomDialog] = useState(false);
+
+    // Add state for showing room settings
+    const [showRoomSettings, setShowRoomSettings] = useState(false);
+    const [activeRoomDetails, setActiveRoomDetails] = useState(null);
+
+    // Add useEffect for fetching rooms
+    useEffect(() => {
+        const fetchRooms = async () => {
+            try {
+                const response = await fetch('/api/rooms', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    setRooms(data.rooms);
+                }
+            } catch (error) {
+                console.error('Error fetching rooms:', error);
+            }
+        };
+
+        fetchRooms();
+    }, []);
+
+    // Add room creation handler
+    const handleCreateRoom = async (roomData) => {
+        try {
+            const response = await fetch('/api/rooms', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(roomData)
+            });
+
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to create room');
+            }
+
+            setRooms(prevRooms => [...prevRooms, data.room]);
+            setActiveRoom(data.room.id);
+            socket.emit('join_room', data.room.id);
+        } catch (error) {
+            throw error;
+        }
+    };
+
+    // Add room joining handler
+    const handleJoinRoom = async (roomId, password = null) => {
+        try {
+            const response = await fetch(`/api/rooms/${roomId}/join`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({ password })
+            });
+
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to join room');
+            }
+
+            setActiveRoom(roomId);
+            socket.emit('join_room', roomId);
+        } catch (error) {
+            console.error('Error joining room:', error);
+        }
     };
 
     useEffect(() => {
@@ -395,150 +475,291 @@ export default function Chat() {
         setShowBubbleCustomizer(false);
     };
 
+    // Add room settings handlers
+    const handleUpdateTopic = async (topic) => {
+        try {
+            const response = await fetch(`/api/rooms/${activeRoom}/topic`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({ topic })
+            });
+
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to update topic');
+            }
+
+            socket.emit('update_topic', {
+                roomId: activeRoom,
+                topic
+            });
+
+            setActiveRoomDetails(prev => ({
+                ...prev,
+                topic
+            }));
+        } catch (error) {
+            throw error;
+        }
+    };
+
+    const handleAddMember = async (userId) => {
+        try {
+            const response = await fetch(`/api/rooms/${activeRoom}/members`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({ userId })
+            });
+
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to add member');
+            }
+
+            setActiveRoomDetails(prev => ({
+                ...prev,
+                members: [...prev.members, data.member]
+            }));
+        } catch (error) {
+            throw error;
+        }
+    };
+
+    const handleRemoveMember = async (userId) => {
+        try {
+            const response = await fetch(`/api/rooms/${activeRoom}/members/${userId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.error || 'Failed to remove member');
+            }
+
+            setActiveRoomDetails(prev => ({
+                ...prev,
+                members: prev.members.filter(member => member.id !== userId)
+            }));
+        } catch (error) {
+            throw error;
+        }
+    };
+
+    const handlePromoteToAdmin = async (userId) => {
+        try {
+            const response = await fetch(`/api/rooms/${activeRoom}/admins`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({ userId })
+            });
+
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to promote member');
+            }
+
+            setActiveRoomDetails(prev => ({
+                ...prev,
+                admins: [...prev.admins, userId]
+            }));
+        } catch (error) {
+            throw error;
+        }
+    };
+
+    const handleDemoteFromAdmin = async (userId) => {
+        try {
+            const response = await fetch(`/api/rooms/${activeRoom}/admins/${userId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.error || 'Failed to demote admin');
+            }
+
+            setActiveRoomDetails(prev => ({
+                ...prev,
+                admins: prev.admins.filter(id => id !== userId)
+            }));
+        } catch (error) {
+            throw error;
+        }
+    };
+
+    // Update useEffect for fetching room details
+    useEffect(() => {
+        const fetchRoomDetails = async () => {
+            if (!activeRoom) return;
+
+            try {
+                const response = await fetch(`/api/rooms/${activeRoom}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    setActiveRoomDetails(data.room);
+                }
+            } catch (error) {
+                console.error('Error fetching room details:', error);
+            }
+        };
+
+        fetchRoomDetails();
+    }, [activeRoom]);
+
+    // Add socket listeners for room events
+    useEffect(() => {
+        socket.on('topic_updated', ({ roomId, topic }) => {
+            if (roomId === activeRoom) {
+                setActiveRoomDetails(prev => ({
+                    ...prev,
+                    topic
+                }));
+            }
+        });
+
+        return () => {
+            socket.off('topic_updated');
+        };
+    }, [activeRoom]);
+
     // Add drawer content component
     const drawerContent = (
-        <>
-            <Box sx={{
-                p: 2,
-                borderBottom: '1px solid rgba(255, 255, 255, 0.125)',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 2
-            }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <Typography variant="h6">Chats</Typography>
-                    <IconButton
-                        onClick={() => setIsNewChatOpen(true)}
-                        sx={{ color: 'white' }}
-                    >
-                        <AddIcon />
-                    </IconButton>
-                </Box>
-                <TextField
-                    placeholder="Search users or rooms..."
-                    size="small"
-                    fullWidth
-                    InputProps={{
-                        startAdornment: <SearchIcon sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.5)' }} />,
-                        sx: { color: 'white' }
-                    }}
-                    sx={{
-                        '& .MuiOutlinedInput-root': {
-                            bgcolor: 'rgba(255, 255, 255, 0.05)',
-                            '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.08)' },
-                            '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.125)' }
-                        }
-                    }}
-                />
+        <Box sx={{ width: drawerWidth, height: '100%', display: 'flex', flexDirection: 'column' }}>
+            <Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Typography variant="h6">Rooms</Typography>
+                <IconButton onClick={() => setShowNewRoomDialog(true)} color="primary">
+                    <AddIcon />
+                </IconButton>
             </Box>
-
+            <Divider />
             <List sx={{ flex: 1, overflowY: 'auto' }}>
-                <ListSubheader sx={{ bgcolor: 'transparent', color: 'white', fontWeight: 600 }}>
-                    Public Rooms
-                </ListSubheader>
-                {rooms.map((room) => (
-                    <ListItem key={room.id} disablePadding>
-                        <ListItemButton
-                            selected={activeRoom?.id === room.id}
-                            onClick={() => handleRoomSelect(room)}
-                            sx={{
-                                '&.Mui-selected': {
-                                    bgcolor: 'rgba(255, 255, 255, 0.1)',
-                                    '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.15)' }
-                                }
-                            }}
-                        >
-                            <ListItemAvatar>
-                                <Avatar sx={{ bgcolor: 'primary.main' }}>
-                                    {room.name[0].toUpperCase()}
-                                </Avatar>
-                            </ListItemAvatar>
-                            <ListItemText
-                                primary={room.name}
-                                secondary={room.topic || 'No topic set'}
-                                secondaryTypographyProps={{ color: 'rgba(255, 255, 255, 0.7)' }}
-                            />
-                        </ListItemButton>
-                    </ListItem>
-                ))}
-
-                <ListSubheader sx={{ bgcolor: 'transparent', color: 'white', fontWeight: 600, mt: 2 }}>
-                    Direct Messages
-                </ListSubheader>
-                {onlineUsers.map((user) => (
-                    <ListItem key={user.id} disablePadding>
-                        <ListItemButton onClick={() => handleStartDM(user)}>
-                            <ListItemAvatar>
-                                <Avatar src={user.avatarUrl}>
-                                    {user.username[0].toUpperCase()}
-                                </Avatar>
-                            </ListItemAvatar>
-                            <ListItemText
-                                primary={user.username}
-                                secondary={user.status || 'Online'}
-                                secondaryTypographyProps={{ color: 'rgba(255, 255, 255, 0.7)' }}
-                            />
-                        </ListItemButton>
+                {rooms.map(room => (
+                    <ListItem
+                        key={room.id}
+                        button
+                        selected={activeRoom === room.id}
+                        onClick={() => handleJoinRoom(room.id)}
+                    >
+                        <ListItemText
+                            primary={room.name}
+                            secondary={room.topic || 'No topic set'}
+                        />
+                        {room.isPrivate && (
+                            <LockIcon fontSize="small" sx={{ ml: 1, opacity: 0.5 }} />
+                        )}
                     </ListItem>
                 ))}
             </List>
-        </>
+        </Box>
     );
 
-    return (
-        <Box sx={{
-            display: 'flex',
-            height: '100vh',
-            background: '#1a1a40',
-            backgroundImage: `
-                radial-gradient(at 47% 33%, hsl(206.25, 35%, 36%) 0, transparent 59%), 
-                radial-gradient(at 82% 65%, hsl(120.00, 34%, 29%) 0, transparent 55%)
-            `,
-            color: 'white',
-            position: 'relative',
-            overscrollBehavior: 'none'
-        }}>
-            {/* Mobile app bar */}
-            <AppBar
-                position="fixed"
-                sx={{
-                    display: { sm: 'none' },
-                    bgcolor: 'rgba(17, 25, 40, 0.75)',
-                    backdropFilter: 'blur(16px)',
-                    borderBottom: '1px solid rgba(255, 255, 255, 0.125)'
-                }}
-            >
-                <Toolbar>
+    // Update the AppBar to include room settings button
+    const appBar = (
+        <AppBar
+            position="fixed"
+            sx={{
+                width: { sm: `calc(100% - ${drawerWidth}px)` },
+                ml: { sm: `${drawerWidth}px` },
+                bgcolor: 'background.paper',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.12)'
+            }}
+        >
+            <Toolbar>
+                <IconButton
+                    color="inherit"
+                    aria-label="open drawer"
+                    edge="start"
+                    onClick={handleDrawerToggle}
+                    sx={{ mr: 2, display: { sm: 'none' } }}
+                >
+                    <MenuIcon />
+                </IconButton>
+                <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+                    {activeRoomDetails?.name || 'Select a Room'}
+                </Typography>
+                {activeRoom && (
                     <IconButton
                         color="inherit"
-                        edge="start"
-                        onClick={handleDrawerToggle}
-                        sx={{ mr: 2 }}
+                        onClick={() => setShowRoomSettings(true)}
+                        title="Room Settings"
                     >
-                        <MenuIcon />
+                        <SettingsIcon />
                     </IconButton>
-                    <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-                        TheSpeakEasy
-                    </Typography>
-                    <IconButton
-                        color="inherit"
-                        onClick={(e) => setUserMenuAnchor(e.currentTarget)}
-                    >
-                        <Avatar
-                            src={user?.avatarUrl}
-                            sx={{
-                                width: 32,
-                                height: 32,
-                                bgcolor: 'rgba(255, 255, 255, 0.1)',
-                                border: '2px solid rgba(255, 255, 255, 0.2)'
-                            }}
-                        >
-                            {user?.username?.[0]?.toUpperCase()}
-                        </Avatar>
-                    </IconButton>
-                </Toolbar>
-            </AppBar>
+                )}
+            </Toolbar>
+        </AppBar>
+    );
 
+    // Add the missing handler functions
+    const handleRoomSelect = (room) => {
+        setActiveRoom(room.id);
+        socket.emit('join_room', room.id);
+        setMobileOpen(false);
+    };
+
+    const handleStartDM = async (user) => {
+        try {
+            // Check if DM room already exists
+            const existingRoom = rooms.find(room =>
+                room.isDM && room.members.length === 2 &&
+                room.members.some(member => member.id === user.id)
+            );
+
+            if (existingRoom) {
+                handleRoomSelect(existingRoom);
+                return;
+            }
+
+            // Create new DM room
+            const response = await fetch('/api/rooms', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({
+                    name: `DM-${user.username}`,
+                    isDM: true,
+                    members: [user.id]
+                })
+            });
+
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to create DM');
+            }
+
+            setRooms(prevRooms => [...prevRooms, data.room]);
+            handleRoomSelect(data.room);
+        } catch (error) {
+            console.error('Error starting DM:', error);
+        }
+    };
+
+    return (
+        <Box sx={{ display: 'flex', height: '100vh' }}>
+            {/* Mobile app bar */}
+            {appBar}
             {/* Mobile drawer */}
             <Drawer
                 variant="temporary"
@@ -1097,6 +1318,24 @@ export default function Chat() {
                     </MenuItem>
                 ))}
             </Menu>
+
+            <NewRoomDialog
+                open={showNewRoomDialog}
+                onClose={() => setShowNewRoomDialog(false)}
+                onCreateRoom={handleCreateRoom}
+            />
+
+            <RoomSettings
+                open={showRoomSettings}
+                onClose={() => setShowRoomSettings(false)}
+                room={activeRoomDetails}
+                onUpdateTopic={handleUpdateTopic}
+                onAddMember={handleAddMember}
+                onRemoveMember={handleRemoveMember}
+                onPromoteToAdmin={handlePromoteToAdmin}
+                onDemoteFromAdmin={handleDemoteFromAdmin}
+                isAdmin={activeRoomDetails?.admins?.includes(user?._id)}
+            />
         </Box>
     );
 } 

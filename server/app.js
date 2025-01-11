@@ -1,32 +1,28 @@
 const express = require('express');
 const cors = require('cors');
-const path = require('path');
 const mongoose = require('mongoose');
+const path = require('path');
 const userRoutes = require('./routes/users');
-const messageRoutes = require('./routes/messages');
-const { setupSocket } = require('./socket');
-require('dotenv').config();
+const chatRoutes = require('./routes/chat');
 
 const app = express();
 
 // Middleware
-app.use(cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:3000',
-    credentials: true
-}));
+app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Serve static files from uploads directory
+// Serve static files from the uploads directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
-app.use('/api/users', userRoutes);
-app.use('/api/messages', messageRoutes);
+app.use('/api', userRoutes);
+app.use('/api', chatRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);
-    res.status(500).json({ error: 'Something broke!' });
+    res.status(500).json({ error: 'Something went wrong!' });
 });
 
 module.exports = app; 
