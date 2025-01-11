@@ -806,27 +806,16 @@ export default function Chat() {
                     `,
                     position: 'relative',
                     overflow: 'hidden',
-                    '&::before': {
-                        content: '""',
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        height: '100%',
-                        background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%)',
-                        pointerEvents: 'none'
-                    },
-                    '&::after': {
-                        content: '""',
-                        position: 'absolute',
-                        top: -200,
-                        left: -200,
-                        right: -200,
-                        height: '200%',
-                        background: 'linear-gradient(45deg, transparent 45%, rgba(255,255,255,0.1) 48%, rgba(255,255,255,0.1) 52%, transparent 55%)',
-                        animation: 'shine 8s infinite',
-                        transform: 'rotate(35deg)',
-                        pointerEvents: 'none'
+                    animation: 'fadeIn 0.6s ease-out',
+                    transition: 'all 0.3s ease-in-out',
+                    '&:hover': {
+                        transform: 'translateY(-5px)',
+                        boxShadow: `
+                            0 8px 32px -1px rgba(0, 0, 0, 0.3),
+                            0 0 16px -2px rgba(0, 0, 0, 0.2),
+                            0 0 1px 0 rgba(255, 255, 255, 0.3) inset,
+                            0 0 20px 0 rgba(255, 255, 255, 0.1)
+                        `,
                     }
                 }}
             >
@@ -927,31 +916,66 @@ export default function Chat() {
                         scrollbarWidth: 'thin',
                         scrollbarColor: 'rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.05)',
                         '&::-webkit-scrollbar': {
-                            width: '8px',
+                            width: '6px',
+                            height: '6px'
                         },
                         '&::-webkit-scrollbar-track': {
-                            background: 'rgba(255, 255, 255, 0.05)',
-                            borderRadius: '4px',
+                            background: 'rgba(255, 255, 255, 0.02)',
+                            borderRadius: '3px',
+                            margin: '10px'
                         },
                         '&::-webkit-scrollbar-thumb': {
                             background: 'rgba(255, 255, 255, 0.2)',
-                            borderRadius: '4px',
+                            borderRadius: '3px',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            transition: 'all 0.3s ease',
                             '&:hover': {
-                                background: 'rgba(255, 255, 255, 0.3)'
+                                background: 'rgba(255, 255, 255, 0.3)',
+                                boxShadow: '0 0 10px rgba(255, 255, 255, 0.2)'
                             }
+                        },
+                        '&::-webkit-scrollbar-corner': {
+                            background: 'transparent'
                         }
                     }}
                 >
-                    {messages.map((message) => (
-                        <MessageThread
-                            key={message._id}
-                            message={message}
-                            currentUser={user.username}
-                            onReaction={handleReaction}
-                            onRemoveReaction={handleRemoveReaction}
-                            bubbleSettings={bubbleSettings}
-                        />
-                    ))}
+                    {loading ? (
+                        // Add loading skeleton animation
+                        <Box sx={{ p: 2 }}>
+                            {[...Array(3)].map((_, i) => (
+                                <Box
+                                    key={i}
+                                    sx={{
+                                        height: '60px',
+                                        borderRadius: '12px',
+                                        mb: 2,
+                                        background: 'linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%)',
+                                        backgroundSize: '1000px 100%',
+                                        animation: 'shimmer 2s infinite linear'
+                                    }}
+                                />
+                            ))}
+                        </Box>
+                    ) : (
+                        messages.map((message, index) => (
+                            <Box
+                                key={message._id}
+                                sx={{
+                                    animation: `fadeIn 0.3s ease-out ${index * 0.1}s`,
+                                    opacity: 0,
+                                    animationFillMode: 'forwards'
+                                }}
+                            >
+                                <MessageThread
+                                    message={message}
+                                    currentUser={user.username}
+                                    onReaction={handleReaction}
+                                    onRemoveReaction={handleRemoveReaction}
+                                    bubbleSettings={bubbleSettings}
+                                />
+                            </Box>
+                        ))
+                    )}
                     <div ref={messagesEndRef} />
                 </Box>
 
