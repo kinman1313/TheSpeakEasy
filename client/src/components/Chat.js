@@ -285,10 +285,7 @@ export default function Chat() {
         setMessageSettingsAnchor(null);
     };
 
-    const handleSubmit = (e) => {
-        if (e) {
-            e.preventDefault();
-        }
+    const handleSubmit = () => {
         const messageText = messageInputRef.current?.value?.trim();
         if (messageText) {
             handleSendMessage(messageText);
@@ -522,8 +519,6 @@ export default function Chat() {
                 </Box>
 
                 <Paper
-                    component="form"
-                    onSubmit={handleSubmit}
                     sx={{
                         p: 2,
                         display: 'flex',
@@ -570,6 +565,16 @@ export default function Chat() {
                         </IconButton>
 
                         <IconButton
+                            onClick={() => setShowScheduler(true)}
+                            sx={{
+                                color: showScheduler ? 'white' : 'rgba(255, 255, 255, 0.7)',
+                                '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.1)' }
+                            }}
+                        >
+                            <ScheduleIcon />
+                        </IconButton>
+
+                        <IconButton
                             onClick={(e) => setMessageSettingsAnchor(e.currentTarget)}
                             sx={{
                                 color: messageVanishTime ? 'white' : 'rgba(255, 255, 255, 0.7)',
@@ -603,15 +608,15 @@ export default function Chat() {
                                     },
                                 },
                             }}
-                            onKeyPress={(e) => {
+                            onKeyDown={(e) => {
                                 if (e.key === 'Enter' && !e.shiftKey) {
                                     e.preventDefault();
-                                    handleSubmit(e);
+                                    handleSubmit();
                                 }
                             }}
                         />
                         <IconButton
-                            onClick={handleSubmit}
+                            onClick={() => handleSubmit()}
                             sx={{
                                 color: 'white',
                                 '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.1)' }
@@ -643,10 +648,10 @@ export default function Chat() {
                 </Dialog>
             )}
 
-            {showProfileSettings && (
+            {showVoiceMessage && (
                 <Dialog
-                    open={showProfileSettings}
-                    onClose={() => setShowProfileSettings(false)}
+                    open={showVoiceMessage}
+                    onClose={() => setShowVoiceMessage(false)}
                     PaperProps={{
                         sx: {
                             backdropFilter: 'blur(16px) saturate(180%)',
@@ -654,88 +659,69 @@ export default function Chat() {
                             backgroundColor: 'rgba(17, 25, 40, 0.75)',
                             border: '1px solid rgba(255, 255, 255, 0.125)',
                             boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
-                            borderRadius: '12px',
-                            color: 'white',
-                            minWidth: 400
+                            borderRadius: '12px'
                         }
                     }}
                 >
-                    <DialogTitle sx={{
-                        borderBottom: '1px solid rgba(255, 255, 255, 0.125)',
-                        color: '#f3d77f'
-                    }}>
-                        Profile Settings
-                    </DialogTitle>
-                    <DialogContent sx={{ mt: 2 }}>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, p: 2 }}>
-                            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                                <ProfilePicture size={120} />
-                            </Box>
-                            <TextField
-                                label="Username"
-                                value={user?.username || ''}
-                                InputProps={{
-                                    sx: {
-                                        color: 'white',
-                                        '& .MuiOutlinedInput-notchedOutline': {
-                                            borderColor: 'rgba(243, 215, 127, 0.3)'
-                                        },
-                                        '&:hover .MuiOutlinedInput-notchedOutline': {
-                                            borderColor: 'rgba(243, 215, 127, 0.5)'
-                                        }
-                                    }
-                                }}
-                                InputLabelProps={{
-                                    sx: { color: 'rgba(243, 215, 127, 0.7)' }
-                                }}
-                            />
-                            <TextField
-                                label="Email"
-                                value={user?.email || ''}
-                                InputProps={{
-                                    sx: {
-                                        color: 'white',
-                                        '& .MuiOutlinedInput-notchedOutline': {
-                                            borderColor: 'rgba(243, 215, 127, 0.3)'
-                                        },
-                                        '&:hover .MuiOutlinedInput-notchedOutline': {
-                                            borderColor: 'rgba(243, 215, 127, 0.5)'
-                                        }
-                                    }
-                                }}
-                                InputLabelProps={{
-                                    sx: { color: 'rgba(243, 215, 127, 0.7)' }
-                                }}
-                            />
-                        </Box>
-                    </DialogContent>
-                    <DialogActions sx={{ borderTop: '1px solid rgba(243, 215, 127, 0.1)', p: 2 }}>
-                        <Button
-                            onClick={() => setShowProfileSettings(false)}
-                            sx={{
-                                color: 'rgba(243, 215, 127, 0.7)',
-                                '&:hover': {
-                                    bgcolor: 'rgba(243, 215, 127, 0.1)'
-                                }
-                            }}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            variant="contained"
-                            sx={{
-                                bgcolor: 'rgba(243, 215, 127, 0.2)',
-                                color: '#f3d77f',
-                                '&:hover': {
-                                    bgcolor: 'rgba(243, 215, 127, 0.3)'
-                                }
-                            }}
-                        >
-                            Save Changes
-                        </Button>
-                    </DialogActions>
+                    <VoiceMessage
+                        onSend={handleVoiceMessageComplete}
+                        onClose={() => setShowVoiceMessage(false)}
+                    />
                 </Dialog>
             )}
+
+            {showScheduler && (
+                <Dialog
+                    open={showScheduler}
+                    onClose={() => setShowScheduler(false)}
+                    PaperProps={{
+                        sx: {
+                            backdropFilter: 'blur(16px) saturate(180%)',
+                            WebkitBackdropFilter: 'blur(16px) saturate(180%)',
+                            backgroundColor: 'rgba(17, 25, 40, 0.75)',
+                            border: '1px solid rgba(255, 255, 255, 0.125)',
+                            boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+                            borderRadius: '12px'
+                        }
+                    }}
+                >
+                    <MessageScheduler
+                        onSchedule={handleScheduleMessage}
+                        onClose={() => setShowScheduler(false)}
+                    />
+                </Dialog>
+            )}
+
+            <Menu
+                anchorEl={userMenuAnchor}
+                open={Boolean(userMenuAnchor)}
+                onClose={() => setUserMenuAnchor(null)}
+                PaperProps={{
+                    sx: {
+                        backdropFilter: 'blur(16px) saturate(180%)',
+                        WebkitBackdropFilter: 'blur(16px) saturate(180%)',
+                        backgroundColor: 'rgba(17, 25, 40, 0.75)',
+                        border: '1px solid rgba(255, 255, 255, 0.125)',
+                        boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+                        borderRadius: '12px',
+                        color: 'white',
+                        minWidth: 200
+                    }
+                }}
+            >
+                <MenuItem onClick={handleProfileSettings}>
+                    <ListItemIcon>
+                        <AccountIcon sx={{ color: 'white' }} />
+                    </ListItemIcon>
+                    Profile Settings
+                </MenuItem>
+                <MenuItem onClick={handleLogout}>
+                    <ListItemIcon>
+                        <LogoutIcon sx={{ color: 'white' }} />
+                    </ListItemIcon>
+                    Logout
+                </MenuItem>
+            </Menu>
 
             {showEmojiPicker && (
                 <Box
@@ -769,6 +755,107 @@ export default function Chat() {
                         }}
                     />
                 </Box>
+            )}
+
+            {/* Profile Settings Dialog */}
+            {showProfileSettings && (
+                <Dialog
+                    open={showProfileSettings}
+                    onClose={() => setShowProfileSettings(false)}
+                    PaperProps={{
+                        sx: {
+                            backdropFilter: 'blur(16px) saturate(180%)',
+                            WebkitBackdropFilter: 'blur(16px) saturate(180%)',
+                            backgroundColor: 'rgba(17, 25, 40, 0.75)',
+                            border: '1px solid rgba(255, 255, 255, 0.125)',
+                            boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+                            borderRadius: '12px',
+                            color: 'white',
+                            minWidth: 400
+                        }
+                    }}
+                >
+                    <DialogTitle sx={{
+                        borderBottom: '1px solid rgba(255, 255, 255, 0.125)',
+                        color: 'white'
+                    }}>
+                        Profile Settings
+                    </DialogTitle>
+                    <DialogContent sx={{ mt: 2 }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, p: 2 }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                                <ProfilePicture size={120} />
+                            </Box>
+                            <TextField
+                                label="Username"
+                                value={user?.username || ''}
+                                InputProps={{
+                                    sx: {
+                                        color: 'white',
+                                        '& .MuiOutlinedInput-notchedOutline': {
+                                            borderColor: 'rgba(255, 255, 255, 0.3)'
+                                        },
+                                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                                            borderColor: 'rgba(255, 255, 255, 0.5)'
+                                        },
+                                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                            borderColor: 'rgba(255, 255, 255, 0.7)'
+                                        }
+                                    }
+                                }}
+                                InputLabelProps={{
+                                    sx: { color: 'rgba(255, 255, 255, 0.7)' }
+                                }}
+                            />
+                            <TextField
+                                label="Email"
+                                value={user?.email || ''}
+                                InputProps={{
+                                    sx: {
+                                        color: 'white',
+                                        '& .MuiOutlinedInput-notchedOutline': {
+                                            borderColor: 'rgba(255, 255, 255, 0.3)'
+                                        },
+                                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                                            borderColor: 'rgba(255, 255, 255, 0.5)'
+                                        },
+                                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                            borderColor: 'rgba(255, 255, 255, 0.7)'
+                                        }
+                                    }
+                                }}
+                                InputLabelProps={{
+                                    sx: { color: 'rgba(255, 255, 255, 0.7)' }
+                                }}
+                            />
+                        </Box>
+                    </DialogContent>
+                    <DialogActions sx={{ borderTop: '1px solid rgba(255, 255, 255, 0.125)', p: 2 }}>
+                        <Button
+                            onClick={() => setShowProfileSettings(false)}
+                            sx={{
+                                color: 'rgba(255, 255, 255, 0.7)',
+                                '&:hover': {
+                                    bgcolor: 'rgba(255, 255, 255, 0.1)'
+                                }
+                            }}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="contained"
+                            sx={{
+                                bgcolor: 'rgba(255, 255, 255, 0.1)',
+                                color: 'white',
+                                '&:hover': {
+                                    bgcolor: 'rgba(255, 255, 255, 0.2)'
+                                }
+                            }}
+                        >
+                            Save Changes
+                        </Button>
+                    </DialogActions>
+                </Dialog>
             )}
         </Box>
     );
