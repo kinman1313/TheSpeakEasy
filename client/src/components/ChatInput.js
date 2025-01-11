@@ -1,100 +1,181 @@
-import React, { useState, useRef, forwardRef } from 'react';
-import { Box, TextField, IconButton, Tooltip } from '@mui/material';
+import React, { forwardRef, useState } from 'react';
+import {
+    Box,
+    IconButton,
+    InputBase,
+    Tooltip,
+    Zoom
+} from '@mui/material';
 import {
     Send as SendIcon,
-    Gif as GifIcon,
     Mic as MicIcon,
-    Schedule as ScheduleIcon,
-    EmojiEmotions as EmojiIcon
+    Gif as GifIcon,
+    EmojiEmotions as EmojiIcon,
+    Schedule as ScheduleIcon
 } from '@mui/icons-material';
 
-const ChatInput = forwardRef(({ onSendMessage, onGifClick, onVoiceClick, onScheduleClick, onEmojiClick, onTyping }, ref) => {
+const ChatInput = forwardRef(({ onSendMessage, onVoiceMessage, onGifClick, onEmojiClick, onScheduleMessage }, ref) => {
     const [message, setMessage] = useState('');
-    const isTypingRef = useRef(false);
-    const typingTimeoutRef = useRef(null);
+    const [isTyping, setIsTyping] = useState(false);
 
-    const handleTyping = () => {
-        if (!isTypingRef.current) {
-            isTypingRef.current = true;
-            onTyping?.(true);
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        if (message.trim()) {
+            onSendMessage(message);
+            setMessage('');
         }
-
-        // Clear existing timeout
-        if (typingTimeoutRef.current) {
-            clearTimeout(typingTimeoutRef.current);
-        }
-
-        // Set new timeout
-        typingTimeoutRef.current = setTimeout(() => {
-            isTypingRef.current = false;
-            onTyping?.(false);
-        }, 2000);
     };
 
-    const handleSend = () => {
-        if (message.trim()) {
-            onSendMessage(message.trim());
-            setMessage('');
-            isTypingRef.current = false;
-            onTyping?.(false);
-            if (typingTimeoutRef.current) {
-                clearTimeout(typingTimeoutRef.current);
-            }
+    const handleKeyPress = (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSubmit(e);
+        }
+    };
+
+    const handleChange = (e) => {
+        setMessage(e.target.value);
+        if (!isTyping && e.target.value.trim()) {
+            setIsTyping(true);
+        } else if (isTyping && !e.target.value.trim()) {
+            setIsTyping(false);
         }
     };
 
     return (
-        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-            <Tooltip title="Send GIF">
-                <IconButton onClick={onGifClick}>
-                    <GifIcon />
-                </IconButton>
-            </Tooltip>
-            <Tooltip title="Voice Message">
-                <IconButton onClick={onVoiceClick}>
-                    <MicIcon />
-                </IconButton>
-            </Tooltip>
-            <Tooltip title="Schedule Message">
-                <IconButton onClick={onScheduleClick}>
-                    <ScheduleIcon />
-                </IconButton>
-            </Tooltip>
-            <Tooltip title="Emoji">
-                <IconButton onClick={onEmojiClick}>
-                    <EmojiIcon />
-                </IconButton>
-            </Tooltip>
+        <Box
+            component="form"
+            onSubmit={handleSubmit}
+            sx={{
+                display: 'flex',
+                alignItems: 'flex-end',
+                gap: 1
+            }}
+        >
+            <Box
+                sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 0.5,
+                    flexWrap: 'wrap'
+                }}
+            >
+                <Tooltip title="Add emoji" TransitionComponent={Zoom}>
+                    <IconButton
+                        onClick={onEmojiClick}
+                        sx={{
+                            color: 'text.secondary',
+                            transition: 'all 0.3s ease-in-out',
+                            '&:hover': {
+                                color: 'primary.main',
+                                background: 'rgba(59, 130, 246, 0.12)',
+                                transform: 'translateY(-2px)',
+                                boxShadow: '0 0 12px rgba(59, 130, 246, 0.3)'
+                            }
+                        }}
+                    >
+                        <EmojiIcon />
+                    </IconButton>
+                </Tooltip>
+                <Tooltip title="Send GIF" TransitionComponent={Zoom}>
+                    <IconButton
+                        onClick={onGifClick}
+                        sx={{
+                            color: 'text.secondary',
+                            transition: 'all 0.3s ease-in-out',
+                            '&:hover': {
+                                color: 'primary.main',
+                                background: 'rgba(59, 130, 246, 0.12)',
+                                transform: 'translateY(-2px)',
+                                boxShadow: '0 0 12px rgba(59, 130, 246, 0.3)'
+                            }
+                        }}
+                    >
+                        <GifIcon />
+                    </IconButton>
+                </Tooltip>
+                <Tooltip title="Record voice message" TransitionComponent={Zoom}>
+                    <IconButton
+                        onClick={onVoiceMessage}
+                        sx={{
+                            color: 'text.secondary',
+                            transition: 'all 0.3s ease-in-out',
+                            '&:hover': {
+                                color: 'primary.main',
+                                background: 'rgba(59, 130, 246, 0.12)',
+                                transform: 'translateY(-2px)',
+                                boxShadow: '0 0 12px rgba(59, 130, 246, 0.3)'
+                            }
+                        }}
+                    >
+                        <MicIcon />
+                    </IconButton>
+                </Tooltip>
+                <Tooltip title="Schedule message" TransitionComponent={Zoom}>
+                    <IconButton
+                        onClick={onScheduleMessage}
+                        sx={{
+                            color: 'text.secondary',
+                            transition: 'all 0.3s ease-in-out',
+                            '&:hover': {
+                                color: 'primary.main',
+                                background: 'rgba(59, 130, 246, 0.12)',
+                                transform: 'translateY(-2px)',
+                                boxShadow: '0 0 12px rgba(59, 130, 246, 0.3)'
+                            }
+                        }}
+                    >
+                        <ScheduleIcon />
+                    </IconButton>
+                </Tooltip>
+            </Box>
 
-            <TextField
-                fullWidth
-                value={message}
-                onChange={(e) => {
-                    setMessage(e.target.value);
-                    handleTyping();
-                }}
-                onKeyPress={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSend();
-                    }
-                }}
-                placeholder="Type a message..."
+            <InputBase
+                inputRef={ref}
                 multiline
                 maxRows={4}
-                ref={ref}
+                value={message}
+                onChange={handleChange}
+                onKeyPress={handleKeyPress}
+                placeholder="Type a message..."
                 sx={{
-                    '& .MuiOutlinedInput-root': {
-                        borderRadius: 2
+                    flex: 1,
+                    background: 'rgba(15, 23, 42, 0.45)',
+                    backdropFilter: 'blur(8px)',
+                    WebkitBackdropFilter: 'blur(8px)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    borderRadius: '12px',
+                    px: 2,
+                    py: 1,
+                    color: 'text.primary',
+                    transition: 'all 0.3s ease-in-out',
+                    '&:hover': {
+                        background: 'rgba(15, 23, 42, 0.55)',
+                        borderColor: 'rgba(59, 130, 246, 0.3)',
+                        boxShadow: '0 0 15px rgba(59, 130, 246, 0.15)'
+                    },
+                    '&.Mui-focused': {
+                        background: 'rgba(15, 23, 42, 0.65)',
+                        borderColor: 'primary.main',
+                        boxShadow: '0 0 0 2px rgba(59, 130, 246, 0.2), 0 0 20px rgba(59, 130, 246, 0.2)'
                     }
                 }}
             />
 
-            <Tooltip title="Send">
+            <Tooltip title="Send message" TransitionComponent={Zoom}>
                 <IconButton
-                    color="primary"
-                    onClick={handleSend}
+                    type="submit"
                     disabled={!message.trim()}
+                    sx={{
+                        color: message.trim() ? 'primary.main' : 'text.disabled',
+                        background: message.trim() ? 'rgba(59, 130, 246, 0.08)' : 'transparent',
+                        transition: 'all 0.3s ease-in-out',
+                        '&:hover': {
+                            background: message.trim() ? 'rgba(59, 130, 246, 0.15)' : 'transparent',
+                            transform: message.trim() ? 'translateY(-2px) scale(1.05)' : 'none',
+                            boxShadow: message.trim() ? '0 0 15px rgba(59, 130, 246, 0.4)' : 'none'
+                        }
+                    }}
                 >
                     <SendIcon />
                 </IconButton>

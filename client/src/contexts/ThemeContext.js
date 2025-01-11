@@ -1,104 +1,132 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { createTheme } from '@mui/material/styles';
-
-const baseTheme = {
-    palette: {
-        primary: {
-            main: '#7C4DFF',
-            light: '#B47CFF',
-            dark: '#3F1DCB',
-        },
-        secondary: {
-            main: '#FF4081',
-            light: '#FF79B0',
-            dark: '#C60055',
-        }
-    },
-    typography: {
-        fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-    },
-    components: {
-        MuiButton: {
-            styleOverrides: {
-                root: {
-                    textTransform: 'none',
-                }
-            }
-        }
-    }
-};
+import React, { createContext, useContext, useState } from 'react';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { CssBaseline } from '@mui/material';
 
 const ThemeContext = createContext();
 
-export const useTheme = () => {
-    return useContext(ThemeContext);
-};
+export const useTheme = () => useContext(ThemeContext);
 
-export const ThemeProvider = ({ children }) => {
-    const [mode, setMode] = useState(() => {
-        const savedMode = localStorage.getItem('themeMode');
-        return savedMode || 'system';
-    });
+export const ThemeContextProvider = ({ children }) => {
+    const [mode, setMode] = useState('dark');
 
-    const [systemTheme, setSystemTheme] = useState(() =>
-        window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-    );
-
-    useEffect(() => {
-        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-        const handleChange = (e) => {
-            setSystemTheme(e.matches ? 'dark' : 'light');
-        };
-
-        mediaQuery.addEventListener('change', handleChange);
-        return () => mediaQuery.removeEventListener('change', handleChange);
-    }, []);
-
-    const currentTheme = createTheme({
-        ...baseTheme,
+    const theme = createTheme({
         palette: {
-            ...baseTheme.palette,
-            mode: mode === 'system' ? systemTheme : mode,
-            ...(mode === 'system' ?
-                (systemTheme === 'dark' ? {
-                    background: {
-                        default: '#121212',
-                        paper: '#1E1E1E',
-                    },
-                    text: {
-                        primary: '#FFFFFF',
-                        secondary: '#B0B0B0',
-                    },
-                } : {}) :
-                (mode === 'dark' ? {
-                    background: {
-                        default: '#121212',
-                        paper: '#1E1E1E',
-                    },
-                    text: {
-                        primary: '#FFFFFF',
-                        secondary: '#B0B0B0',
-                    },
-                } : {}))
+            mode,
+            primary: {
+                main: '#3B82F6',
+                light: '#60A5FA',
+                dark: '#2563EB',
+                contrastText: '#FFFFFF'
+            },
+            background: {
+                default: '#0A0F1E',
+                paper: 'rgba(15, 23, 42, 0.65)'
+            },
+            text: {
+                primary: '#F1F5F9',
+                secondary: '#94A3B8'
+            }
         },
+        typography: {
+            fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+            h6: {
+                fontWeight: 600,
+                letterSpacing: '0.0075em'
+            }
+        },
+        shape: {
+            borderRadius: 16
+        },
+        components: {
+            MuiCssBaseline: {
+                styleOverrides: {
+                    body: {
+                        scrollbarColor: 'rgba(255, 255, 255, 0.1) rgba(0, 0, 0, 0.1)',
+                        '&::-webkit-scrollbar, & *::-webkit-scrollbar': {
+                            width: '8px',
+                            height: '8px',
+                            background: 'rgba(0, 0, 0, 0.1)'
+                        },
+                        '&::-webkit-scrollbar-thumb, & *::-webkit-scrollbar-thumb': {
+                            borderRadius: '4px',
+                            background: 'rgba(255, 255, 255, 0.1)',
+                            '&:hover': {
+                                background: 'rgba(255, 255, 255, 0.2)'
+                            }
+                        }
+                    }
+                }
+            },
+            MuiDrawer: {
+                styleOverrides: {
+                    paper: {
+                        background: 'rgba(15, 23, 42, 0.65)',
+                        backdropFilter: 'blur(10px)',
+                        WebkitBackdropFilter: 'blur(10px)',
+                        border: '1px solid rgba(255, 255, 255, 0.08)'
+                    }
+                }
+            },
+            MuiDialog: {
+                styleOverrides: {
+                    paper: {
+                        background: 'rgba(15, 23, 42, 0.95)',
+                        backdropFilter: 'blur(10px)',
+                        WebkitBackdropFilter: 'blur(10px)',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        boxShadow: '0 4px 24px -1px rgba(0, 0, 0, 0.25)'
+                    }
+                }
+            },
+            MuiMenu: {
+                styleOverrides: {
+                    paper: {
+                        background: 'rgba(15, 23, 42, 0.95)',
+                        backdropFilter: 'blur(10px)',
+                        WebkitBackdropFilter: 'blur(10px)',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        boxShadow: '0 4px 24px -1px rgba(0, 0, 0, 0.25)'
+                    }
+                }
+            },
+            MuiIconButton: {
+                styleOverrides: {
+                    root: {
+                        transition: 'all 0.2s ease-in-out',
+                        '&:hover': {
+                            background: 'rgba(255, 255, 255, 0.1)'
+                        }
+                    }
+                }
+            },
+            MuiButton: {
+                styleOverrides: {
+                    root: {
+                        textTransform: 'none',
+                        borderRadius: '8px',
+                        transition: 'all 0.2s ease-in-out'
+                    }
+                }
+            },
+            MuiListItem: {
+                styleOverrides: {
+                    root: {
+                        borderRadius: '8px',
+                        '&:hover': {
+                            background: 'rgba(255, 255, 255, 0.05)'
+                        }
+                    }
+                }
+            }
+        }
     });
-
-    const toggleTheme = () => {
-        const newMode = mode === 'light' ? 'dark' : 'light';
-        setMode(newMode);
-        localStorage.setItem('themeMode', newMode);
-    };
-
-    const value = {
-        mode,
-        setMode,
-        toggleTheme,
-        theme: currentTheme
-    };
 
     return (
-        <ThemeContext.Provider value={value}>
-            {children}
+        <ThemeContext.Provider value={{ mode, setMode, theme }}>
+            <ThemeProvider theme={theme}>
+                <CssBaseline />
+                {children}
+            </ThemeProvider>
         </ThemeContext.Provider>
     );
 };

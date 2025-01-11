@@ -42,8 +42,19 @@ import RoomSettings from './RoomSettings';
 
 const drawerWidth = {
     xs: '100%',
-    sm: 240,
-    md: 280
+    sm: 280,
+    md: 320
+};
+
+// Add glassmorphism styles
+const glassStyle = {
+    background: 'rgba(15, 23, 42, 0.65)',
+    backdropFilter: 'blur(10px)',
+    WebkitBackdropFilter: 'blur(10px)',
+    borderRadius: '16px',
+    border: '1px solid rgba(255, 255, 255, 0.08)',
+    boxShadow: '0 4px 24px -1px rgba(0, 0, 0, 0.25)',
+    transition: 'all 0.3s ease-in-out'
 };
 
 export default function Chat() {
@@ -317,31 +328,198 @@ export default function Chat() {
     }, [socket, socketConnected, activeRoom]);
 
     return (
-        <Box sx={{ display: 'flex', height: '100vh', bgcolor: 'background.default' }}>
-            <AppBar
-                position="fixed"
+        <Box sx={{
+            display: 'flex',
+            minHeight: '100vh',
+            bgcolor: '#0A0F1E',
+            background: 'linear-gradient(135deg, #0A0F1E 0%, #1A1F3E 100%)',
+            p: 3,
+            gap: 3
+        }}>
+            {/* Left Sidebar */}
+            <Box
                 sx={{
-                    width: { sm: `calc(100% - ${drawerWidth.sm}px)` },
-                    ml: { sm: `${drawerWidth.sm}px` },
-                    display: { sm: 'none' }
+                    width: { xs: 0, sm: drawerWidth.sm },
+                    flexShrink: 0,
+                    display: { xs: 'none', sm: 'block' }
                 }}
             >
-                <Toolbar>
-                    <IconButton
-                        color="inherit"
-                        aria-label="open drawer"
-                        edge="start"
-                        onClick={handleDrawerToggle}
-                        sx={{ mr: 2, display: { sm: 'none' } }}
-                    >
-                        <MenuIcon />
-                    </IconButton>
-                    <Typography variant="h6" noWrap component="div">
-                        {activeRoom ? rooms.find(r => r.id === activeRoom)?.name : 'Chat'}
-                    </Typography>
-                </Toolbar>
-            </AppBar>
+                <Box
+                    sx={{
+                        ...glassStyle,
+                        height: 'calc(100vh - 48px)',
+                        p: 2,
+                        display: 'flex',
+                        flexDirection: 'column'
+                    }}
+                >
+                    <RoomList
+                        rooms={rooms}
+                        activeRoom={activeRoom}
+                        onRoomSelect={setActiveRoom}
+                        onNewRoom={() => setShowNewRoomDialog(true)}
+                    />
+                </Box>
+            </Box>
 
+            {/* Main Content */}
+            <Box
+                sx={{
+                    flexGrow: 1,
+                    height: 'calc(100vh - 48px)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 3
+                }}
+            >
+                {/* Top Bar */}
+                <Box
+                    sx={{
+                        ...glassStyle,
+                        p: 2,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between'
+                    }}
+                >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <IconButton
+                            color="inherit"
+                            aria-label="open drawer"
+                            edge="start"
+                            onClick={handleDrawerToggle}
+                            sx={{ display: { sm: 'none' } }}
+                        >
+                            <MenuIcon />
+                        </IconButton>
+                        <Typography variant="h6" noWrap component="div">
+                            {activeRoom ? rooms.find(r => r.id === activeRoom)?.name : 'Chat'}
+                        </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                        <IconButton onClick={() => setShowNotificationSettings(true)}>
+                            <TimerIcon />
+                        </IconButton>
+                        <IconButton onClick={(e) => setUserMenuAnchor(e.currentTarget)}>
+                            <AccountIcon />
+                        </IconButton>
+                    </Box>
+                </Box>
+
+                {/* Chat Area */}
+                <Box
+                    sx={{
+                        ...glassStyle,
+                        flexGrow: 1,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        overflow: 'hidden'
+                    }}
+                >
+                    <Box
+                        ref={messagesContainerRef}
+                        sx={{
+                            flexGrow: 1,
+                            overflowY: 'auto',
+                            p: 2,
+                            '&::-webkit-scrollbar': {
+                                width: '8px',
+                                background: 'rgba(0, 0, 0, 0.1)'
+                            },
+                            '&::-webkit-scrollbar-thumb': {
+                                background: 'rgba(255, 255, 255, 0.1)',
+                                borderRadius: '4px',
+                                '&:hover': {
+                                    background: 'rgba(255, 255, 255, 0.2)'
+                                }
+                            }
+                        }}
+                    >
+                        <MessageThread
+                            messages={messages}
+                            typingUsers={typingUsers}
+                            onMessageDelete={(messageId) => {
+                                setMessages(prev => prev.filter(m => m._id !== messageId));
+                            }}
+                            endRef={messagesEndRef}
+                        />
+                    </Box>
+
+                    {/* Input Area */}
+                    <Box
+                        sx={{
+                            p: 2,
+                            borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+                            background: 'rgba(15, 23, 42, 0.45)'
+                        }}
+                    >
+                        <ChatInput
+                            ref={messageInputRef}
+                            onSendMessage={(content) => {
+                                if (socket && socketConnected && content.trim()) {
+                                    const message = {
+                                        content: content.trim(),
+                                        sender: user.username,
+                                        roomId: activeRoom,
+                                        timestamp: new Date().toISOString()
+                                    };
+                                    socket.emit('message', message);
+                                }
+                            }}
+                            onVoiceMessage={() => setShowVoiceMessage(true)}
+                            onGifClick={() => setShowGifPicker(true)}
+                            onEmojiClick={() => setShowEmojiPicker(true)}
+                            onScheduleMessage={() => setShowScheduler(true)}
+                        />
+                    </Box>
+                </Box>
+            </Box>
+
+            {/* Right Sidebar */}
+            <Box
+                sx={{
+                    width: { xs: 0, md: 280 },
+                    display: { xs: 'none', md: 'flex' },
+                    flexDirection: 'column',
+                    gap: 3
+                }}
+            >
+                {/* User Profile Area */}
+                <Box
+                    sx={{
+                        ...glassStyle,
+                        p: 2,
+                        height: '200px'
+                    }}
+                >
+                    <Typography variant="h6" gutterBottom>
+                        Profile
+                    </Typography>
+                    {/* Add user profile content */}
+                </Box>
+
+                {/* Online Users Area */}
+                <Box
+                    sx={{
+                        ...glassStyle,
+                        p: 2,
+                        flexGrow: 1
+                    }}
+                >
+                    <Typography variant="h6" gutterBottom>
+                        Online Users
+                    </Typography>
+                    <List>
+                        {onlineUsers.map(user => (
+                            <ListItem key={user.id}>
+                                <ListItemText primary={user.username} />
+                            </ListItem>
+                        ))}
+                    </List>
+                </Box>
+            </Box>
+
+            {/* Mobile Drawer */}
             <Drawer
                 variant="temporary"
                 open={mobileOpen}
@@ -352,8 +530,11 @@ export default function Chat() {
                 sx={{
                     display: { xs: 'block', sm: 'none' },
                     '& .MuiDrawer-paper': {
+                        ...glassStyle,
                         boxSizing: 'border-box',
-                        width: drawerWidth.xs
+                        width: drawerWidth.xs,
+                        border: 'none',
+                        borderRadius: 0
                     }
                 }}
             >
@@ -367,70 +548,6 @@ export default function Chat() {
                     onNewRoom={() => setShowNewRoomDialog(true)}
                 />
             </Drawer>
-
-            <Drawer
-                variant="permanent"
-                sx={{
-                    display: { xs: 'none', sm: 'block' },
-                    '& .MuiDrawer-paper': {
-                        boxSizing: 'border-box',
-                        width: drawerWidth.sm
-                    }
-                }}
-                open
-            >
-                <RoomList
-                    rooms={rooms}
-                    activeRoom={activeRoom}
-                    onRoomSelect={setActiveRoom}
-                    onNewRoom={() => setShowNewRoomDialog(true)}
-                />
-            </Drawer>
-
-            <Box
-                component="main"
-                sx={{
-                    flexGrow: 1,
-                    p: 3,
-                    width: { sm: `calc(100% - ${drawerWidth.sm}px)` },
-                    height: '100vh',
-                    display: 'flex',
-                    flexDirection: 'column'
-                }}
-            >
-                <Toolbar sx={{ display: { sm: 'none' } }} />
-
-                <MessageThread
-                    messages={messages}
-                    typingUsers={typingUsers}
-                    onMessageDelete={(messageId) => {
-                        setMessages(prev => prev.filter(m => m._id !== messageId));
-                    }}
-                    containerRef={messagesContainerRef}
-                    endRef={messagesEndRef}
-                />
-
-                <Box sx={{ mt: 2 }}>
-                    <ChatInput
-                        ref={messageInputRef}
-                        onSendMessage={(content) => {
-                            if (socket && socketConnected && content.trim()) {
-                                const message = {
-                                    content: content.trim(),
-                                    sender: user.username,
-                                    roomId: activeRoom,
-                                    timestamp: new Date().toISOString()
-                                };
-                                socket.emit('message', message);
-                            }
-                        }}
-                        onVoiceMessage={() => setShowVoiceMessage(true)}
-                        onGifClick={() => setShowGifPicker(true)}
-                        onEmojiClick={() => setShowEmojiPicker(true)}
-                        onScheduleMessage={() => setShowScheduler(true)}
-                    />
-                </Box>
-            </Box>
 
             {/* Dialogs */}
             <NewRoomDialog
