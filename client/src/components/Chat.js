@@ -33,7 +33,11 @@ import { useTheme } from '../contexts/ThemeContext';
 import ProfilePicture from './ProfilePicture';
 import ChatBubbleCustomizer from './ChatBubbleCustomizer';
 
-const drawerWidth = 280;
+const drawerWidth = {
+    xs: '100%',
+    sm: 240,
+    md: 280
+};
 
 export default function Chat() {
     const { socket } = useSocket();
@@ -86,11 +90,21 @@ export default function Chat() {
             // Handle incoming messages
             socket.on('message', (newMessage) => {
                 console.log('Received message:', newMessage); // Debug log
-                setMessages(prevMessages => [...prevMessages, {
-                    _id: Date.now(), // Ensure unique ID
-                    ...newMessage,
-                    timestamp: new Date().toISOString()
-                }]);
+                setMessages(prevMessages => {
+                    // Check if message already exists to prevent duplicates
+                    const messageExists = prevMessages.some(msg =>
+                        msg.timestamp === newMessage.timestamp &&
+                        msg.sender === newMessage.sender &&
+                        msg.content === newMessage.content
+                    );
+                    if (messageExists) return prevMessages;
+
+                    return [...prevMessages, {
+                        _id: Date.now(), // Ensure unique ID
+                        ...newMessage,
+                        timestamp: newMessage.timestamp || new Date().toISOString()
+                    }];
+                });
                 scrollToBottom();
             });
 
@@ -255,12 +269,6 @@ export default function Chat() {
 
         console.log('Sending message:', message);
         socket.emit('message', message);
-
-        setMessages(prevMessages => [...prevMessages, {
-            _id: Date.now(),
-            ...message
-        }]);
-        scrollToBottom();
     };
 
     const handleLogout = () => {
@@ -394,6 +402,7 @@ export default function Chat() {
             <Drawer
                 variant="permanent"
                 sx={{
+                    display: { xs: 'none', sm: 'block' },
                     width: drawerWidth,
                     flexShrink: 0,
                     '& .MuiDrawer-paper': {
@@ -403,7 +412,15 @@ export default function Chat() {
                         WebkitBackdropFilter: 'blur(16px) saturate(180%)',
                         backgroundColor: 'rgba(17, 25, 40, 0.75)',
                         border: '1px solid rgba(255, 255, 255, 0.125)',
-                        boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)'
+                        boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+                        '& .MuiListItemButton-root': {
+                            transition: 'all 0.3s ease',
+                            '&:hover': {
+                                bgcolor: 'rgba(255, 255, 255, 0.1)',
+                                boxShadow: '0 0 15px rgba(255, 255, 255, 0.2)',
+                                transform: 'translateY(-2px)'
+                            }
+                        }
                     }
                 }}
             >
@@ -485,7 +502,7 @@ export default function Chat() {
                 component="main"
                 sx={{
                     flexGrow: 1,
-                    p: 3,
+                    p: { xs: 1, sm: 2, md: 3 },
                     display: 'flex',
                     flexDirection: 'column',
                     gap: 2,
@@ -493,7 +510,8 @@ export default function Chat() {
                     backdropFilter: 'blur(16px) saturate(180%)',
                     WebkitBackdropFilter: 'blur(16px) saturate(180%)',
                     backgroundColor: 'rgba(17, 25, 40, 0.75)',
-                    overscrollBehavior: 'none'
+                    overscrollBehavior: 'none',
+                    marginLeft: { xs: 0, sm: `${drawerWidth.sm}px`, md: `${drawerWidth.md}px` }
                 }}
             >
                 <Box
@@ -538,7 +556,7 @@ export default function Chat() {
 
                 <Paper
                     sx={{
-                        p: 2,
+                        p: { xs: 1, sm: 2 },
                         display: 'flex',
                         gap: 1,
                         alignItems: 'center',
@@ -548,15 +566,25 @@ export default function Chat() {
                         borderRadius: '12px',
                         border: '1px solid rgba(255, 255, 255, 0.125)',
                         boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
-                        position: 'relative'
+                        position: 'relative',
+                        transition: 'all 0.3s ease',
+                        '&:hover': {
+                            boxShadow: '0 0 20px rgba(255, 255, 255, 0.15)'
+                        }
                     }}
                 >
                     <Box sx={{ display: 'flex', gap: 1, width: '100%' }}>
                         <IconButton
                             onClick={() => setShowEmojiPicker(true)}
                             sx={{
-                                color: showEmojiPicker ? 'white' : 'rgba(255, 255, 255, 0.7)',
-                                '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.1)' }
+                                color: 'rgba(255, 255, 255, 0.7)',
+                                transition: 'all 0.3s ease',
+                                '&:hover': {
+                                    color: 'white',
+                                    bgcolor: 'rgba(255, 255, 255, 0.1)',
+                                    boxShadow: '0 0 15px rgba(255, 255, 255, 0.3)',
+                                    transform: 'scale(1.1)'
+                                }
                             }}
                         >
                             <EmojiIcon />
@@ -565,8 +593,14 @@ export default function Chat() {
                         <IconButton
                             onClick={() => setShowGifPicker(true)}
                             sx={{
-                                color: showGifPicker ? 'white' : 'rgba(255, 255, 255, 0.7)',
-                                '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.1)' }
+                                color: 'rgba(255, 255, 255, 0.7)',
+                                transition: 'all 0.3s ease',
+                                '&:hover': {
+                                    color: 'white',
+                                    bgcolor: 'rgba(255, 255, 255, 0.1)',
+                                    boxShadow: '0 0 15px rgba(255, 255, 255, 0.3)',
+                                    transform: 'scale(1.1)'
+                                }
                             }}
                         >
                             <GifIcon />
@@ -575,8 +609,14 @@ export default function Chat() {
                         <IconButton
                             onClick={handleVoiceMessageStart}
                             sx={{
-                                color: showVoiceMessage ? 'white' : 'rgba(255, 255, 255, 0.7)',
-                                '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.1)' }
+                                color: 'rgba(255, 255, 255, 0.7)',
+                                transition: 'all 0.3s ease',
+                                '&:hover': {
+                                    color: 'white',
+                                    bgcolor: 'rgba(255, 255, 255, 0.1)',
+                                    boxShadow: '0 0 15px rgba(255, 255, 255, 0.3)',
+                                    transform: 'scale(1.1)'
+                                }
                             }}
                         >
                             <MicIcon />
@@ -585,8 +625,14 @@ export default function Chat() {
                         <IconButton
                             onClick={() => setShowScheduler(true)}
                             sx={{
-                                color: showScheduler ? 'white' : 'rgba(255, 255, 255, 0.7)',
-                                '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.1)' }
+                                color: 'rgba(255, 255, 255, 0.7)',
+                                transition: 'all 0.3s ease',
+                                '&:hover': {
+                                    color: 'white',
+                                    bgcolor: 'rgba(255, 255, 255, 0.1)',
+                                    boxShadow: '0 0 15px rgba(255, 255, 255, 0.3)',
+                                    transform: 'scale(1.1)'
+                                }
                             }}
                         >
                             <ScheduleIcon />
@@ -595,8 +641,14 @@ export default function Chat() {
                         <IconButton
                             onClick={(e) => setMessageSettingsAnchor(e.currentTarget)}
                             sx={{
-                                color: messageVanishTime ? 'white' : 'rgba(255, 255, 255, 0.7)',
-                                '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.1)' }
+                                color: 'rgba(255, 255, 255, 0.7)',
+                                transition: 'all 0.3s ease',
+                                '&:hover': {
+                                    color: 'white',
+                                    bgcolor: 'rgba(255, 255, 255, 0.1)',
+                                    boxShadow: '0 0 15px rgba(255, 255, 255, 0.3)',
+                                    transform: 'scale(1.1)'
+                                }
                             }}
                         >
                             <TimerIcon />
@@ -610,20 +662,25 @@ export default function Chat() {
                             size="small"
                             sx={{
                                 '& .MuiOutlinedInput-root': {
+                                    fontSize: { xs: '0.875rem', sm: '1rem' },
                                     color: 'white',
                                     bgcolor: 'rgba(255, 255, 255, 0.05)',
+                                    transition: 'all 0.3s ease',
                                     '&:hover': {
                                         bgcolor: 'rgba(255, 255, 255, 0.08)',
+                                        boxShadow: '0 0 15px rgba(255, 255, 255, 0.1)'
                                     },
                                     '& fieldset': {
                                         borderColor: 'rgba(255, 255, 255, 0.2)',
+                                        transition: 'all 0.3s ease'
                                     },
                                     '&:hover fieldset': {
-                                        borderColor: 'rgba(255, 255, 255, 0.3)',
+                                        borderColor: 'rgba(255, 255, 255, 0.3)'
                                     },
                                     '&.Mui-focused fieldset': {
                                         borderColor: 'rgba(255, 255, 255, 0.5)',
-                                    },
+                                        boxShadow: '0 0 15px rgba(255, 255, 255, 0.2)'
+                                    }
                                 },
                             }}
                             onKeyDown={(e) => {
@@ -636,8 +693,14 @@ export default function Chat() {
                         <IconButton
                             onClick={() => handleSubmit()}
                             sx={{
-                                color: 'white',
-                                '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.1)' }
+                                color: 'rgba(255, 255, 255, 0.7)',
+                                transition: 'all 0.3s ease',
+                                '&:hover': {
+                                    color: 'white',
+                                    bgcolor: 'rgba(255, 255, 255, 0.1)',
+                                    boxShadow: '0 0 15px rgba(255, 255, 255, 0.3)',
+                                    transform: 'scale(1.1)'
+                                }
                             }}
                         >
                             <SendIcon />
@@ -653,12 +716,19 @@ export default function Chat() {
                     maxWidth="md"
                     PaperProps={{
                         sx: {
+                            width: { xs: '95%', sm: 'auto' },
+                            maxWidth: { xs: '95%', sm: 'md' },
+                            margin: { xs: '10px', sm: '32px' },
                             backdropFilter: 'blur(16px) saturate(180%)',
                             WebkitBackdropFilter: 'blur(16px) saturate(180%)',
                             backgroundColor: 'rgba(17, 25, 40, 0.75)',
                             border: '1px solid rgba(255, 255, 255, 0.125)',
                             boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
-                            borderRadius: '12px'
+                            borderRadius: '12px',
+                            transition: 'all 0.3s ease',
+                            '&:hover': {
+                                boxShadow: '0 0 25px rgba(255, 255, 255, 0.2)'
+                            }
                         }
                     }}
                 >
@@ -672,12 +742,19 @@ export default function Chat() {
                     onClose={() => setShowVoiceMessage(false)}
                     PaperProps={{
                         sx: {
+                            width: { xs: '95%', sm: 'auto' },
+                            maxWidth: { xs: '95%', sm: 'md' },
+                            margin: { xs: '10px', sm: '32px' },
                             backdropFilter: 'blur(16px) saturate(180%)',
                             WebkitBackdropFilter: 'blur(16px) saturate(180%)',
                             backgroundColor: 'rgba(17, 25, 40, 0.75)',
                             border: '1px solid rgba(255, 255, 255, 0.125)',
                             boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
-                            borderRadius: '12px'
+                            borderRadius: '12px',
+                            transition: 'all 0.3s ease',
+                            '&:hover': {
+                                boxShadow: '0 0 25px rgba(255, 255, 255, 0.2)'
+                            }
                         }
                     }}
                 >
@@ -694,12 +771,19 @@ export default function Chat() {
                     onClose={() => setShowScheduler(false)}
                     PaperProps={{
                         sx: {
+                            width: { xs: '95%', sm: 'auto' },
+                            maxWidth: { xs: '95%', sm: 'md' },
+                            margin: { xs: '10px', sm: '32px' },
                             backdropFilter: 'blur(16px) saturate(180%)',
                             WebkitBackdropFilter: 'blur(16px) saturate(180%)',
                             backgroundColor: 'rgba(17, 25, 40, 0.75)',
                             border: '1px solid rgba(255, 255, 255, 0.125)',
                             boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
-                            borderRadius: '12px'
+                            borderRadius: '12px',
+                            transition: 'all 0.3s ease',
+                            '&:hover': {
+                                boxShadow: '0 0 25px rgba(255, 255, 255, 0.2)'
+                            }
                         }
                     }}
                 >
@@ -791,6 +875,9 @@ export default function Chat() {
                     onClose={() => setShowProfileSettings(false)}
                     PaperProps={{
                         sx: {
+                            width: { xs: '95%', sm: 'auto' },
+                            maxWidth: { xs: '95%', sm: 'md' },
+                            margin: { xs: '10px', sm: '32px' },
                             backdropFilter: 'blur(16px) saturate(180%)',
                             WebkitBackdropFilter: 'blur(16px) saturate(180%)',
                             backgroundColor: 'rgba(17, 25, 40, 0.75)',
@@ -891,6 +978,45 @@ export default function Chat() {
                 onSave={handleBubbleSettingsSave}
                 initialSettings={bubbleSettings}
             />
+
+            {/* Add the Vanish Timer Menu */}
+            <Menu
+                anchorEl={messageSettingsAnchor}
+                open={Boolean(messageSettingsAnchor)}
+                onClose={() => setMessageSettingsAnchor(null)}
+                PaperProps={{
+                    sx: {
+                        backdropFilter: 'blur(16px) saturate(180%)',
+                        WebkitBackdropFilter: 'blur(16px) saturate(180%)',
+                        backgroundColor: 'rgba(17, 25, 40, 0.75)',
+                        border: '1px solid rgba(255, 255, 255, 0.125)',
+                        boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+                        borderRadius: '12px',
+                        color: 'white'
+                    }
+                }}
+            >
+                <MenuItem onClick={() => handleVanishTimeSelect(null)}>
+                    <ListItemIcon>
+                        <TimerIcon sx={{ color: messageVanishTime === null ? '#4caf50' : 'white' }} />
+                    </ListItemIcon>
+                    <Typography>No Auto-Delete</Typography>
+                    {messageVanishTime === null && (
+                        <CheckIcon sx={{ ml: 1, color: '#4caf50' }} />
+                    )}
+                </MenuItem>
+                {[1, 5, 10, 30, 60].map((minutes) => (
+                    <MenuItem key={minutes} onClick={() => handleVanishTimeSelect(minutes)}>
+                        <ListItemIcon>
+                            <TimerIcon sx={{ color: messageVanishTime === minutes ? '#4caf50' : 'white' }} />
+                        </ListItemIcon>
+                        <Typography>Delete after {minutes} {minutes === 1 ? 'minute' : 'minutes'}</Typography>
+                        {messageVanishTime === minutes && (
+                            <CheckIcon sx={{ ml: 1, color: '#4caf50' }} />
+                        )}
+                    </MenuItem>
+                ))}
+            </Menu>
         </Box>
     );
 } 

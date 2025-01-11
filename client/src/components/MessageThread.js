@@ -216,16 +216,32 @@ export default function MessageThread({ message, currentUser, onReaction, onRemo
             display: 'flex',
             flexDirection: 'column',
             alignItems: message.sender === currentUser ? 'flex-end' : 'flex-start',
-            gap: 0.5
+            gap: 0.5,
+            width: '100%',
+            px: { xs: 1, sm: 2 }, // Responsive padding
+            mb: 1
         }}>
             <Box sx={{
                 display: 'flex',
                 flexDirection: 'column',
-                ...getBubbleStyle(message.sender === currentUser)
+                maxWidth: { xs: '85%', sm: '70%' }, // Wider on mobile
+                ...getBubbleStyle(message.sender === currentUser),
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 0 15px rgba(255, 255, 255, 0.2)'
+                }
             }}>
-                <Box sx={{ mb: 0.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box sx={{
+                    mb: 0.5,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    fontSize: { xs: '0.75rem', sm: '0.875rem' } // Smaller font on mobile
+                }}>
                     <Typography variant="caption" sx={{
-                        color: isOwnMessage ? 'rgba(243, 215, 127, 0.9)' : 'rgba(255, 255, 255, 0.7)'
+                        color: isOwnMessage ? 'rgba(243, 215, 127, 0.9)' : 'rgba(255, 255, 255, 0.7)',
+                        fontSize: 'inherit'
                     }}>
                         {message.sender}
                         {message.timestamp && (
@@ -275,6 +291,13 @@ export default function MessageThread({ message, currentUser, onReaction, onRemo
                 }}>
                     <ReactionButton
                         onReactionSelect={(emoji) => onReaction?.(message._id, emoji)}
+                        sx={{
+                            transition: 'all 0.3s ease',
+                            '&:hover': {
+                                transform: 'scale(1.1)',
+                                boxShadow: '0 0 10px rgba(255, 255, 255, 0.2)'
+                            }
+                        }}
                     />
                 </Box>
             </Box>
