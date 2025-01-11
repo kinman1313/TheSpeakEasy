@@ -17,7 +17,10 @@ export const SocketProvider = ({ children }) => {
             console.log('Initializing socket connection with user:', user.username);
 
             // Create socket connection
-            const newSocket = io('http://localhost:8080', {
+            const socketUrl = process.env.REACT_APP_SOCKET_URL || 'https://lies-server-9ayj.onrender.com';
+            console.log('Connecting to socket server at:', socketUrl);
+
+            const newSocket = io(socketUrl, {
                 transports: ['polling', 'websocket'],
                 withCredentials: false,
                 autoConnect: true,
@@ -30,21 +33,25 @@ export const SocketProvider = ({ children }) => {
                 auth: {
                     token: localStorage.getItem('token')
                 },
-                path: '/socket.io'
+                path: '/socket.io',
+                extraHeaders: {
+                    "Access-Control-Allow-Origin": "*"
+                }
             });
 
-            // Socket event listeners
+            // Add connection status logging
             newSocket.on('connect', () => {
                 console.log('Socket connected successfully', {
                     id: newSocket.id,
                     connected: newSocket.connected,
-                    transport: newSocket.io.engine.transport.name
+                    transport: newSocket.io.engine.transport.name,
+                    url: socketUrl
                 });
 
-                // Join default room after connection
+                // Join with username after connection
                 if (user.username) {
-                    console.log('Attempting to join default room with username:', user.username);
-                    newSocket.emit('join_default', { username: user.username });
+                    console.log('Emitting join event with username:', user.username);
+                    newSocket.emit('join', user.username);
                 }
             });
 

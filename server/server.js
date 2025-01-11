@@ -43,42 +43,34 @@ const server = http.createServer(app);
 // Configure Socket.IO with CORS and timeout settings
 const io = socketIO(server, {
     cors: {
-        origin: ["https://lies-client-9ayj.onrender.com", "http://localhost:3000"],
+        origin: [
+            "https://lies-client-9ayj.onrender.com",
+            "http://localhost:3000",
+            "https://thespeakeasy.onrender.com"
+        ],
         methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        credentials: true,
-        allowedHeaders: ["Content-Type", "Authorization"],
-        preflightContinue: false,
-        optionsSuccessStatus: 204,
-        exposedHeaders: ['Access-Control-Allow-Origin']
+        credentials: false,
+        allowedHeaders: ["Content-Type", "Authorization"]
     },
     transports: ['websocket', 'polling'],
     allowEIO3: true,
     pingTimeout: 60000,
     pingInterval: 25000,
     connectTimeout: 60000,
-    // Add error handling for socket.io
-    handlePreflightRequest: (req, res) => {
-        const headers = {
-            "Access-Control-Allow-Headers": "Content-Type, Authorization",
-            "Access-Control-Allow-Origin": req.headers.origin,
-            "Access-Control-Allow-Credentials": true,
-            "Access-Control-Max-Age": "1728000"
-        };
-        res.writeHead(200, headers);
-        res.end();
-    }
+    path: '/socket.io'
 });
 
-// CORS middleware for Express with extended timeout
+// CORS middleware for Express
 app.use(cors({
-    origin: ["https://lies-client-9ayj.onrender.com", "http://localhost:3000"],
+    origin: [
+        "https://lies-client-9ayj.onrender.com",
+        "http://localhost:3000",
+        "https://thespeakeasy.onrender.com"
+    ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true,
-    preflightContinue: false,
-    optionsSuccessStatus: 204,
-    exposedHeaders: ['Access-Control-Allow-Origin'],
-    maxAge: 1728000 // 20 days
+    credentials: false,
+    optionsSuccessStatus: 200
 }));
 
 // Increase server timeout
