@@ -2,6 +2,7 @@
     "name": "chat-app-client",
     "version": "0.1.0",
     "private": true,
+    "proxy": "http://localhost:8080",
     "dependencies": {
         "@date-io/dayjs": "^3.2.0",
         "@emoji-mart/data": "^1.2.1",

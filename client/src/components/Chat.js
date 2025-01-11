@@ -255,14 +255,23 @@ export default function Chat() {
         const fetchRooms = async () => {
             try {
                 setLoading(true);
-                const response = await fetch('/api/rooms', {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    throw new Error('No authentication token found');
+                }
+
+                const response = await fetch('http://localhost:8080/api/rooms', {
                     headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                        'Accept': 'application/json'
-                    }
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'omit'
                 });
 
                 if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Server response:', errorText);
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
 
@@ -273,13 +282,15 @@ export default function Chat() {
                 let publicLobby = data.rooms?.find(room => room.name === 'Public Lobby');
 
                 if (!publicLobby) {
+                    console.log('Creating public lobby...');
                     // Create public lobby if it doesn't exist
-                    const createResponse = await fetch('/api/rooms', {
+                    const createResponse = await fetch('http://localhost:8080/api/rooms', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`
+                            'Authorization': `Bearer ${token}`
                         },
+                        credentials: 'omit',
                         body: JSON.stringify({
                             name: 'Public Lobby',
                             topic: 'Welcome to the chat!',
@@ -289,6 +300,8 @@ export default function Chat() {
                     });
 
                     if (!createResponse.ok) {
+                        const errorText = await createResponse.text();
+                        console.error('Failed to create lobby:', errorText);
                         throw new Error('Failed to create public lobby');
                     }
 
@@ -300,7 +313,7 @@ export default function Chat() {
                 setRooms(data.rooms || []);
 
                 // Always join public lobby first if no active room
-                if (!activeRoom) {
+                if (!activeRoom && publicLobby) {
                     setActiveRoom(publicLobby.id);
                     socket?.emit('join_room', publicLobby.id);
                 }
@@ -317,6 +330,9 @@ export default function Chat() {
                 setRooms([defaultLobby]);
                 setActiveRoom(defaultLobby.id);
                 socket?.emit('join_room', defaultLobby.id);
+
+                // Show error in UI
+                setConnectionError(true);
             } finally {
                 setLoading(false);
             }

@@ -15,40 +15,51 @@ export const SocketProvider = ({ children }) => {
     useEffect(() => {
         if (user) {
             // Create socket connection
-            const newSocket = io(process.env.REACT_APP_API_URL, {
-                transports: ['websocket', 'polling'],
-                withCredentials: true,
+            const newSocket = io('http://localhost:8080', {
+                transports: ['polling', 'websocket'],
+                withCredentials: false,
                 autoConnect: true,
                 forceNew: true,
                 reconnection: true,
-                reconnectionAttempts: Infinity,
+                reconnectionAttempts: 5,
                 reconnectionDelay: 1000,
                 reconnectionDelayMax: 5000,
-                timeout: 60000, // 60 seconds
+                timeout: 20000,
                 auth: {
-                    token: user.token
-                }
+                    token: localStorage.getItem('token')
+                },
+                path: '/socket.io'
             });
 
             // Socket event listeners
             newSocket.on('connect', () => {
                 console.log('Socket connected successfully');
+                // Join default room after connection
+                if (user.username) {
+                    newSocket.emit('join_default', { username: user.username });
+                }
             });
 
             newSocket.on('connect_error', (error) => {
                 console.error('Socket connection error:', error);
                 // Try to reconnect with polling if websocket fails
-                if (newSocket.io.opts.transports.includes('websocket')) {
+                if (newSocket.io.opts.transports[0] === 'websocket') {
                     console.log('Falling back to polling transport');
                     newSocket.io.opts.transports = ['polling'];
                 }
+            });
+
+            newSocket.on('error', (error) => {
+                console.error('Socket error:', error);
             });
 
             newSocket.on('disconnect', (reason) => {
                 console.log('Socket disconnected:', reason);
                 if (reason === 'io server disconnect') {
                     // Server initiated disconnect, try reconnecting
-                    newSocket.connect();
+                    setTimeout(() => {
+                        newSocket.connect();
+                    }, 1000);
                 }
             });
 
