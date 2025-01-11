@@ -187,17 +187,6 @@ router.post('/upload-avatar', auth, upload.single('avatar'), async (req, res) =>
             return res.status(400).json({ error: 'No file uploaded' });
         }
 
-        // Delete old avatar file if it exists
-        if (req.user.avatarUrl) {
-            const oldAvatarPath = path.join(__dirname, '..', req.user.avatarUrl);
-            try {
-                await fs.unlink(oldAvatarPath);
-            } catch (error) {
-                console.log('Error deleting old avatar:', error);
-                // Continue even if old file deletion fails
-            }
-        }
-
         // Generate the URL for the uploaded file
         const avatarUrl = `/uploads/avatars/${req.file.filename}`;
 
@@ -205,37 +194,24 @@ router.post('/upload-avatar', auth, upload.single('avatar'), async (req, res) =>
         req.user.avatarUrl = avatarUrl;
         await req.user.save();
 
-        // Return the new avatar URL with a timestamp to prevent caching
-        const timestamp = new Date().getTime();
+        // Return success response with the new avatar URL
         res.json({
             success: true,
-            avatarUrl: `${avatarUrl}?t=${timestamp}`,
-            message: 'Avatar uploaded successfully'
+            avatarUrl: avatarUrl
         });
     } catch (error) {
         console.error('Avatar upload error:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Failed to upload avatar',
-            message: error.message
-        });
+        res.status(500).json({ error: 'Failed to upload avatar' });
     }
 }, (error, req, res, next) => {
     // Error handling middleware for multer errors
     if (error instanceof multer.MulterError) {
         if (error.code === 'LIMIT_FILE_SIZE') {
-            return res.status(400).json({
-                success: false,
-                error: 'File too large',
-                message: 'File size must be less than 5MB'
-            });
+            return res.status(400).json({ error: 'File size too large. Maximum size is 5MB.' });
         }
+        return res.status(400).json({ error: error.message });
     }
-    res.status(400).json({
-        success: false,
-        error: 'File upload error',
-        message: error.message
-    });
+    res.status(500).json({ error: error.message });
 });
 
 // Request password reset

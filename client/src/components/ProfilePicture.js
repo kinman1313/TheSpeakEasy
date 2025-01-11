@@ -59,25 +59,16 @@ export default function ProfilePicture({ size = 40, showEditButton = true, onClo
                 body: formData,
                 headers: {
                     'Authorization': `Bearer ${token}`
-                },
-                credentials: 'include'
+                }
             });
 
-            const data = await response.json();
-
             if (!response.ok) {
-                throw new Error(data.message || data.error || 'Failed to upload avatar');
+                const data = await response.json();
+                throw new Error(data.error || 'Failed to upload avatar');
             }
 
-            if (!data.success) {
-                throw new Error(data.message || data.error || 'Failed to upload avatar');
-            }
-
+            const data = await response.json();
             await updateProfile({ avatarUrl: data.avatarUrl });
-
-            const timestamp = new Date().getTime();
-            const newAvatarUrl = `${data.avatarUrl}?t=${timestamp}`;
-            await updateProfile({ avatarUrl: newAvatarUrl });
 
             setOpen(false);
             if (onClose) onClose();
@@ -86,6 +77,8 @@ export default function ProfilePicture({ size = 40, showEditButton = true, onClo
             setError(err.message || 'Failed to upload avatar');
         } finally {
             setLoading(false);
+            setSelectedFile(null);
+            setPreviewUrl(null);
         }
     };
 

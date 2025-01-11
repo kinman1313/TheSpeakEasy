@@ -100,7 +100,7 @@ export default function Chat() {
     const [showRoomSettings, setShowRoomSettings] = useState(false);
     const [activeRoomDetails, setActiveRoomDetails] = useState(null);
 
-    // Add useEffect for fetching rooms
+    // Update useEffect for fetching rooms
     useEffect(() => {
         const fetchRooms = async () => {
             try {
@@ -117,25 +117,53 @@ export default function Chat() {
 
                 const data = await response.json();
                 console.log('Fetched rooms:', data); // Debug log
+
+                // Check if public lobby exists
+                let publicLobby = data.rooms?.find(room => room.name === 'Public Lobby');
+
+                if (!publicLobby) {
+                    // Create public lobby if it doesn't exist
+                    const createResponse = await fetch('/api/rooms', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        },
+                        body: JSON.stringify({
+                            name: 'Public Lobby',
+                            topic: 'Welcome to the chat!',
+                            isPrivate: false,
+                            isLobby: true
+                        })
+                    });
+
+                    if (!createResponse.ok) {
+                        throw new Error('Failed to create public lobby');
+                    }
+
+                    const createData = await createResponse.json();
+                    publicLobby = createData.room;
+                    data.rooms = [...(data.rooms || []), publicLobby];
+                }
+
                 setRooms(data.rooms || []);
 
-                // Join public lobby by default
-                if (data.rooms?.length > 0) {
-                    const publicLobby = data.rooms.find(room => room.name === 'public-lobby');
-                    if (publicLobby) {
-                        setActiveRoom(publicLobby.id);
-                        socket.emit('join_room', publicLobby.id);
-                    }
-                }
+                // Always join public lobby first
+                setActiveRoom(publicLobby.id);
+                socket?.emit('join_room', publicLobby.id);
             } catch (error) {
-                console.error('Error fetching rooms:', error);
-                // Set default public lobby if fetch fails
-                setRooms([{
+                console.error('Error fetching/creating rooms:', error);
+                // Set default public lobby in state if everything fails
+                const defaultLobby = {
                     id: 'public-lobby',
                     name: 'Public Lobby',
                     topic: 'Welcome to the chat!',
-                    isPrivate: false
-                }]);
+                    isPrivate: false,
+                    isLobby: true
+                };
+                setRooms([defaultLobby]);
+                setActiveRoom(defaultLobby.id);
+                socket?.emit('join_room', defaultLobby.id);
             }
         };
 
