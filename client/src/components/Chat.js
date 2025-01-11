@@ -194,79 +194,72 @@ export default function Chat() {
     };
 
     useEffect(() => {
-        if (socket) {
-            // Connect to the socket and join public lobby
-            socket.connect();
-            socket.emit('join', 'public-lobby');
+        if (!socket) return;
 
-            // Handle incoming messages
-            socket.on('message', (newMessage) => {
-                console.log('Received message:', newMessage);
-                setMessages(prevMessages => {
-                    // Check if message already exists
-                    const messageExists = prevMessages.some(msg =>
-                        msg.timestamp === newMessage.timestamp &&
-                        msg.sender === newMessage.sender &&
-                        msg.content === newMessage.content
-                    );
+        // Connect to the socket and join public lobby
+        socket.connect();
+        socket.emit('join', 'public-lobby');
 
-                    if (messageExists) {
-                        console.log('Duplicate message detected, skipping');
-                        return prevMessages;
-                    }
+        // Handle incoming messages
+        const handleMessage = (newMessage) => {
+            console.log('Received message:', newMessage);
+            setMessages(prevMessages => {
+                // Check if message already exists
+                const messageExists = prevMessages.some(msg =>
+                    msg.timestamp === newMessage.timestamp &&
+                    msg.sender === newMessage.sender &&
+                    msg.content === newMessage.content
+                );
 
-                    const updatedMessages = [...prevMessages, {
-                        _id: newMessage._id || Date.now(),
-                        ...newMessage
-                    }];
+                if (messageExists) {
+                    console.log('Duplicate message detected, skipping');
+                    return prevMessages;
+                }
 
-                    console.log('Updated messages:', updatedMessages);
-                    return updatedMessages;
-                });
-                scrollToBottom();
+                const updatedMessages = [...prevMessages, {
+                    _id: newMessage._id || Date.now(),
+                    ...newMessage
+                }];
+
+                console.log('Updated messages:', updatedMessages);
+                return updatedMessages;
             });
+            scrollToBottom();
+        };
 
-            // Handle user list updates
-            socket.on('userList', (users) => {
-                console.log('Online users:', users); // Debug log
-                setOnlineUsers(users);
+        // Handle user list updates
+        const handleUserList = (users) => {
+            console.log('Online users:', users);
+            setOnlineUsers(users);
+        };
+
+        // Handle typing indicators
+        const handleTyping = ({ username, isTyping }) => {
+            setTypingUsers(prev => {
+                const newSet = new Set(prev);
+                if (isTyping) {
+                    newSet.add(username);
+                } else {
+                    newSet.delete(username);
+                }
+                return newSet;
             });
+        };
 
-            // Handle typing indicators
-            socket.on('typing', ({ username, isTyping }) => {
-                setTypingUsers(prev => {
-                    const newSet = new Set(prev);
-                    if (isTyping) {
-                        newSet.add(username);
-                    } else {
-                        newSet.delete(username);
-                    }
-                    return newSet;
-                });
-            });
+        socket.on('message', handleMessage);
+        socket.on('userList', handleUserList);
+        socket.on('typing', handleTyping);
+        socket.on('connect', () => console.log('Connected to server'));
+        socket.on('disconnect', () => console.log('Disconnected from server'));
 
-            // Handle connection/disconnection
-            socket.on('connect', () => {
-                console.log('Connected to server');
-                setLoading(false);
-            });
-
-            socket.on('disconnect', () => {
-                console.log('Disconnected from server');
-                setLoading(true);
-            });
-
-            // Cleanup on unmount
-            return () => {
-                socket.off('message');
-                socket.off('typing');
-                socket.off('userList');
-                socket.off('connect');
-                socket.off('disconnect');
-                socket.disconnect();
-            };
-        }
-    }, [socket]);
+        return () => {
+            socket.off('message', handleMessage);
+            socket.off('userList', handleUserList);
+            socket.off('typing', handleTyping);
+            socket.off('connect');
+            socket.off('disconnect');
+        };
+    }, [socket, scrollToBottom]);
 
     useEffect(() => {
         const container = messagesContainerRef.current;
@@ -439,22 +432,22 @@ export default function Chat() {
     };
 
     useEffect(() => {
-        if (messageVanishTime) {
-            const now = Date.now();
-            const timeouts = messages.map(message => {
-                const messageTime = new Date(message.timestamp).getTime();
-                const timeLeft = messageTime + (messageVanishTime * 60 * 1000) - now;
+        if (!messageVanishTime || !messages.length) return;
 
-                if (timeLeft > 0) {
-                    return setTimeout(() => {
-                        setMessages(prev => prev.filter(m => m._id !== message._id));
-                    }, timeLeft);
-                }
-                return null;
-            }).filter(Boolean);
+        const now = Date.now();
+        const timeouts = messages.map(message => {
+            const messageTime = new Date(message.timestamp).getTime();
+            const timeLeft = messageTime + (messageVanishTime * 60 * 1000) - now;
 
-            return () => timeouts.forEach(timeout => clearTimeout(timeout));
-        }
+            if (timeLeft > 0) {
+                return setTimeout(() => {
+                    setMessages(prev => prev.filter(m => m._id !== message._id));
+                }, timeLeft);
+            }
+            return null;
+        }).filter(Boolean);
+
+        return () => timeouts.forEach(timeout => clearTimeout(timeout));
     }, [messageVanishTime, messages]);
 
     const handleVanishTimeSelect = (minutes) => {
@@ -711,7 +704,7 @@ export default function Chat() {
         return () => {
             socket.off('topic_updated');
         };
-    }, [activeRoom]);
+    }, [activeRoom, socket]);
 
     // Add drawer content component
     const drawerContent = (

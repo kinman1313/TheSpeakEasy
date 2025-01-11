@@ -51,13 +51,15 @@ export default function VoiceMessage({ onComplete }) {
         };
 
         setupRecorder();
+    }, []);
 
+    useEffect(() => {
         return () => {
             if (mediaRecorder && mediaRecorder.state !== 'inactive') {
                 mediaRecorder.stop();
             }
         };
-    }, []);
+    }, [mediaRecorder]);
 
     const startRecording = () => {
         if (mediaRecorder && mediaRecorder.state === 'inactive') {
