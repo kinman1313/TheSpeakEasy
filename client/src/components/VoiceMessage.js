@@ -1,85 +1,75 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Box, IconButton, Typography, Paper, Dialog, CircularProgress } from '@mui/material';
-import { Close as CloseIcon, Mic as MicIcon, Stop as StopIcon, Send as SendIcon } from '@mui/icons-material';
+import React, { useState, useEffect, useRef } from 'react';
+import { Box, IconButton, Typography, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
+import { Mic as MicIcon, Stop as StopIcon, Delete as DeleteIcon, Send as SendIcon } from '@mui/icons-material';
 
 export default function VoiceMessage({ onSend, onClose }) {
     const [isRecording, setIsRecording] = useState(false);
     const [audioBlob, setAudioBlob] = useState(null);
-    const [recordingTime, setRecordingTime] = useState(0);
-    const [permissionGranted, setPermissionGranted] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const mediaRecorder = useRef(null);
-    const timerInterval = useRef(null);
-    const audioChunks = useRef([]);
+    const [duration, setDuration] = useState(0);
+    const [hasPermission, setHasPermission] = useState(null);
+    const mediaRecorderRef = useRef(null);
+    const chunksRef = useRef([]);
+    const startTimeRef = useRef(null);
+    const timerRef = useRef(null);
 
     useEffect(() => {
-        // Request microphone permission on component mount
-        const requestMicrophonePermission = async () => {
-            try {
-                setLoading(true);
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                setPermissionGranted(true);
-                stream.getTracks().forEach(track => track.stop()); // Stop initial stream
-            } catch (error) {
-                console.error('Error accessing microphone:', error);
-                setPermissionGranted(false);
-            } finally {
-                setLoading(false);
-            }
-        };
         requestMicrophonePermission();
+        return () => {
+            if (timerRef.current) clearInterval(timerRef.current);
+            stopRecording();
+        };
     }, []);
 
-    const startRecording = async () => {
+    const requestMicrophonePermission = async () => {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorder.current = new MediaRecorder(stream, {
-                mimeType: 'audio/webm;codecs=opus'
-            });
-            audioChunks.current = [];
-
-            mediaRecorder.current.ondataavailable = (event) => {
-                if (event.data.size > 0) {
-                    audioChunks.current.push(event.data);
-                }
-            };
-
-            mediaRecorder.current.onstop = () => {
-                const audioBlob = new Blob(audioChunks.current, {
-                    type: 'audio/webm;codecs=opus'
-                });
-                console.log('Created audio blob:', audioBlob);
-                setAudioBlob(audioBlob);
-            };
-
-            mediaRecorder.current.start(100);
-            setIsRecording(true);
-            startTimer();
+            setHasPermission(true);
+            setupMediaRecorder(stream);
         } catch (error) {
-            console.error('Error starting recording:', error);
+            console.error('Error accessing microphone:', error);
+            setHasPermission(false);
         }
+    };
+
+    const setupMediaRecorder = (stream) => {
+        mediaRecorderRef.current = new MediaRecorder(stream);
+        mediaRecorderRef.current.ondataavailable = handleDataAvailable;
+        mediaRecorderRef.current.onstop = handleStop;
+    };
+
+    const handleDataAvailable = (event) => {
+        if (event.data.size > 0) {
+            chunksRef.current.push(event.data);
+        }
+    };
+
+    const handleStop = () => {
+        const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+        setAudioBlob(blob);
+        chunksRef.current = [];
+    };
+
+    const startRecording = () => {
+        if (!mediaRecorderRef.current) return;
+        chunksRef.current = [];
+        mediaRecorderRef.current.start();
+        setIsRecording(true);
+        startTimeRef.current = Date.now();
+        timerRef.current = setInterval(updateDuration, 100);
     };
 
     const stopRecording = () => {
-        if (mediaRecorder.current && isRecording) {
-            mediaRecorder.current.stop();
-            mediaRecorder.current.stream.getTracks().forEach(track => track.stop());
-            setIsRecording(false);
-            stopTimer();
+        if (!mediaRecorderRef.current || mediaRecorderRef.current.state === 'inactive') return;
+        mediaRecorderRef.current.stop();
+        setIsRecording(false);
+        if (timerRef.current) {
+            clearInterval(timerRef.current);
         }
     };
 
-    const startTimer = () => {
-        setRecordingTime(0);
-        timerInterval.current = setInterval(() => {
-            setRecordingTime(prev => prev + 1);
-        }, 1000);
-    };
-
-    const stopTimer = () => {
-        if (timerInterval.current) {
-            clearInterval(timerInterval.current);
-        }
+    const updateDuration = () => {
+        const elapsed = Date.now() - startTimeRef.current;
+        setDuration(elapsed / 1000);
     };
 
     const handleSend = () => {
@@ -88,110 +78,111 @@ export default function VoiceMessage({ onSend, onClose }) {
         }
     };
 
-    const formatTime = (seconds) => {
+    const handleReset = () => {
+        setAudioBlob(null);
+        setDuration(0);
+    };
+
+    const formatDuration = (seconds) => {
         const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
+        const secs = Math.floor(seconds % 60);
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     };
 
-    if (loading) {
+    if (hasPermission === false) {
         return (
-            <Dialog open={true} PaperProps={{ sx: { bgcolor: 'transparent', boxShadow: 'none' } }}>
-                <CircularProgress sx={{ color: '#f3d77f' }} />
-            </Dialog>
+            <Box sx={{ p: 3, textAlign: 'center' }}>
+                <Typography color="error">
+                    Microphone access denied. Please enable microphone access to record voice messages.
+                </Typography>
+            </Box>
         );
     }
 
     return (
-        <Dialog
-            open={true}
-            onClose={onClose}
-            PaperProps={{
-                sx: {
-                    bgcolor: 'rgba(10, 25, 41, 0.95)',
-                    backdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(243, 215, 127, 0.1)',
-                    borderRadius: 2,
-                    minWidth: 300,
-                    color: 'white'
-                }
-            }}
-        >
-            <Box sx={{ p: 2 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                    <Typography variant="h6" sx={{ color: '#f3d77f' }}>Voice Message</Typography>
-                    <IconButton onClick={onClose} size="small" sx={{ color: '#f3d77f' }}>
-                        <CloseIcon />
-                    </IconButton>
-                </Box>
-
-                {!permissionGranted ? (
-                    <Typography color="error" sx={{ textAlign: 'center', my: 2 }}>
-                        Please allow microphone access to record voice messages
-                    </Typography>
-                ) : (
-                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-                        <Paper
-                            elevation={3}
+        <>
+            <DialogTitle>Record Voice Message</DialogTitle>
+            <DialogContent>
+                <Box sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 2,
+                    p: 2
+                }}>
+                    <Box sx={{
+                        width: 80,
+                        height: 80,
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        bgcolor: isRecording ? 'error.main' : 'primary.main',
+                        transition: 'all 0.3s ease',
+                        transform: isRecording ? 'scale(1.1)' : 'scale(1)',
+                        boxShadow: isRecording ? '0 0 20px rgba(255, 0, 0, 0.5)' : 'none'
+                    }}>
+                        <IconButton
+                            onClick={isRecording ? stopRecording : startRecording}
                             sx={{
-                                width: '100%',
-                                p: 2,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                                borderRadius: 2,
-                                bgcolor: isRecording ? 'rgba(243, 215, 127, 0.1)' : 'rgba(10, 25, 41, 0.6)',
-                                border: '1px solid rgba(243, 215, 127, 0.1)',
-                                backdropFilter: 'blur(10px)'
+                                color: 'white',
+                                '&:hover': { bgcolor: 'transparent' }
                             }}
                         >
-                            <Typography sx={{ color: '#f3d77f' }}>
-                                {isRecording ? formatTime(recordingTime) : 'Ready to record'}
-                            </Typography>
-                            <IconButton
-                                color="primary"
-                                onClick={isRecording ? stopRecording : startRecording}
-                                sx={{
-                                    color: '#f3d77f',
-                                    '&:hover': {
-                                        bgcolor: 'rgba(243, 215, 127, 0.1)'
-                                    }
-                                }}
-                            >
-                                {isRecording ? <StopIcon /> : <MicIcon />}
-                            </IconButton>
-                        </Paper>
-
-                        {audioBlob && (
-                            <Box sx={{ width: '100%' }}>
-                                <audio
-                                    controls
-                                    src={URL.createObjectURL(audioBlob)}
-                                    style={{
-                                        width: '100%',
-                                        height: 40,
-                                        borderRadius: 8,
-                                        backgroundColor: 'rgba(243, 215, 127, 0.1)'
-                                    }}
-                                />
-                                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-                                    <IconButton
-                                        onClick={handleSend}
-                                        sx={{
-                                            color: '#f3d77f',
-                                            '&:hover': {
-                                                bgcolor: 'rgba(243, 215, 127, 0.1)'
-                                            }
-                                        }}
-                                    >
-                                        <SendIcon />
-                                    </IconButton>
-                                </Box>
-                            </Box>
-                        )}
+                            {isRecording ? <StopIcon fontSize="large" /> : <MicIcon fontSize="large" />}
+                        </IconButton>
                     </Box>
+
+                    <Typography variant="h6">
+                        {isRecording ? 'Recording...' : audioBlob ? 'Ready to send' : 'Click to start'}
+                    </Typography>
+
+                    <Typography variant="body2" color="textSecondary">
+                        {formatDuration(duration)}
+                    </Typography>
+
+                    {isRecording && (
+                        <LinearProgress
+                            sx={{
+                                width: '100%',
+                                height: 4,
+                                borderRadius: 2
+                            }}
+                        />
+                    )}
+                </Box>
+            </DialogContent>
+
+            <DialogActions sx={{ p: 2, gap: 1 }}>
+                <Button
+                    onClick={onClose}
+                    color="inherit"
+                    sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
+                >
+                    Cancel
+                </Button>
+                {audioBlob && (
+                    <>
+                        <IconButton
+                            onClick={handleReset}
+                            sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
+                        >
+                            <DeleteIcon />
+                        </IconButton>
+                        <Button
+                            variant="contained"
+                            onClick={handleSend}
+                            startIcon={<SendIcon />}
+                            sx={{
+                                bgcolor: 'primary.main',
+                                '&:hover': { bgcolor: 'primary.dark' }
+                            }}
+                        >
+                            Send
+                        </Button>
+                    </>
                 )}
-            </Box>
-        </Dialog>
+            </DialogActions>
+        </>
     );
 } 

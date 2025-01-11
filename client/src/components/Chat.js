@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Box, Drawer, IconButton, Divider, Typography, Avatar, Menu, MenuItem, Tooltip, List, ListItem, ListItemButton, ListItemAvatar, ListItemText, Paper, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, ListItemIcon, Switch } from '@mui/material';
+import { Box, Drawer, IconButton, Divider, Typography, Avatar, Menu, MenuItem, Tooltip, List, ListItem, ListItemButton, ListItemAvatar, ListItemText, Paper, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, ListItemIcon, Switch, AppBar, Toolbar } from '@mui/material';
 import {
     Add as AddIcon,
     Send as SendIcon,
@@ -15,7 +15,8 @@ import {
     Logout as LogoutIcon,
     Timer as TimerIcon,
     Check as CheckIcon,
-    FormatPaint as FormatPaintIcon
+    FormatPaint as FormatPaintIcon,
+    Search as SearchIcon
 } from '@mui/icons-material';
 import RoomList from './RoomList';
 import MessageThread from './MessageThread';
@@ -80,6 +81,14 @@ export default function Chat() {
     const messagesEndRef = useRef(null);
     const messagesContainerRef = useRef(null);
     const messageInputRef = useRef(null);
+
+    // Add mobile drawer state
+    const [mobileOpen, setMobileOpen] = useState(false);
+
+    // Add mobile drawer toggle handler
+    const handleDrawerToggle = () => {
+        setMobileOpen(!mobileOpen);
+    };
 
     useEffect(() => {
         if (socket) {
@@ -386,6 +395,96 @@ export default function Chat() {
         setShowBubbleCustomizer(false);
     };
 
+    // Add drawer content component
+    const drawerContent = (
+        <>
+            <Box sx={{
+                p: 2,
+                borderBottom: '1px solid rgba(255, 255, 255, 0.125)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 2
+            }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <Typography variant="h6">Chats</Typography>
+                    <IconButton
+                        onClick={() => setIsNewChatOpen(true)}
+                        sx={{ color: 'white' }}
+                    >
+                        <AddIcon />
+                    </IconButton>
+                </Box>
+                <TextField
+                    placeholder="Search users or rooms..."
+                    size="small"
+                    fullWidth
+                    InputProps={{
+                        startAdornment: <SearchIcon sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.5)' }} />,
+                        sx: { color: 'white' }
+                    }}
+                    sx={{
+                        '& .MuiOutlinedInput-root': {
+                            bgcolor: 'rgba(255, 255, 255, 0.05)',
+                            '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.08)' },
+                            '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.125)' }
+                        }
+                    }}
+                />
+            </Box>
+
+            <List sx={{ flex: 1, overflowY: 'auto' }}>
+                <ListSubheader sx={{ bgcolor: 'transparent', color: 'white', fontWeight: 600 }}>
+                    Public Rooms
+                </ListSubheader>
+                {rooms.map((room) => (
+                    <ListItem key={room.id} disablePadding>
+                        <ListItemButton
+                            selected={activeRoom?.id === room.id}
+                            onClick={() => handleRoomSelect(room)}
+                            sx={{
+                                '&.Mui-selected': {
+                                    bgcolor: 'rgba(255, 255, 255, 0.1)',
+                                    '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.15)' }
+                                }
+                            }}
+                        >
+                            <ListItemAvatar>
+                                <Avatar sx={{ bgcolor: 'primary.main' }}>
+                                    {room.name[0].toUpperCase()}
+                                </Avatar>
+                            </ListItemAvatar>
+                            <ListItemText
+                                primary={room.name}
+                                secondary={room.topic || 'No topic set'}
+                                secondaryTypographyProps={{ color: 'rgba(255, 255, 255, 0.7)' }}
+                            />
+                        </ListItemButton>
+                    </ListItem>
+                ))}
+
+                <ListSubheader sx={{ bgcolor: 'transparent', color: 'white', fontWeight: 600, mt: 2 }}>
+                    Direct Messages
+                </ListSubheader>
+                {onlineUsers.map((user) => (
+                    <ListItem key={user.id} disablePadding>
+                        <ListItemButton onClick={() => handleStartDM(user)}>
+                            <ListItemAvatar>
+                                <Avatar src={user.avatarUrl}>
+                                    {user.username[0].toUpperCase()}
+                                </Avatar>
+                            </ListItemAvatar>
+                            <ListItemText
+                                primary={user.username}
+                                secondary={user.status || 'Online'}
+                                secondaryTypographyProps={{ color: 'rgba(255, 255, 255, 0.7)' }}
+                            />
+                        </ListItemButton>
+                    </ListItem>
+                ))}
+            </List>
+        </>
+    );
+
     return (
         <Box sx={{
             display: 'flex',
@@ -399,119 +498,100 @@ export default function Chat() {
             position: 'relative',
             overscrollBehavior: 'none'
         }}>
+            {/* Mobile app bar */}
+            <AppBar
+                position="fixed"
+                sx={{
+                    display: { sm: 'none' },
+                    bgcolor: 'rgba(17, 25, 40, 0.75)',
+                    backdropFilter: 'blur(16px)',
+                    borderBottom: '1px solid rgba(255, 255, 255, 0.125)'
+                }}
+            >
+                <Toolbar>
+                    <IconButton
+                        color="inherit"
+                        edge="start"
+                        onClick={handleDrawerToggle}
+                        sx={{ mr: 2 }}
+                    >
+                        <MenuIcon />
+                    </IconButton>
+                    <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+                        TheSpeakEasy
+                    </Typography>
+                    <IconButton
+                        color="inherit"
+                        onClick={(e) => setUserMenuAnchor(e.currentTarget)}
+                    >
+                        <Avatar
+                            src={user?.avatarUrl}
+                            sx={{
+                                width: 32,
+                                height: 32,
+                                bgcolor: 'rgba(255, 255, 255, 0.1)',
+                                border: '2px solid rgba(255, 255, 255, 0.2)'
+                            }}
+                        >
+                            {user?.username?.[0]?.toUpperCase()}
+                        </Avatar>
+                    </IconButton>
+                </Toolbar>
+            </AppBar>
+
+            {/* Mobile drawer */}
+            <Drawer
+                variant="temporary"
+                open={mobileOpen}
+                onClose={handleDrawerToggle}
+                ModalProps={{
+                    keepMounted: true // Better mobile performance
+                }}
+                sx={{
+                    display: { xs: 'block', sm: 'none' },
+                    '& .MuiDrawer-paper': {
+                        width: drawerWidth.xs,
+                        boxSizing: 'border-box',
+                        backdropFilter: 'blur(16px)',
+                        bgcolor: 'rgba(17, 25, 40, 0.95)',
+                        border: 'none'
+                    }
+                }}
+            >
+                {drawerContent}
+            </Drawer>
+
+            {/* Desktop drawer */}
             <Drawer
                 variant="permanent"
                 sx={{
                     display: { xs: 'none', sm: 'block' },
-                    width: drawerWidth,
+                    width: drawerWidth.sm,
                     flexShrink: 0,
                     '& .MuiDrawer-paper': {
-                        width: drawerWidth,
+                        width: drawerWidth.sm,
                         boxSizing: 'border-box',
-                        backdropFilter: 'blur(16px) saturate(180%)',
-                        WebkitBackdropFilter: 'blur(16px) saturate(180%)',
-                        backgroundColor: 'rgba(17, 25, 40, 0.75)',
-                        border: '1px solid rgba(255, 255, 255, 0.125)',
-                        boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
-                        '& .MuiListItemButton-root': {
-                            transition: 'all 0.3s ease',
-                            '&:hover': {
-                                bgcolor: 'rgba(255, 255, 255, 0.1)',
-                                boxShadow: '0 0 15px rgba(255, 255, 255, 0.2)',
-                                transform: 'translateY(-2px)'
-                            }
-                        }
+                        backdropFilter: 'blur(16px)',
+                        bgcolor: 'rgba(17, 25, 40, 0.75)',
+                        border: '1px solid rgba(255, 255, 255, 0.125)'
                     }
                 }}
             >
-                <Box sx={{
-                    p: 2,
-                    borderBottom: '1px solid rgba(255, 255, 255, 0.125)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    backdropFilter: 'blur(16px) saturate(180%)',
-                    backgroundColor: 'rgba(17, 25, 40, 0.75)'
-                }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Avatar
-                            src={user?.avatarUrl}
-                            sx={{
-                                bgcolor: 'rgba(255, 255, 255, 0.1)',
-                                border: '2px solid rgba(255, 255, 255, 0.2)',
-                                color: 'white',
-                                cursor: 'pointer'
-                            }}
-                            onClick={(e) => setUserMenuAnchor(e.currentTarget)}
-                        >
-                            {user?.username?.[0]?.toUpperCase()}
-                        </Avatar>
-                        <Typography variant="subtitle1" sx={{ color: 'white' }}>
-                            {user?.username}
-                        </Typography>
-                    </Box>
-                    <IconButton
-                        onClick={(e) => setUserMenuAnchor(e.currentTarget)}
-                        sx={{
-                            color: 'white',
-                            '&:hover': {
-                                bgcolor: 'rgba(255, 255, 255, 0.1)'
-                            }
-                        }}
-                    >
-                        <MenuIcon />
-                    </IconButton>
-                </Box>
-
-                <Typography variant="h6" sx={{ p: 2, color: 'white' }}>Online Users</Typography>
-                <List>
-                    {onlineUsers.map((user) => (
-                        <ListItem key={user.id} disablePadding>
-                            <ListItemButton
-                                sx={{
-                                    transition: 'all 0.3s ease',
-                                    '&:hover': {
-                                        bgcolor: 'rgba(255, 255, 255, 0.1)'
-                                    }
-                                }}
-                            >
-                                <ListItemAvatar>
-                                    <Avatar sx={{
-                                        bgcolor: 'rgba(255, 255, 255, 0.1)',
-                                        border: '2px solid rgba(255, 255, 255, 0.2)',
-                                        color: 'white'
-                                    }}>
-                                        {user.username[0].toUpperCase()}
-                                    </Avatar>
-                                </ListItemAvatar>
-                                <ListItemText
-                                    primary={user.username}
-                                    sx={{
-                                        '& .MuiListItemText-primary': {
-                                            color: 'rgba(255, 255, 255, 0.9)'
-                                        }
-                                    }}
-                                />
-                            </ListItemButton>
-                        </ListItem>
-                    ))}
-                </List>
+                {drawerContent}
             </Drawer>
 
+            {/* Main content */}
             <Box
                 component="main"
                 sx={{
                     flexGrow: 1,
-                    p: { xs: 1, sm: 2, md: 3 },
+                    height: '100vh',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: 2,
-                    position: 'relative',
-                    backdropFilter: 'blur(16px) saturate(180%)',
-                    WebkitBackdropFilter: 'blur(16px) saturate(180%)',
-                    backgroundColor: 'rgba(17, 25, 40, 0.75)',
-                    overscrollBehavior: 'none',
-                    marginLeft: { xs: 0, sm: `${drawerWidth.sm}px`, md: `${drawerWidth.md}px` }
+                    pt: { xs: 7, sm: 0 }, // Account for mobile AppBar
+                    pb: 2,
+                    px: { xs: 1, sm: 2 },
+                    overflow: 'hidden'
                 }}
             >
                 <Box
