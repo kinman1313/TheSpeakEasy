@@ -793,16 +793,16 @@ export default function Chat() {
                     flexDirection: 'column',
                     gap: 2,
                     height: 'calc(100vh - 48px)',
-                    backdropFilter: 'blur(20px) saturate(200%)',
-                    WebkitBackdropFilter: 'blur(20px) saturate(200%)',
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    backdropFilter: 'blur(25px) saturate(200%)',
+                    WebkitBackdropFilter: 'blur(25px) saturate(200%)',
+                    backgroundColor: 'rgba(255, 255, 255, 0.03)',
                     borderRadius: '24px',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
                     boxShadow: `
-                        0 4px 24px -1px rgba(0, 0, 0, 0.2),
-                        0 0 16px -2px rgba(0, 0, 0, 0.1),
+                        0 4px 24px -1px rgba(0, 0, 0, 0.3),
+                        0 0 16px -2px rgba(0, 0, 0, 0.2),
                         0 0 1px 0 rgba(255, 255, 255, 0.2) inset,
-                        0 0 15px 0 rgba(255, 255, 255, 0.05)
+                        0 0 20px 0 rgba(255, 255, 255, 0.1)
                     `,
                     position: 'relative',
                     overflow: 'hidden',
@@ -811,11 +811,34 @@ export default function Chat() {
                     '&:hover': {
                         transform: 'translateY(-5px)',
                         boxShadow: `
-                            0 8px 32px -1px rgba(0, 0, 0, 0.3),
-                            0 0 16px -2px rgba(0, 0, 0, 0.2),
+                            0 8px 32px -1px rgba(0, 0, 0, 0.4),
+                            0 0 16px -2px rgba(0, 0, 0, 0.3),
                             0 0 1px 0 rgba(255, 255, 255, 0.3) inset,
-                            0 0 20px 0 rgba(255, 255, 255, 0.1)
+                            0 0 25px 0 rgba(255, 255, 255, 0.15)
                         `,
+                        backgroundColor: 'rgba(255, 255, 255, 0.04)'
+                    },
+                    '&::before': {
+                        content: '""',
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        height: '100%',
+                        background: 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 100%)',
+                        pointerEvents: 'none'
+                    },
+                    '&::after': {
+                        content: '""',
+                        position: 'absolute',
+                        top: -200,
+                        left: -200,
+                        right: -200,
+                        height: '200%',
+                        background: 'linear-gradient(45deg, transparent 45%, rgba(255,255,255,0.1) 48%, rgba(255,255,255,0.1) 52%, transparent 55%)',
+                        animation: 'shine 8s infinite',
+                        transform: 'rotate(35deg)',
+                        pointerEvents: 'none'
                     }
                 }}
             >
@@ -981,18 +1004,29 @@ export default function Chat() {
 
                 {/* Message input area */}
                 <Paper
+                    component="form"
+                    onSubmit={(e) => {
+                        e.preventDefault();
+                        handleSubmit();
+                    }}
                     sx={{
                         p: { xs: 1, sm: 2 },
                         display: 'flex',
                         gap: 1,
                         alignItems: 'center',
-                        backdropFilter: 'blur(20px) saturate(200%)',
-                        WebkitBackdropFilter: 'blur(20px) saturate(200%)',
-                        backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                        backdropFilter: 'blur(25px) saturate(200%)',
+                        WebkitBackdropFilter: 'blur(25px) saturate(200%)',
+                        backgroundColor: 'rgba(255, 255, 255, 0.02)',
                         borderRadius: '16px',
-                        border: '1px solid rgba(255, 255, 255, 0.05)',
-                        boxShadow: '0 4px 12px -1px rgba(0, 0, 0, 0.1)',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        boxShadow: '0 4px 12px -1px rgba(0, 0, 0, 0.2)',
                         position: 'relative',
+                        transition: 'all 0.3s ease-in-out',
+                        '&:hover': {
+                            backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                            boxShadow: '0 8px 16px -1px rgba(0, 0, 0, 0.3)',
+                            border: '1px solid rgba(255, 255, 255, 0.12)'
+                        },
                         '&::before': {
                             content: '""',
                             position: 'absolute',
@@ -1000,13 +1034,120 @@ export default function Chat() {
                             left: 0,
                             right: 0,
                             height: '100%',
-                            background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%)',
+                            background: 'linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0) 100%)',
                             borderRadius: '16px',
                             pointerEvents: 'none'
                         }
                     }}
                 >
-                    {/* Existing message input content */}
+                    <IconButton
+                        onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                        sx={{
+                            color: 'rgba(255, 255, 255, 0.7)',
+                            transition: 'all 0.3s ease',
+                            '&:hover': {
+                                color: 'rgba(255, 255, 255, 0.9)',
+                                transform: 'scale(1.1)'
+                            }
+                        }}
+                    >
+                        <EmojiIcon />
+                    </IconButton>
+
+                    <IconButton
+                        onClick={() => setShowGifPicker(!showGifPicker)}
+                        sx={{
+                            color: 'rgba(255, 255, 255, 0.7)',
+                            transition: 'all 0.3s ease',
+                            '&:hover': {
+                                color: 'rgba(255, 255, 255, 0.9)',
+                                transform: 'scale(1.1)'
+                            }
+                        }}
+                    >
+                        <GifIcon />
+                    </IconButton>
+
+                    <IconButton
+                        onClick={handleVoiceMessageStart}
+                        sx={{
+                            color: 'rgba(255, 255, 255, 0.7)',
+                            transition: 'all 0.3s ease',
+                            '&:hover': {
+                                color: 'rgba(255, 255, 255, 0.9)',
+                                transform: 'scale(1.1)'
+                            }
+                        }}
+                    >
+                        <MicIcon />
+                    </IconButton>
+
+                    <IconButton
+                        onClick={() => setShowScheduler(!showScheduler)}
+                        sx={{
+                            color: 'rgba(255, 255, 255, 0.7)',
+                            transition: 'all 0.3s ease',
+                            '&:hover': {
+                                color: 'rgba(255, 255, 255, 0.9)',
+                                transform: 'scale(1.1)'
+                            }
+                        }}
+                    >
+                        <ScheduleIcon />
+                    </IconButton>
+
+                    <IconButton
+                        onClick={(e) => setMessageSettingsAnchor(e.currentTarget)}
+                        sx={{
+                            color: 'rgba(255, 255, 255, 0.7)',
+                            transition: 'all 0.3s ease',
+                            '&:hover': {
+                                color: 'rgba(255, 255, 255, 0.9)',
+                                transform: 'scale(1.1)'
+                            }
+                        }}
+                    >
+                        <TimerIcon />
+                    </IconButton>
+
+                    <TextField
+                        inputRef={messageInputRef}
+                        fullWidth
+                        placeholder="Type a message..."
+                        variant="standard"
+                        sx={{
+                            input: {
+                                color: 'rgba(255, 255, 255, 0.9)',
+                                '&::placeholder': {
+                                    color: 'rgba(255, 255, 255, 0.5)',
+                                    opacity: 1
+                                }
+                            },
+                            '& .MuiInput-underline:before': {
+                                borderBottomColor: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            '& .MuiInput-underline:hover:before': {
+                                borderBottomColor: 'rgba(255, 255, 255, 0.2)'
+                            },
+                            '& .MuiInput-underline:after': {
+                                borderBottomColor: 'rgba(255, 255, 255, 0.3)'
+                            }
+                        }}
+                    />
+
+                    <IconButton
+                        type="submit"
+                        sx={{
+                            color: 'rgba(255, 255, 255, 0.7)',
+                            transition: 'all 0.3s ease',
+                            '&:hover': {
+                                color: 'rgba(255, 255, 255, 0.9)',
+                                transform: 'scale(1.1)'
+                            }
+                        }}
+                    >
+                        <SendIcon />
+                    </IconButton>
                 </Paper>
             </Box>
 
@@ -1120,7 +1261,160 @@ export default function Chat() {
                 </Box>
             </Box>
 
-            {/* Keep existing dialogs and menus */}
+            {/* GIF Picker Dialog */}
+            <Dialog
+                open={showGifPicker}
+                onClose={() => setShowGifPicker(false)}
+                maxWidth="md"
+                PaperProps={{
+                    sx: {
+                        backdropFilter: 'blur(25px) saturate(200%)',
+                        WebkitBackdropFilter: 'blur(25px) saturate(200%)',
+                        backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                        borderRadius: '24px',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+                        overflow: 'hidden'
+                    }
+                }}
+            >
+                <DialogTitle>Select a GIF</DialogTitle>
+                <DialogContent>
+                    <GifPicker onSelect={handleGifSelect} />
+                </DialogContent>
+            </Dialog>
+
+            {/* Voice Message Dialog */}
+            <Dialog
+                open={showVoiceMessage}
+                onClose={() => setShowVoiceMessage(false)}
+                PaperProps={{
+                    sx: {
+                        backdropFilter: 'blur(25px) saturate(200%)',
+                        WebkitBackdropFilter: 'blur(25px) saturate(200%)',
+                        backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                        borderRadius: '24px',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
+                    }
+                }}
+            >
+                <DialogTitle>Record Voice Message</DialogTitle>
+                <DialogContent>
+                    <VoiceMessage onComplete={handleVoiceMessageComplete} />
+                </DialogContent>
+            </Dialog>
+
+            {/* Message Scheduler Dialog */}
+            <Dialog
+                open={showScheduler}
+                onClose={() => setShowScheduler(false)}
+                PaperProps={{
+                    sx: {
+                        backdropFilter: 'blur(25px) saturate(200%)',
+                        WebkitBackdropFilter: 'blur(25px) saturate(200%)',
+                        backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                        borderRadius: '24px',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
+                    }
+                }}
+            >
+                <DialogTitle>Schedule Message</DialogTitle>
+                <DialogContent>
+                    <MessageScheduler onSchedule={handleScheduleMessage} />
+                </DialogContent>
+            </Dialog>
+
+            {/* Vanishing Message Timer Menu */}
+            <Menu
+                anchorEl={messageSettingsAnchor}
+                open={Boolean(messageSettingsAnchor)}
+                onClose={() => setMessageSettingsAnchor(null)}
+                PaperProps={{
+                    sx: {
+                        backdropFilter: 'blur(25px) saturate(200%)',
+                        WebkitBackdropFilter: 'blur(25px) saturate(200%)',
+                        backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                        borderRadius: '16px',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+                        '& .MuiMenuItem-root': {
+                            color: 'rgba(255, 255, 255, 0.9)',
+                            transition: 'all 0.3s ease',
+                            '&:hover': {
+                                backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        }
+                    }
+                }}
+            >
+                <MenuItem onClick={() => handleVanishTimeSelect(null)}>
+                    <ListItemIcon><TimerIcon sx={{ color: 'rgba(255, 255, 255, 0.7)' }} /></ListItemIcon>
+                    <ListItemText>No Auto-Delete</ListItemText>
+                    {!messageVanishTime && <CheckIcon sx={{ ml: 2, color: 'rgba(255, 255, 255, 0.7)' }} />}
+                </MenuItem>
+                {[1, 5, 10, 30, 60].map(minutes => (
+                    <MenuItem key={minutes} onClick={() => handleVanishTimeSelect(minutes)}>
+                        <ListItemIcon><TimerIcon sx={{ color: 'rgba(255, 255, 255, 0.7)' }} /></ListItemIcon>
+                        <ListItemText>{minutes} minute{minutes !== 1 ? 's' : ''}</ListItemText>
+                        {messageVanishTime === minutes && <CheckIcon sx={{ ml: 2, color: 'rgba(255, 255, 255, 0.7)' }} />}
+                    </MenuItem>
+                ))}
+            </Menu>
+
+            {/* Emoji Picker */}
+            {showEmojiPicker && (
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        bottom: '100%',
+                        left: '16px',
+                        zIndex: 9999,
+                        transform: 'translateY(-8px)',
+                        '& em-emoji-picker': {
+                            '--background-rgb': '17, 25, 40',
+                            '--border-radius': '16px',
+                            '--category-icon-size': '24px',
+                            '--font-family': 'inherit',
+                            '--rgb-accent': '255, 255, 255',
+                            '--rgb-background': '17, 25, 40',
+                            '--rgb-color': '255, 255, 255',
+                            '--rgb-input': '255, 255, 255',
+                            border: '1px solid rgba(255, 255, 255, 0.08)',
+                            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+                            backdropFilter: 'blur(25px) saturate(200%)',
+                            WebkitBackdropFilter: 'blur(25px) saturate(200%)',
+                            backgroundColor: 'rgba(17, 25, 40, 0.8)'
+                        }
+                    }}
+                >
+                    <Picker
+                        data={data}
+                        onEmojiSelect={handleEmojiSelect}
+                        theme={theme.mode}
+                    />
+                </Box>
+            )}
+
+            {/* New Room Dialog */}
+            <NewRoomDialog
+                open={showNewRoomDialog}
+                onClose={() => setShowNewRoomDialog(false)}
+                onCreateRoom={handleCreateRoom}
+            />
+
+            {/* Room Settings Dialog */}
+            <RoomSettings
+                open={showRoomSettings}
+                onClose={() => setShowRoomSettings(false)}
+                room={activeRoomDetails}
+                onUpdateTopic={handleUpdateTopic}
+                onAddMember={handleAddMember}
+                onRemoveMember={handleRemoveMember}
+                onPromoteToAdmin={handlePromoteToAdmin}
+                onDemoteFromAdmin={handleDemoteFromAdmin}
+            />
         </Box>
     );
 } 
