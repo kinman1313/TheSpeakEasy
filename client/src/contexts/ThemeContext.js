@@ -1,12 +1,12 @@
 import React, { createContext, useContext, useState } from 'react';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { createTheme, ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
 
 const ThemeContext = createContext();
 
 export const useTheme = () => useContext(ThemeContext);
 
-export const ThemeContextProvider = ({ children }) => {
+export const ThemeProvider = ({ children }) => {
     const [mode, setMode] = useState('dark');
 
     const theme = createTheme({
@@ -123,10 +123,10 @@ export const ThemeContextProvider = ({ children }) => {
 
     return (
         <ThemeContext.Provider value={{ mode, setMode, theme }}>
-            <ThemeProvider theme={theme}>
+            <MuiThemeProvider theme={theme}>
                 <CssBaseline />
                 {children}
-            </ThemeProvider>
+            </MuiThemeProvider>
         </ThemeContext.Provider>
     );
 };

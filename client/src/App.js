@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { SocketProvider } from './contexts/SocketContext';
-import { ThemeProvider as CustomThemeProvider } from './contexts/ThemeContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
 import AppRoutes from './routes/AppRoutes';
@@ -30,9 +30,9 @@ const ThemedApp = () => {
 
 function App() {
     return (
-        <CustomThemeProvider>
+        <ThemeProvider>
             <ThemedApp />
-        </CustomThemeProvider>
+        </ThemeProvider>
     );
 }
 
