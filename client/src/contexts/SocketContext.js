@@ -22,7 +22,7 @@ export const SocketProvider = ({ children }) => {
 
             const newSocket = io(socketUrl, {
                 transports: ['polling', 'websocket'],
-                withCredentials: false,
+                withCredentials: true,
                 autoConnect: true,
                 forceNew: true,
                 reconnection: true,
@@ -35,7 +35,9 @@ export const SocketProvider = ({ children }) => {
                 },
                 path: '/socket.io',
                 extraHeaders: {
-                    "Access-Control-Allow-Origin": "*"
+                    "Authorization": `Bearer ${localStorage.getItem('token')}`,
+                    "Access-Control-Allow-Origin": "https://lies-client-9ayj.onrender.com",
+                    "Access-Control-Allow-Credentials": "true"
                 }
             });
 

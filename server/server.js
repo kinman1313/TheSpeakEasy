@@ -43,16 +43,24 @@ const server = http.createServer(app);
 // Configure Socket.IO with CORS and timeout settings
 const io = socketIO(server, {
     cors: {
-        origin: [
-            "https://lies-client-9ayj.onrender.com",
-            "http://localhost:3000",
-            "https://thespeakeasy.onrender.com"
-        ],
+        origin: function (origin, callback) {
+            const allowedOrigins = [
+                "https://lies-client-9ayj.onrender.com",
+                "http://localhost:3000",
+                "https://thespeakeasy.onrender.com"
+            ];
+            if (!origin || allowedOrigins.includes(origin)) {
+                callback(null, true);
+            } else {
+                callback(new Error('Origin not allowed'));
+            }
+        },
         methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allowedHeaders: ["Content-Type", "Authorization", "Access-Control-Allow-Origin", "Access-Control-Allow-Credentials"],
         credentials: true,
-        allowedHeaders: ["Content-Type", "Authorization"]
+        maxAge: 86400
     },
-    transports: ['websocket', 'polling'],
+    transports: ['polling', 'websocket'],
     allowEIO3: true,
     pingTimeout: 60000,
     pingInterval: 25000,
