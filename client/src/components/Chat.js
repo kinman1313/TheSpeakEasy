@@ -41,6 +41,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import ChatBubbleCustomizer from './ChatBubbleCustomizer';
 import NewRoomDialog from './NewRoomDialog';
 import RoomSettings from './RoomSettings';
+import { config } from '../config';
 
 const drawerWidth = {
     xs: '100%',
@@ -264,13 +265,13 @@ export default function Chat() {
                     throw new Error('No authentication token found');
                 }
 
-                const response = await fetch('http://localhost:8080/api/rooms', {
+                const response = await fetch(`${config.API_URL}/api/rooms`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Accept': 'application/json',
                         'Content-Type': 'application/json'
                     },
-                    credentials: 'omit'
+                    credentials: 'include'
                 });
 
                 if (!response.ok) {
@@ -288,13 +289,13 @@ export default function Chat() {
                 if (!publicLobby) {
                     console.log('Creating public lobby...');
                     // Create public lobby if it doesn't exist
-                    const createResponse = await fetch('http://localhost:8080/api/rooms', {
+                    const createResponse = await fetch(`${config.API_URL}/api/rooms`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                             'Authorization': `Bearer ${token}`
                         },
-                        credentials: 'omit',
+                        credentials: 'include',
                         body: JSON.stringify({
                             name: 'Public Lobby',
                             topic: 'Welcome to the chat!',
@@ -628,15 +629,48 @@ export default function Chat() {
                 maxWidth="sm"
                 fullWidth
             >
-                <DialogTitle>Record Voice Message</DialogTitle>
-                <DialogContent>
-                    <VoiceMessage
-                        onRecordingComplete={(blob) => {
-                            // Handle voice message
-                            setShowVoiceMessage(false);
-                        }}
-                    />
-                </DialogContent>
+                <VoiceMessage
+                    onComplete={async (blob) => {
+                        try {
+                            // Create a FormData object to send the audio file
+                            const formData = new FormData();
+                            formData.append('audio', blob, 'voice-message.webm');
+                            formData.append('roomId', activeRoom);
+
+                            // Upload the audio file
+                            const response = await fetch(`${config.API_URL}/api/messages/voice`, {
+                                method: 'POST',
+                                headers: {
+                                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                                },
+                                body: formData,
+                                credentials: 'include'
+                            });
+
+                            if (!response.ok) {
+                                throw new Error('Failed to upload voice message');
+                            }
+
+                            const data = await response.json();
+
+                            // Emit the message through socket
+                            if (socket && socketConnected) {
+                                socket.emit('message', {
+                                    type: 'voice',
+                                    content: data.url,
+                                    roomId: activeRoom,
+                                    timestamp: new Date().toISOString()
+                                });
+                            }
+                        } catch (error) {
+                            console.error('Error sending voice message:', error);
+                            // Show error to user
+                            setConnectionError(true);
+                            setConnectionStatus('Failed to send voice message');
+                        }
+                        setShowVoiceMessage(false);
+                    }}
+                />
             </Dialog>
 
             <Dialog
