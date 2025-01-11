@@ -10,6 +10,7 @@ export const useAuth = () => useContext(AuthContext);
 axios.defaults.timeout = 60000; // Increase timeout to 60 seconds
 axios.defaults.withCredentials = true;
 axios.defaults.headers.common['Content-Type'] = 'application/json';
+axios.defaults.headers.common['Accept'] = 'application/json';
 
 // Add request interceptor for authentication
 axios.interceptors.request.use(
@@ -23,6 +24,8 @@ axios.interceptors.request.use(
             ...config.params,
             _t: Date.now()
         };
+        // Ensure credentials are sent
+        config.withCredentials = true;
         return config;
     },
     error => Promise.reject(error)

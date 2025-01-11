@@ -49,7 +49,7 @@ const io = socketIO(server, {
             "https://thespeakeasy.onrender.com"
         ],
         methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        credentials: false,
+        credentials: true,
         allowedHeaders: ["Content-Type", "Authorization"]
     },
     transports: ['websocket', 'polling'],
@@ -69,51 +69,36 @@ app.use(cors({
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: false,
-    optionsSuccessStatus: 200
+    credentials: true,
+    optionsSuccessStatus: 200,
+    exposedHeaders: ['Content-Range', 'X-Content-Range']
 }));
+
+// Add OPTIONS handling for preflight requests
+app.options('*', cors({
+    origin: [
+        "https://lies-client-9ayj.onrender.com",
+        "http://localhost:3000",
+        "https://thespeakeasy.onrender.com"
+    ],
+    credentials: true
+}));
+
+// Add CORS headers middleware
+app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (origin) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+    }
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Expose-Headers', 'Authorization');
+    next();
+});
 
 // Increase server timeout
 server.timeout = 60000; // 60 seconds
-
-// Add OPTIONS handling for preflight requests
-app.options('*', cors());
-
-// Add CORS headers middleware with improved error handling
-app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', req.headers.origin);
-    res.header('Access-Control-Allow-Credentials', true);
-    res.header(
-        'Access-Control-Allow-Headers',
-        'Origin, X-Requested-With, Content-Type, Accept, Authorization'
-    );
-    res.header(
-        'Access-Control-Allow-Methods',
-        'GET, POST, PUT, DELETE, PATCH, OPTIONS'
-    );
-    res.header('Access-Control-Max-Age', '1728000');
-
-    // Modified CSP to be more permissive
-    res.header(
-        'Content-Security-Policy',
-        "default-src * 'unsafe-inline' 'unsafe-eval'; " +
-        "img-src * data: blob: 'unsafe-inline'; " +
-        "media-src * data: blob: 'unsafe-inline'; " +
-        "script-src * 'unsafe-inline' 'unsafe-eval'; " +
-        "style-src * 'unsafe-inline'; " +
-        "connect-src * ws: wss:; " +
-        "worker-src * blob:; " +
-        "frame-src *; " +
-        "font-src * data:;"
-    );
-
-    // Handle preflight
-    if (req.method === 'OPTIONS') {
-        res.sendStatus(204);
-    } else {
-        next();
-    }
-});
 
 // Add body parser with increased limit
 app.use(express.json({ limit: '10mb' }));
