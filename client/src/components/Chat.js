@@ -368,21 +368,14 @@ export default function Chat() {
         <Box sx={{
             display: 'flex',
             height: '100vh',
-            background: 'linear-gradient(135deg, #0a1929 0%, #1a2b3c 100%)',
+            background: '#1a1a40',
+            backgroundImage: `
+                radial-gradient(at 47% 33%, hsl(206.25, 35%, 36%) 0, transparent 59%), 
+                radial-gradient(at 82% 65%, hsl(120.00, 34%, 29%) 0, transparent 55%)
+            `,
             color: 'white',
             position: 'relative',
-            overscrollBehavior: 'none', // Prevent overscroll
-            WebkitOverflowScrolling: 'touch', // Enable smooth scrolling on iOS
-            '&::before': {
-                content: '""',
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                background: 'radial-gradient(circle at top left, rgba(243, 215, 127, 0.1), transparent 40%), radial-gradient(circle at bottom right, rgba(243, 215, 127, 0.05), transparent 30%)',
-                pointerEvents: 'none'
-            }
+            overscrollBehavior: 'none'
         }}>
             <Drawer
                 variant="permanent"
@@ -392,98 +385,54 @@ export default function Chat() {
                     '& .MuiDrawer-paper': {
                         width: drawerWidth,
                         boxSizing: 'border-box',
-                        bgcolor: 'rgba(10, 25, 41, 0.85)',
-                        backdropFilter: 'blur(10px)',
-                        borderRight: '1px solid rgba(243, 215, 127, 0.1)',
-                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
-                        '&::before': {
-                            content: '""',
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            height: '1px',
-                            background: 'linear-gradient(90deg, transparent, rgba(243, 215, 127, 0.2), transparent)'
-                        }
+                        backdropFilter: 'blur(16px) saturate(180%)',
+                        WebkitBackdropFilter: 'blur(16px) saturate(180%)',
+                        backgroundColor: 'rgba(17, 25, 40, 0.75)',
+                        border: '1px solid rgba(255, 255, 255, 0.125)',
+                        boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)'
                     }
                 }}
             >
                 <Box sx={{
                     p: 2,
-                    background: 'linear-gradient(180deg, rgba(243, 215, 127, 0.1), transparent)',
-                    borderBottom: '1px solid rgba(243, 215, 127, 0.05)',
+                    borderBottom: '1px solid rgba(255, 255, 255, 0.125)',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'space-between'
+                    justifyContent: 'space-between',
+                    backdropFilter: 'blur(16px) saturate(180%)',
+                    backgroundColor: 'rgba(17, 25, 40, 0.75)'
                 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <Avatar
                             src={user?.avatarUrl}
                             sx={{
-                                bgcolor: 'rgba(243, 215, 127, 0.2)',
-                                border: '2px solid rgba(243, 215, 127, 0.3)',
-                                color: '#f3d77f',
-                                boxShadow: '0 0 10px rgba(243, 215, 127, 0.2)',
+                                bgcolor: 'rgba(255, 255, 255, 0.1)',
+                                border: '2px solid rgba(255, 255, 255, 0.2)',
+                                color: 'white',
                                 cursor: 'pointer'
                             }}
                             onClick={(e) => setUserMenuAnchor(e.currentTarget)}
                         >
                             {user?.username?.[0]?.toUpperCase()}
                         </Avatar>
-                        <Typography variant="subtitle1" sx={{
-                            color: '#f3d77f',
-                            textShadow: '0 0 10px rgba(243, 215, 127, 0.3)'
-                        }}>
+                        <Typography variant="subtitle1" sx={{ color: 'white' }}>
                             {user?.username}
                         </Typography>
                     </Box>
                     <IconButton
                         onClick={(e) => setUserMenuAnchor(e.currentTarget)}
                         sx={{
-                            color: '#f3d77f',
+                            color: 'white',
                             '&:hover': {
-                                bgcolor: 'rgba(243, 215, 127, 0.1)',
-                                backdropFilter: 'blur(5px)'
+                                bgcolor: 'rgba(255, 255, 255, 0.1)'
                             }
                         }}
                     >
                         <MenuIcon />
                     </IconButton>
-
-                    <Menu
-                        anchorEl={userMenuAnchor}
-                        open={Boolean(userMenuAnchor)}
-                        onClose={() => setUserMenuAnchor(null)}
-                        PaperProps={{
-                            sx: {
-                                bgcolor: 'rgba(10, 25, 41, 0.95)',
-                                backdropFilter: 'blur(10px)',
-                                border: '1px solid rgba(243, 215, 127, 0.1)',
-                                boxShadow: '0 4px 32px rgba(0, 0, 0, 0.2)',
-                                '& .MuiMenuItem-root': {
-                                    color: 'white',
-                                    gap: 1.5,
-                                    '&:hover': {
-                                        bgcolor: 'rgba(243, 215, 127, 0.1)'
-                                    }
-                                }
-                            }
-                        }}
-                        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-                    >
-                        <MenuItem onClick={handleProfileSettings}>
-                            <AccountIcon sx={{ color: '#f3d77f' }} />
-                            Profile Settings
-                        </MenuItem>
-                        <MenuItem onClick={handleLogout}>
-                            <LogoutIcon sx={{ color: '#f3d77f' }} />
-                            Logout
-                        </MenuItem>
-                    </Menu>
                 </Box>
 
-                <Typography variant="h6" sx={{ p: 2, color: '#f3d77f' }}>Online Users</Typography>
+                <Typography variant="h6" sx={{ p: 2, color: 'white' }}>Online Users</Typography>
                 <List>
                     {onlineUsers.map((user) => (
                         <ListItem key={user.id} disablePadding>
@@ -491,17 +440,15 @@ export default function Chat() {
                                 sx={{
                                     transition: 'all 0.3s ease',
                                     '&:hover': {
-                                        bgcolor: 'rgba(243, 215, 127, 0.1)',
-                                        backdropFilter: 'blur(5px)'
+                                        bgcolor: 'rgba(255, 255, 255, 0.1)'
                                     }
                                 }}
                             >
                                 <ListItemAvatar>
                                     <Avatar sx={{
-                                        bgcolor: 'rgba(243, 215, 127, 0.2)',
-                                        border: '2px solid rgba(243, 215, 127, 0.3)',
-                                        color: '#f3d77f',
-                                        boxShadow: '0 0 10px rgba(243, 215, 127, 0.2)'
+                                        bgcolor: 'rgba(255, 255, 255, 0.1)',
+                                        border: '2px solid rgba(255, 255, 255, 0.2)',
+                                        color: 'white'
                                     }}>
                                         {user.username[0].toUpperCase()}
                                     </Avatar>
@@ -529,19 +476,10 @@ export default function Chat() {
                     flexDirection: 'column',
                     gap: 2,
                     position: 'relative',
-                    bgcolor: 'rgba(10, 25, 41, 0.7)',
-                    backdropFilter: 'blur(10px)',
-                    overscrollBehavior: 'none', // Prevent overscroll
-                    WebkitOverflowScrolling: 'touch', // Enable smooth scrolling on iOS
-                    '&::before': {
-                        content: '""',
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        height: '1px',
-                        background: 'linear-gradient(90deg, transparent, rgba(243, 215, 127, 0.2), transparent)'
-                    }
+                    backdropFilter: 'blur(16px) saturate(180%)',
+                    WebkitBackdropFilter: 'blur(16px) saturate(180%)',
+                    backgroundColor: 'rgba(17, 25, 40, 0.75)',
+                    overscrollBehavior: 'none'
                 }}
             >
                 <Box
@@ -553,11 +491,8 @@ export default function Chat() {
                         flexDirection: 'column',
                         gap: 2,
                         p: 2,
-                        overscrollBehavior: 'contain', // Prevent overscroll
-                        WebkitOverflowScrolling: 'touch', // Enable smooth scrolling on iOS
                         scrollbarWidth: 'thin',
-                        scrollbarColor: 'rgba(243, 215, 127, 0.3) rgba(255, 255, 255, 0.05)',
-                        msOverflowStyle: 'none', // Hide scrollbar in IE/Edge
+                        scrollbarColor: 'rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.05)',
                         '&::-webkit-scrollbar': {
                             width: '8px',
                         },
@@ -566,12 +501,10 @@ export default function Chat() {
                             borderRadius: '4px',
                         },
                         '&::-webkit-scrollbar-thumb': {
-                            background: 'rgba(243, 215, 127, 0.3)',
+                            background: 'rgba(255, 255, 255, 0.2)',
                             borderRadius: '4px',
-                            border: '2px solid rgba(243, 215, 127, 0.1)',
-                            backdropFilter: 'blur(5px)',
                             '&:hover': {
-                                background: 'rgba(243, 215, 127, 0.4)'
+                                background: 'rgba(255, 255, 255, 0.3)'
                             }
                         }
                     }}
@@ -596,30 +529,21 @@ export default function Chat() {
                         display: 'flex',
                         gap: 1,
                         alignItems: 'center',
-                        bgcolor: 'rgba(10, 25, 41, 0.85)',
-                        backdropFilter: 'blur(10px)',
-                        borderRadius: 2,
-                        boxShadow: '0 4px 32px rgba(0, 0, 0, 0.2)',
-                        border: '1px solid rgba(243, 215, 127, 0.1)',
-                        position: 'relative',
-                        overflow: 'hidden',
-                        '&::before': {
-                            content: '""',
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            height: '1px',
-                            background: 'linear-gradient(90deg, transparent, rgba(243, 215, 127, 0.2), transparent)'
-                        }
+                        backdropFilter: 'blur(16px) saturate(180%)',
+                        WebkitBackdropFilter: 'blur(16px) saturate(180%)',
+                        backgroundColor: 'rgba(17, 25, 40, 0.75)',
+                        borderRadius: '12px',
+                        border: '1px solid rgba(255, 255, 255, 0.125)',
+                        boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+                        position: 'relative'
                     }}
                 >
-                    <Box sx={{ display: 'flex', gap: 1, p: 2, borderTop: '1px solid rgba(243, 215, 127, 0.1)' }}>
+                    <Box sx={{ display: 'flex', gap: 1, width: '100%' }}>
                         <IconButton
                             onClick={() => setShowEmojiPicker(true)}
                             sx={{
-                                color: showEmojiPicker ? '#f3d77f' : 'rgba(243, 215, 127, 0.7)',
-                                '&:hover': { bgcolor: 'rgba(243, 215, 127, 0.1)' }
+                                color: showEmojiPicker ? 'white' : 'rgba(255, 255, 255, 0.7)',
+                                '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.1)' }
                             }}
                         >
                             <EmojiIcon />
@@ -628,8 +552,8 @@ export default function Chat() {
                         <IconButton
                             onClick={() => setShowGifPicker(true)}
                             sx={{
-                                color: showGifPicker ? '#f3d77f' : 'rgba(243, 215, 127, 0.7)',
-                                '&:hover': { bgcolor: 'rgba(243, 215, 127, 0.1)' }
+                                color: showGifPicker ? 'white' : 'rgba(255, 255, 255, 0.7)',
+                                '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.1)' }
                             }}
                         >
                             <GifIcon />
@@ -638,8 +562,8 @@ export default function Chat() {
                         <IconButton
                             onClick={handleVoiceMessageStart}
                             sx={{
-                                color: showVoiceMessage ? '#f3d77f' : 'rgba(243, 215, 127, 0.7)',
-                                '&:hover': { bgcolor: 'rgba(243, 215, 127, 0.1)' }
+                                color: showVoiceMessage ? 'white' : 'rgba(255, 255, 255, 0.7)',
+                                '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.1)' }
                             }}
                         >
                             <MicIcon />
@@ -648,212 +572,76 @@ export default function Chat() {
                         <IconButton
                             onClick={(e) => setMessageSettingsAnchor(e.currentTarget)}
                             sx={{
-                                color: messageVanishTime ? '#f3d77f' : 'rgba(243, 215, 127, 0.7)',
-                                '&:hover': { bgcolor: 'rgba(243, 215, 127, 0.1)' }
+                                color: messageVanishTime ? 'white' : 'rgba(255, 255, 255, 0.7)',
+                                '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.1)' }
                             }}
                         >
                             <TimerIcon />
                         </IconButton>
 
-                        <Box sx={{ display: 'flex', flex: 1, gap: '8px' }}>
-                            <TextField
-                                inputRef={messageInputRef}
-                                fullWidth
-                                placeholder="Type a message..."
-                                variant="outlined"
-                                size="small"
-                                sx={{
-                                    '& .MuiOutlinedInput-root': {
-                                        color: 'white',
-                                        bgcolor: 'rgba(255, 255, 255, 0.05)',
-                                        '&:hover': {
-                                            bgcolor: 'rgba(255, 255, 255, 0.08)',
-                                        },
-                                        '& fieldset': {
-                                            borderColor: 'rgba(243, 215, 127, 0.2)',
-                                        },
-                                        '&:hover fieldset': {
-                                            borderColor: 'rgba(243, 215, 127, 0.3)',
-                                        },
-                                        '&.Mui-focused fieldset': {
-                                            borderColor: '#f3d77f',
-                                        },
+                        <TextField
+                            inputRef={messageInputRef}
+                            fullWidth
+                            placeholder="Type a message..."
+                            variant="outlined"
+                            size="small"
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    color: 'white',
+                                    bgcolor: 'rgba(255, 255, 255, 0.05)',
+                                    '&:hover': {
+                                        bgcolor: 'rgba(255, 255, 255, 0.08)',
                                     },
-                                }}
-                                onKeyPress={(e) => {
-                                    if (e.key === 'Enter' && !e.shiftKey) {
-                                        e.preventDefault();
-                                        handleSubmit(e);
-                                    }
-                                }}
-                            />
-                            <IconButton
-                                onClick={handleSubmit}
-                                sx={{
-                                    color: '#f3d77f',
-                                    '&:hover': { bgcolor: 'rgba(243, 215, 127, 0.1)' }
-                                }}
-                            >
-                                <SendIcon />
-                            </IconButton>
-                        </Box>
+                                    '& fieldset': {
+                                        borderColor: 'rgba(255, 255, 255, 0.2)',
+                                    },
+                                    '&:hover fieldset': {
+                                        borderColor: 'rgba(255, 255, 255, 0.3)',
+                                    },
+                                    '&.Mui-focused fieldset': {
+                                        borderColor: 'rgba(255, 255, 255, 0.5)',
+                                    },
+                                },
+                            }}
+                            onKeyPress={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    handleSubmit(e);
+                                }
+                            }}
+                        />
+                        <IconButton
+                            onClick={handleSubmit}
+                            sx={{
+                                color: 'white',
+                                '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.1)' }
+                            }}
+                        >
+                            <SendIcon />
+                        </IconButton>
                     </Box>
-
-                    {/* Emoji Picker */}
-                    {showEmojiPicker && (
-                        <Box sx={{
-                            position: 'absolute',
-                            bottom: '100%',
-                            right: '16px',
-                            zIndex: 9999,
-                            marginBottom: '8px',
-                            backgroundColor: 'rgba(10, 25, 41, 0.95)',
-                            borderRadius: '8px',
-                            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
-                            border: '1px solid rgba(243, 215, 127, 0.2)',
-                            backdropFilter: 'blur(10px)',
-                            '& .emoji-mart': {
-                                backgroundColor: 'transparent !important',
-                                border: 'none !important'
-                            },
-                            '& .emoji-mart-bar': {
-                                borderColor: 'rgba(243, 215, 127, 0.2) !important'
-                            },
-                            '& .emoji-mart-category-label': {
-                                backgroundColor: 'transparent !important',
-                                color: '#f3d77f !important'
-                            },
-                            '& .emoji-mart-search input': {
-                                backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                                border: '1px solid rgba(243, 215, 127, 0.2)',
-                                color: 'white'
-                            },
-                            '& .emoji-mart-scroll': {
-                                height: '250px'
-                            }
-                        }}>
-                            <Picker
-                                data={data}
-                                onEmojiSelect={handleEmojiSelect}
-                                theme="dark"
-                                previewPosition="none"
-                                perLine={8}
-                                emojiSize={24}
-                                showPreview={false}
-                                showSkinTones={false}
-                                style={{
-                                    width: '350px',
-                                    backgroundColor: 'transparent',
-                                    border: 'none'
-                                }}
-                            />
-                        </Box>
-                    )}
-
-                    {/* GIF Picker */}
-                    {showGifPicker && (
-                        <Dialog
-                            open={showGifPicker}
-                            onClose={() => setShowGifPicker(false)}
-                            maxWidth="md"
-                            PaperProps={{
-                                sx: {
-                                    bgcolor: 'rgba(10, 25, 41, 0.95)',
-                                    backdropFilter: 'blur(10px)',
-                                    border: '1px solid rgba(243, 215, 127, 0.1)',
-                                }
-                            }}
-                        >
-                            <GifPicker onSelect={handleGifSelect} onClose={() => setShowGifPicker(false)} />
-                        </Dialog>
-                    )}
-
-                    {/* Voice Message */}
-                    {showVoiceMessage && (
-                        <Dialog
-                            open={showVoiceMessage}
-                            onClose={() => setShowVoiceMessage(false)}
-                            PaperProps={{
-                                sx: {
-                                    bgcolor: 'rgba(10, 25, 41, 0.95)',
-                                    backdropFilter: 'blur(10px)',
-                                    border: '1px solid rgba(243, 215, 127, 0.1)',
-                                }
-                            }}
-                        >
-                            <VoiceMessage
-                                onSend={handleVoiceMessageComplete}
-                                onClose={() => setShowVoiceMessage(false)}
-                            />
-                        </Dialog>
-                    )}
-
-                    {/* Message Settings Menu */}
-                    <Menu
-                        anchorEl={messageSettingsAnchor}
-                        open={Boolean(messageSettingsAnchor)}
-                        onClose={() => setMessageSettingsAnchor(null)}
-                        PaperProps={{
-                            sx: {
-                                bgcolor: 'rgba(10, 25, 41, 0.95)',
-                                backdropFilter: 'blur(10px)',
-                                border: '1px solid rgba(243, 215, 127, 0.1)',
-                                color: 'white'
-                            }
-                        }}
-                    >
-                        <MenuItem onClick={() => handleVanishTimeSelect(null)}>
-                            <ListItemIcon>
-                                {!messageVanishTime && <CheckIcon sx={{ color: '#f3d77f' }} />}
-                            </ListItemIcon>
-                            Never
-                        </MenuItem>
-                        {[1, 5, 10, 30, 60].map(minutes => (
-                            <MenuItem key={minutes} onClick={() => handleVanishTimeSelect(minutes)}>
-                                <ListItemIcon>
-                                    {messageVanishTime === minutes && <CheckIcon sx={{ color: '#f3d77f' }} />}
-                                </ListItemIcon>
-                                {minutes} {minutes === 1 ? 'minute' : 'minutes'}
-                            </MenuItem>
-                        ))}
-                    </Menu>
-
-                    {/* Notification Settings Dialog */}
-                    <Dialog
-                        open={showNotificationSettings}
-                        onClose={() => setShowNotificationSettings(false)}
-                        PaperProps={{
-                            sx: {
-                                bgcolor: 'rgba(10, 25, 41, 0.95)',
-                                backdropFilter: 'blur(10px)',
-                                border: '1px solid rgba(243, 215, 127, 0.1)',
-                            }
-                        }}
-                    >
-                        <DialogTitle sx={{ color: '#f3d77f' }}>Notification Settings</DialogTitle>
-                        <DialogContent>
-                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 300 }}>
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <Typography sx={{ color: 'white' }}>Sound</Typography>
-                                    <Switch
-                                        checked={notificationSound}
-                                        onChange={(e) => handleNotificationSettingsChange('sound', e.target.checked)}
-                                        sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: '#f3d77f' } }}
-                                    />
-                                </Box>
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <Typography sx={{ color: 'white' }}>Desktop Notifications</Typography>
-                                    <Switch
-                                        checked={desktopNotifications}
-                                        onChange={(e) => handleNotificationSettingsChange('desktop', e.target.checked)}
-                                        sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: '#f3d77f' } }}
-                                    />
-                                </Box>
-                            </Box>
-                        </DialogContent>
-                    </Dialog>
                 </Paper>
             </Box>
+
+            {showGifPicker && (
+                <Dialog
+                    open={showGifPicker}
+                    onClose={() => setShowGifPicker(false)}
+                    maxWidth="md"
+                    PaperProps={{
+                        sx: {
+                            backdropFilter: 'blur(16px) saturate(180%)',
+                            WebkitBackdropFilter: 'blur(16px) saturate(180%)',
+                            backgroundColor: 'rgba(17, 25, 40, 0.75)',
+                            border: '1px solid rgba(255, 255, 255, 0.125)',
+                            boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+                            borderRadius: '12px'
+                        }
+                    }}
+                >
+                    <GifPicker onSelect={handleGifSelect} onClose={() => setShowGifPicker(false)} />
+                </Dialog>
+            )}
 
             {showProfileSettings && (
                 <Dialog
@@ -861,17 +649,19 @@ export default function Chat() {
                     onClose={() => setShowProfileSettings(false)}
                     PaperProps={{
                         sx: {
-                            bgcolor: 'rgba(10, 25, 41, 0.95)',
-                            backdropFilter: 'blur(10px)',
-                            border: '1px solid rgba(243, 215, 127, 0.1)',
-                            boxShadow: '0 4px 32px rgba(0, 0, 0, 0.2)',
+                            backdropFilter: 'blur(16px) saturate(180%)',
+                            WebkitBackdropFilter: 'blur(16px) saturate(180%)',
+                            backgroundColor: 'rgba(17, 25, 40, 0.75)',
+                            border: '1px solid rgba(255, 255, 255, 0.125)',
+                            boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+                            borderRadius: '12px',
                             color: 'white',
                             minWidth: 400
                         }
                     }}
                 >
                     <DialogTitle sx={{
-                        borderBottom: '1px solid rgba(243, 215, 127, 0.1)',
+                        borderBottom: '1px solid rgba(255, 255, 255, 0.125)',
                         color: '#f3d77f'
                     }}>
                         Profile Settings
@@ -945,6 +735,40 @@ export default function Chat() {
                         </Button>
                     </DialogActions>
                 </Dialog>
+            )}
+
+            {showEmojiPicker && (
+                <Box
+                    sx={{
+                        position: 'fixed',
+                        bottom: '80px',
+                        right: '20px',
+                        zIndex: 9999,
+                        backdropFilter: 'blur(16px) saturate(180%)',
+                        WebkitBackdropFilter: 'blur(16px) saturate(180%)',
+                        backgroundColor: 'rgba(17, 25, 40, 0.75)',
+                        border: '1px solid rgba(255, 255, 255, 0.125)',
+                        boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+                        borderRadius: '12px',
+                        padding: '8px'
+                    }}
+                >
+                    <Picker
+                        data={data}
+                        onEmojiSelect={handleEmojiSelect}
+                        theme="dark"
+                        previewPosition="none"
+                        perLine={8}
+                        emojiSize={24}
+                        showPreview={false}
+                        showSkinTones={false}
+                        style={{
+                            width: '350px',
+                            backgroundColor: 'transparent',
+                            border: 'none'
+                        }}
+                    />
+                </Box>
             )}
         </Box>
     );
