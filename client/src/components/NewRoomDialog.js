@@ -34,8 +34,18 @@ const NewRoomDialog = ({ open, onClose, onCreateRoom }) => {
         e.preventDefault();
         setError('');
 
+        // Validate room name format
+        const roomNamePattern = /^[a-zA-Z0-9-_]+$/;
         if (!roomData.name.trim()) {
             setError('Room name is required');
+            return;
+        }
+        if (!roomNamePattern.test(roomData.name)) {
+            setError('Room name can only contain letters, numbers, hyphens, and underscores');
+            return;
+        }
+        if (roomData.name.length < 3 || roomData.name.length > 30) {
+            setError('Room name must be between 3 and 30 characters');
             return;
         }
 
@@ -82,6 +92,12 @@ const NewRoomDialog = ({ open, onClose, onCreateRoom }) => {
                             fullWidth
                             required
                             autoFocus
+                            helperText="Use letters, numbers, hyphens, or underscores (3-30 characters)"
+                            inputProps={{
+                                pattern: "[a-zA-Z0-9-_]+",
+                                minLength: 3,
+                                maxLength: 30
+                            }}
                         />
                         <TextField
                             name="topic"

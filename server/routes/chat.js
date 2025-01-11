@@ -10,14 +10,33 @@ router.post('/rooms', auth, async (req, res) => {
     try {
         const { name, topic, isPrivate, password } = req.body;
 
+        // Validate room name
         if (!name) {
             return res.status(400).json({ error: 'Room name is required' });
+        }
+
+        const roomNamePattern = /^[a-zA-Z0-9-_]+$/;
+        if (!roomNamePattern.test(name)) {
+            return res.status(400).json({
+                error: 'Room name can only contain letters, numbers, hyphens, and underscores'
+            });
+        }
+
+        if (name.length < 3 || name.length > 30) {
+            return res.status(400).json({
+                error: 'Room name must be between 3 and 30 characters'
+            });
         }
 
         // Check if room name already exists
         const existingRoom = await Room.findOne({ name: name.toLowerCase() });
         if (existingRoom) {
             return res.status(400).json({ error: 'Room name already exists' });
+        }
+
+        // Validate private room password
+        if (isPrivate && !password) {
+            return res.status(400).json({ error: 'Password is required for private rooms' });
         }
 
         const room = new Room({

@@ -106,20 +106,43 @@ export default function Chat() {
             try {
                 const response = await fetch('/api/rooms', {
                     headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                        'Accept': 'application/json'
                     }
                 });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
                 const data = await response.json();
-                if (response.ok) {
-                    setRooms(data.rooms);
+                console.log('Fetched rooms:', data); // Debug log
+                setRooms(data.rooms || []);
+
+                // Join public lobby by default
+                if (data.rooms?.length > 0) {
+                    const publicLobby = data.rooms.find(room => room.name === 'public-lobby');
+                    if (publicLobby) {
+                        setActiveRoom(publicLobby.id);
+                        socket.emit('join_room', publicLobby.id);
+                    }
                 }
             } catch (error) {
                 console.error('Error fetching rooms:', error);
+                // Set default public lobby if fetch fails
+                setRooms([{
+                    id: 'public-lobby',
+                    name: 'Public Lobby',
+                    topic: 'Welcome to the chat!',
+                    isPrivate: false
+                }]);
             }
         };
 
-        fetchRooms();
-    }, []);
+        if (socket) {
+            fetchRooms();
+        }
+    }, [socket]);
 
     // Add room creation handler
     const handleCreateRoom = async (roomData) => {
@@ -307,12 +330,13 @@ export default function Chat() {
         }
     }, [messages]);
 
-    const handleGifSelect = (gif) => {
-        handleSendMessage(gif.url, 'gif', {
-            width: gif.width,
-            height: gif.height,
-            title: gif.title
-        });
+    const handleGifSelect = (gifData) => {
+        if (!gifData || !gifData.content) {
+            console.error('Invalid GIF data');
+            return;
+        }
+
+        handleSendMessage(gifData.content, 'gif', gifData.metadata);
         setShowGifPicker(false);
     };
 
@@ -349,12 +373,18 @@ export default function Chat() {
     };
 
     const handleSendMessage = (content, type = 'text', metadata = {}) => {
-        if (!socket || !content) {
-            console.error('Cannot send message: socket not connected or empty content');
+        if (!socket) {
+            console.error('Cannot send message: socket not connected');
             return;
         }
 
-        if (!activeRoom) {
+        if (!content) {
+            console.error('Cannot send message: empty content');
+            return;
+        }
+
+        const roomId = activeRoom || 'public-lobby';
+        if (!roomId) {
             console.error('Cannot send message: no active room selected');
             return;
         }
@@ -367,11 +397,11 @@ export default function Chat() {
                 vanishTime: messageVanishTime
             },
             sender: user.username,
-            roomId: activeRoom,
+            roomId,
             timestamp: new Date().toISOString()
         };
 
-        console.log('Sending message:', message);
+        console.log('Sending message:', message); // Debug log
 
         // Add message to local state first
         setMessages(prevMessages => [...prevMessages, {
@@ -390,13 +420,12 @@ export default function Chat() {
                 ));
             } else {
                 console.log('Message sent successfully');
+                // Clear input if it's a text message
+                if (type === 'text' && messageInputRef.current) {
+                    messageInputRef.current.value = '';
+                }
             }
         });
-
-        // Clear input if it's a text message
-        if (type === 'text' && messageInputRef.current) {
-            messageInputRef.current.value = '';
-        }
     };
 
     const handleLogout = () => {
@@ -811,6 +840,111 @@ export default function Chat() {
         }
     };
 
+    // Update the message rendering
+    const renderMessage = (message) => {
+        switch (message.type) {
+            case 'gif':
+                return (
+                    <Box
+                        component="img"
+                        src={message.content}
+                        alt="GIF"
+                        sx={{
+                            maxWidth: '300px',
+                            maxHeight: '300px',
+                            borderRadius: 2,
+                            objectFit: 'contain'
+                        }}
+                    />
+                );
+            case 'voice':
+                return (
+                    <audio controls>
+                        <source src={message.content} type="audio/webm" />
+                        Your browser does not support the audio element.
+                    </audio>
+                );
+            default:
+                return message.content;
+        }
+    };
+
+    // Update the messages container styling
+    <Box
+        ref={messagesContainerRef}
+        sx={{
+            flexGrow: 1,
+            overflowY: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 2,
+            p: 2,
+            '&::-webkit-scrollbar': {
+                width: '8px',
+            },
+            '&::-webkit-scrollbar-track': {
+                background: 'rgba(0, 0, 0, 0.1)',
+                borderRadius: '4px',
+            },
+            '&::-webkit-scrollbar-thumb': {
+                background: 'rgba(255, 255, 255, 0.3)',
+                borderRadius: '4px',
+                '&:hover': {
+                    background: 'rgba(255, 255, 255, 0.4)',
+                },
+            },
+        }}
+    >
+        {messages.map((message, index) => (
+            <Box
+                key={message._id || index}
+                sx={{
+                    alignSelf: message.sender === user.username ? 'flex-end' : 'flex-start',
+                    maxWidth: '70%',
+                    position: 'relative'
+                }}
+            >
+                <Paper
+                    elevation={0}
+                    sx={{
+                        p: 2,
+                        backgroundColor: message.sender === user.username
+                            ? 'rgba(25, 118, 210, 0.6)'
+                            : 'rgba(255, 255, 255, 0.1)',
+                        backdropFilter: 'blur(8px)',
+                        borderRadius: 2,
+                        border: '1px solid rgba(255, 255, 255, 0.125)',
+                        color: 'white',
+                        position: 'relative',
+                        overflow: 'hidden',
+                        '&::before': {
+                            content: '""',
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            background: 'linear-gradient(45deg, rgba(255,255,255,0.1), rgba(255,255,255,0))',
+                            pointerEvents: 'none'
+                        }
+                    }}
+                >
+                    {renderMessage(message)}
+                </Paper>
+                <Typography
+                    variant="caption"
+                    sx={{
+                        mt: 0.5,
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        textAlign: message.sender === user.username ? 'right' : 'left'
+                    }}
+                >
+                    {message.sender} • {new Date(message.timestamp).toLocaleTimeString()}
+                </Typography>
+            </Box>
+        ))}
+    </Box>
+
     return (
         <Box
             sx={{
@@ -938,67 +1072,76 @@ export default function Chat() {
                 <Box
                     ref={messagesContainerRef}
                     sx={{
-                        flex: 1,
+                        flexGrow: 1,
                         overflowY: 'auto',
                         display: 'flex',
                         flexDirection: 'column',
                         gap: 2,
-                        p: { xs: 1, md: 3 },
+                        p: 2,
                         '&::-webkit-scrollbar': {
-                            width: '6px'
+                            width: '8px',
                         },
                         '&::-webkit-scrollbar-track': {
-                            background: 'rgba(255, 255, 255, 0.05)',
-                            borderRadius: '3px'
+                            background: 'rgba(0, 0, 0, 0.1)',
+                            borderRadius: '4px',
                         },
                         '&::-webkit-scrollbar-thumb': {
-                            background: 'rgba(255, 255, 255, 0.2)',
-                            borderRadius: '3px',
-                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            background: 'rgba(255, 255, 255, 0.3)',
+                            borderRadius: '4px',
                             '&:hover': {
-                                background: 'rgba(255, 255, 255, 0.3)'
-                            }
-                        }
+                                background: 'rgba(255, 255, 255, 0.4)',
+                            },
+                        },
                     }}
                 >
-                    {loading ? (
-                        // Add loading skeleton animation
-                        <Box sx={{ p: 2 }}>
-                            {[...Array(3)].map((_, i) => (
-                                <Box
-                                    key={i}
-                                    sx={{
-                                        height: '60px',
-                                        borderRadius: '12px',
-                                        mb: 2,
-                                        background: 'linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%)',
-                                        backgroundSize: '1000px 100%',
-                                        animation: 'shimmer 2s infinite linear'
-                                    }}
-                                />
-                            ))}
-                        </Box>
-                    ) : (
-                        messages.map((message, index) => (
-                            <Box
-                                key={message._id}
+                    {messages.map((message, index) => (
+                        <Box
+                            key={message._id || index}
+                            sx={{
+                                alignSelf: message.sender === user.username ? 'flex-end' : 'flex-start',
+                                maxWidth: '70%',
+                                position: 'relative'
+                            }}
+                        >
+                            <Paper
+                                elevation={0}
                                 sx={{
-                                    animation: `fadeIn 0.3s ease-out ${index * 0.1}s`,
-                                    opacity: 0,
-                                    animationFillMode: 'forwards'
+                                    p: 2,
+                                    backgroundColor: message.sender === user.username
+                                        ? 'rgba(25, 118, 210, 0.6)'
+                                        : 'rgba(255, 255, 255, 0.1)',
+                                    backdropFilter: 'blur(8px)',
+                                    borderRadius: 2,
+                                    border: '1px solid rgba(255, 255, 255, 0.125)',
+                                    color: 'white',
+                                    position: 'relative',
+                                    overflow: 'hidden',
+                                    '&::before': {
+                                        content: '""',
+                                        position: 'absolute',
+                                        top: 0,
+                                        left: 0,
+                                        right: 0,
+                                        bottom: 0,
+                                        background: 'linear-gradient(45deg, rgba(255,255,255,0.1), rgba(255,255,255,0))',
+                                        pointerEvents: 'none'
+                                    }
                                 }}
                             >
-                                <MessageThread
-                                    message={message}
-                                    currentUser={user.username}
-                                    onReaction={handleReaction}
-                                    onRemoveReaction={handleRemoveReaction}
-                                    bubbleSettings={bubbleSettings}
-                                />
-                            </Box>
-                        ))
-                    )}
-                    <div ref={messagesEndRef} />
+                                {renderMessage(message)}
+                            </Paper>
+                            <Typography
+                                variant="caption"
+                                sx={{
+                                    mt: 0.5,
+                                    color: 'rgba(255, 255, 255, 0.7)',
+                                    textAlign: message.sender === user.username ? 'right' : 'left'
+                                }}
+                            >
+                                {message.sender} • {new Date(message.timestamp).toLocaleTimeString()}
+                            </Typography>
+                        </Box>
+                    ))}
                 </Box>
 
                 {/* Message input area with enhanced glass effect */}
