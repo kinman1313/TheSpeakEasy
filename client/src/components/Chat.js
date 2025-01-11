@@ -15,7 +15,9 @@ import {
     ListItemIcon,
     Switch,
     AppBar,
-    Toolbar
+    Toolbar,
+    Alert,
+    Snackbar
 } from '@mui/material';
 import {
     Menu as MenuIcon,
@@ -108,6 +110,8 @@ export default function Chat() {
         blur: 16,
         border: 'rgba(255, 255, 255, 0.125)'
     });
+    const [showConnectionError, setShowConnectionError] = useState(false);
+    const [connectionStatus, setConnectionStatus] = useState('');
 
     // Handle drawer toggle
     const handleDrawerToggle = () => {
@@ -343,6 +347,16 @@ export default function Chat() {
         }
     }, [socket, socketConnected, activeRoom]);
 
+    useEffect(() => {
+        if (connectionError) {
+            setShowConnectionError(true);
+            setConnectionStatus('Connection lost. Attempting to reconnect...');
+        } else if (socketConnected) {
+            setShowConnectionError(false);
+            setConnectionStatus('Connected');
+        }
+    }, [socketConnected, connectionError]);
+
     return (
         <Box sx={{
             display: 'flex',
@@ -352,6 +366,33 @@ export default function Chat() {
             p: 3,
             gap: 3
         }}>
+            {/* Connection Status Snackbar */}
+            <Snackbar
+                open={showConnectionError}
+                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+            >
+                <Alert severity="error" variant="filled">
+                    {connectionStatus}
+                </Alert>
+            </Snackbar>
+
+            {/* Loading Indicator */}
+            {loading && (
+                <Box sx={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    zIndex: 1000,
+                    ...glassStyle,
+                    p: 3
+                }}>
+                    <Typography>
+                        Connecting to chat...
+                    </Typography>
+                </Box>
+            )}
+
             {/* Left Sidebar */}
             <Box
                 sx={{

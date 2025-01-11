@@ -14,6 +14,8 @@ export const SocketProvider = ({ children }) => {
 
     useEffect(() => {
         if (user) {
+            console.log('Initializing socket connection with user:', user.username);
+
             // Create socket connection
             const newSocket = io('http://localhost:8080', {
                 transports: ['polling', 'websocket'],
@@ -33,15 +35,27 @@ export const SocketProvider = ({ children }) => {
 
             // Socket event listeners
             newSocket.on('connect', () => {
-                console.log('Socket connected successfully');
+                console.log('Socket connected successfully', {
+                    id: newSocket.id,
+                    connected: newSocket.connected,
+                    transport: newSocket.io.engine.transport.name
+                });
+
                 // Join default room after connection
                 if (user.username) {
+                    console.log('Attempting to join default room with username:', user.username);
                     newSocket.emit('join_default', { username: user.username });
                 }
             });
 
             newSocket.on('connect_error', (error) => {
-                console.error('Socket connection error:', error);
+                console.error('Socket connection error:', {
+                    message: error.message,
+                    description: error.description,
+                    type: error.type,
+                    transport: newSocket.io?.engine?.transport?.name
+                });
+
                 // Try to reconnect with polling if websocket fails
                 if (newSocket.io.opts.transports[0] === 'websocket') {
                     console.log('Falling back to polling transport');
@@ -50,33 +64,57 @@ export const SocketProvider = ({ children }) => {
             });
 
             newSocket.on('error', (error) => {
-                console.error('Socket error:', error);
+                console.error('Socket error:', {
+                    error,
+                    socketId: newSocket.id,
+                    connected: newSocket.connected
+                });
             });
 
             newSocket.on('disconnect', (reason) => {
-                console.log('Socket disconnected:', reason);
+                console.log('Socket disconnected:', {
+                    reason,
+                    socketId: newSocket.id,
+                    wasConnected: newSocket.connected,
+                    transport: newSocket.io?.engine?.transport?.name
+                });
+
                 if (reason === 'io server disconnect') {
                     // Server initiated disconnect, try reconnecting
+                    console.log('Attempting reconnection after server disconnect');
                     setTimeout(() => {
                         newSocket.connect();
                     }, 1000);
                 }
             });
 
+            // Add handlers for room events
+            newSocket.on('room_joined', (data) => {
+                console.log('Successfully joined room:', data);
+            });
+
+            newSocket.on('room_error', (error) => {
+                console.error('Room error:', error);
+            });
+
             setSocket(newSocket);
 
             // Cleanup on unmount
             return () => {
+                console.log('Cleaning up socket connection');
                 if (newSocket) {
                     newSocket.removeAllListeners();
                     newSocket.close();
                 }
             };
+        } else {
+            console.log('No user available for socket connection');
         }
     }, [user]);
 
     const value = {
         socket,
+        connected: socket?.connected || false
     };
 
     return (

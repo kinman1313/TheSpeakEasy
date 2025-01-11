@@ -6,6 +6,10 @@ const mongoose = require('mongoose');
 require('dotenv').config();
 const path = require('path');
 
+// Import models
+const Room = require('./models/Room');
+const Message = require('./models/Message');
+
 // Check for required environment variables first
 const requiredEnvVars = [
     'MONGODB_URI',
@@ -179,24 +183,36 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('message', (message) => {
+    socket.on('message', async (message) => {
         try {
             console.log('Received message:', message);
-            // Add server-generated ID and timestamp
-            const enhancedMessage = {
-                ...message,
-                _id: Date.now().toString(),
-                timestamp: new Date().toISOString(),
-                socketId: socket.id,
-                processed: true // Flag to confirm server processing
-            };
 
-            console.log('Broadcasting message:', enhancedMessage);
-            // Broadcast message to all clients
-            io.emit('message', enhancedMessage);
+            const user = connectedUsers.get(socket.id);
+            if (!user) {
+                socket.emit('error', { message: 'User not found' });
+                return;
+            }
+
+            // Create and save the message
+            const newMessage = new Message({
+                type: 'text',
+                content: message.content,
+                roomId: message.roomId,
+                username: user.username,
+                metadata: {},
+                timestamp: new Date().toISOString()
+            });
+
+            await newMessage.save();
+
+            // Broadcast message to room
+            io.to(message.roomId).emit('message', {
+                ...newMessage.toObject(),
+                _id: newMessage._id.toString()
+            });
         } catch (error) {
             console.error('Error in message handler:', error);
-            socket.emit('error', 'Failed to send message');
+            socket.emit('error', { message: 'Failed to send message' });
         }
     });
 
@@ -231,17 +247,22 @@ io.on('connection', (socket) => {
                 return;
             }
 
+            const user = connectedUsers.get(socket.id);
+            if (!user) {
+                socket.emit('error', { message: 'User not found' });
+                return;
+            }
+
             socket.join(roomId);
             socket.to(roomId).emit('user_joined', {
-                userId: socket.user._id,
-                username: socket.user.username
+                socketId: socket.id,
+                username: user.username
             });
 
-            // Get recent messages
-            const messages = await Message.find({ room: roomId })
-                .sort('-createdAt')
+            // Get recent messages for this room
+            const messages = await Message.find({ roomId })
+                .sort('-timestamp')
                 .limit(50)
-                .populate('sender', 'username avatarUrl')
                 .exec();
 
             socket.emit('room_messages', {
