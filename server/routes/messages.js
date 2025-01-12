@@ -56,7 +56,7 @@ router.post('/voice', auth, upload.single('audio'), async (req, res) => {
         }
 
         // Create voice message
-        const message = new Message({
+        const message = new Message({xx
             type: 'voice',
             content: `/uploads/voice/${req.file.filename}`,
             room: roomId,

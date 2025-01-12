@@ -52,7 +52,7 @@ const drawerWidth = {
 // Add glassmorphism styles
 const glassStyle = {
     background: 'rgba(15, 23, 42, 0.65)',
-    backdropFilter: 'blur(12px) brightness(1.5) invert()',
+    backdropFilter: 'blur(12px) 
     WebkitBackdropFilter: 'blur(12px) brightness(1.5) invert()',
     borderRadius: '16px',
     border: '1px solid rgba(255, 255, 255, 0.08)',
