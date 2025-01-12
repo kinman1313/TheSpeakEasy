@@ -54,7 +54,7 @@ export default function ProfilePicture({ size = 40, showEditButton = true, onClo
             formData.append('avatar', selectedFile);
 
             const token = localStorage.getItem('token');
-            const response = await fetch('/api/users/upload-avatar', {
+            const response = await fetch('/opt/render/project/uploads', {
                 method: 'POST',
                 body: formData,
                 headers: {

@@ -5,6 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const userRoutes = require('./routes/users');
 const chatRoutes = require('./routes/chat');
+const roomRoutes = require('./routes/rooms');
 
 const app = express();
 
@@ -24,7 +25,21 @@ const avatarsDir = path.join(BASE_UPLOAD_DIR, 'avatars');
 });
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: function (origin, callback) {
+        const allowedOrigins = [
+            "https://lies-client-9ayj.onrender.com",
+            "http://localhost:3000",
+            "https://thespeakeasy.onrender.com"
+        ];
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Origin not allowed'));
+        }
+    },
+    credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -34,6 +49,7 @@ app.use('/uploads', express.static(BASE_UPLOAD_DIR));
 // Routes
 app.use('/api', userRoutes);
 app.use('/api', chatRoutes);
+app.use('/api', roomRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

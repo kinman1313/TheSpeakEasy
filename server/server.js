@@ -52,6 +52,7 @@ const io = socketIO(server, {
             if (!origin || allowedOrigins.includes(origin)) {
                 callback(null, true);
             } else {
+                console.error('Origin not allowed:', origin);
                 callback(new Error('Origin not allowed'));
             }
         },
@@ -60,12 +61,17 @@ const io = socketIO(server, {
         credentials: true,
         maxAge: 86400
     },
-    transports: ['polling', 'websocket'],
+    transports: ['websocket', 'polling'],
     allowEIO3: true,
     pingTimeout: 60000,
     pingInterval: 25000,
     connectTimeout: 60000,
-    path: '/socket.io'
+    path: '/socket.io',
+    reconnection: true,
+    reconnectionAttempts: 10,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000,
+    randomizationFactor: 0.5
 });
 
 // CORS middleware for Express
@@ -349,6 +355,11 @@ io.on('connection', (socket) => {
 // Add WebSocket specific error handling
 io.engine.on('connection_error', (err) => {
     console.error('Connection error:', err);
+});
+
+// Add connection logging
+io.engine.on('headers', (headers, req) => {
+    console.log('Socket.IO headers:', headers);
 });
 
 // Error handling middleware
