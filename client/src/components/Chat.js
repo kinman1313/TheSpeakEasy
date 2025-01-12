@@ -53,8 +53,7 @@ const drawerWidth = {
 const glassStyle = {
     background: 'rgba(15, 23, 42, 0.65)',
     backdropFilter: 'blur(12px) invert()',
-    WebkitBackdropFilter: 'blur(12px) invert()',
-    opacity: '0.20',
+    WebkitBackdropFilter: 'blur(12px) invert() brightness(1.5) opacity 1',
     borderRadius: '16px',
     border: '1px solid rgba(255, 255, 255, 0.08)',
     boxShadow: '0 4px 24px -1px rgba(0, 0, 0, 0.25)',
@@ -270,22 +269,16 @@ export default function Chat() {
 
                 const response = await fetch(`${config.API_URL}/api/rooms`, {
                     headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json'
-                    },
-                    credentials: 'include'
+                        'Authorization': `Bearer ${token}`
+                    }
                 });
 
                 if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('Server response:', errorText);
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
 
                 const data = await response.json();
                 console.log('Fetched rooms:', data);
-                setRetryCount(0); // Reset retry count on success
 
                 // Create default public lobby
                 const defaultLobby = {
@@ -299,54 +292,51 @@ export default function Chat() {
                 };
 
                 // Check if public lobby exists in fetched rooms
-                const publicLobby = data.rooms?.find(room => room.name === 'public-lobby') || defaultLobby;
+                const publicLobby = data.find(room => room.name === 'public-lobby') || defaultLobby;
 
                 // Ensure public lobby is first in the list
                 const roomsWithLobby = [
                     publicLobby,
-                    ...(data.rooms || []).filter(room => room.name !== 'public-lobby')
+                    ...(data.filter(room => room.name !== 'public-lobby') || [])
                 ];
 
                 setRooms(roomsWithLobby);
 
                 // Join public lobby if no active room
-                if (!activeRoom) {
+                if (!activeRoom && socket?.connected) {
                     console.log('Joining public lobby:', publicLobby._id);
-                    setActiveRoom(publicLobby);
-                    if (socket?.connected) {
-                        socket.emit('join_room', publicLobby._id);
+                    try {
+                        await joinRoom(publicLobby._id);
+                        setActiveRoom(publicLobby);
+                        setConnectionError(false);
+                    } catch (error) {
+                        console.error('Failed to join public lobby:', error);
+                        setConnectionError(true);
                     }
                 }
-
-                setConnectionError(false);
             } catch (error) {
                 console.error('Error fetching rooms:', error);
+                setConnectionError(true);
 
-                // Increment retry count
-                setRetryCount(prev => prev + 1);
+                // Set up default lobby as fallback
+                const defaultLobby = {
+                    _id: 'public-lobby',
+                    name: 'public-lobby',
+                    topic: 'Welcome to The SpeakEasy',
+                    isPrivate: false,
+                    isLobby: true,
+                    members: [],
+                    admins: []
+                };
 
-                // Only set default lobby if we've exceeded max retries
-                if (retryCount >= maxRetries) {
-                    const defaultLobby = {
-                        _id: 'public-lobby',
-                        name: 'public-lobby',
-                        topic: 'Welcome to The SpeakEasy',
-                        isPrivate: false,
-                        isLobby: true,
-                        members: [],
-                        admins: []
-                    };
-                    setRooms([defaultLobby]);
-                    setActiveRoom(defaultLobby);
-                    if (socket?.connected) {
-                        socket.emit('join_room', defaultLobby._id);
+                setRooms([defaultLobby]);
+                if (!activeRoom && socket?.connected) {
+                    try {
+                        await joinRoom(defaultLobby._id);
+                        setActiveRoom(defaultLobby);
+                    } catch (joinError) {
+                        console.error('Failed to join default lobby:', joinError);
                     }
-                    setConnectionError(true);
-                } else {
-                    // Retry after a delay
-                    setTimeout(() => {
-                        fetchRooms();
-                    }, 2000 * (retryCount + 1)); // Exponential backoff
                 }
             } finally {
                 setLoading(false);
@@ -356,11 +346,7 @@ export default function Chat() {
         if (socket?.connected) {
             fetchRooms();
         }
-
-        return () => {
-            setRetryCount(0); // Reset retry count on cleanup
-        };
-    }, [socket?.connected]);
+    }, [socket?.connected, joinRoom]);
 
     useEffect(() => {
         if (connectionError) {
