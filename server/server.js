@@ -25,9 +25,10 @@ app.use(express.urlencoded({ extended: true }));
 // Socket.IO setup with CORS
 const io = new Server(server, {
     cors: {
-        origin: process.env.CLIENT_URL || 'http://localhost:3000',
+        origin: process.env.CLIENT_URL || 'https://lies-client-9ayj.onrender.com',
         methods: ['GET', 'POST'],
-        credentials: true
+        credentials: true,
+        allowedHeaders: ['Content-Type', 'Authorization']
     }
 });
 

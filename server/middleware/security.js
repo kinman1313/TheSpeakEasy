@@ -1,42 +1,46 @@
 const helmet = require('helmet');
+const cors = require('cors');
 
 const securityMiddleware = (app) => {
-    app.use(
-        helmet({
-            contentSecurityPolicy: {
-                directives: {
-                    defaultSrc: ["'self'"],
-                    connectSrc: ["'self'", "wss:", "ws:", "https:", "http:"],
-                    scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-                    styleSrc: ["'self'", "'unsafe-inline'", "https:", "http:"],
-                    imgSrc: ["'self'", "data:", "https:", "http:"],
-                    fontSrc: ["'self'", "data:", "https:", "http:"],
-                    mediaSrc: ["'self'", "data:", "https:", "http:"],
-                    objectSrc: ["'none'"],
-                    frameSrc: ["'self'"],
-                    workerSrc: ["'self'", "blob:"],
-                    childSrc: ["'self'", "blob:"],
-                    upgradeInsecureRequests: []
-                }
-            },
-            crossOriginEmbedderPolicy: false,
-            crossOriginResourcePolicy: { policy: "cross-origin" },
-            crossOriginOpenerPolicy: false
-        })
-    );
+    // CORS configuration
+    app.use(cors({
+        origin: process.env.CLIENT_URL || 'https://lies-client-9ayj.onrender.com',
+        credentials: true,
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization']
+    }));
 
-    // CORS middleware
-    app.use((req, res, next) => {
-        res.header('Access-Control-Allow-Origin', '*');
-        res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-        res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-        res.header('Access-Control-Allow-Credentials', 'true');
-
-        if (req.method === 'OPTIONS') {
-            return res.sendStatus(200);
-        }
-        next();
-    });
+    // Helmet configuration
+    app.use(helmet({
+        contentSecurityPolicy: {
+            directives: {
+                defaultSrc: ["'self'"],
+                connectSrc: [
+                    "'self'",
+                    process.env.CLIENT_URL || 'https://lies-client-9ayj.onrender.com',
+                    'wss://lies-server-9ayj.onrender.com',
+                    'ws://lies-server-9ayj.onrender.com'
+                ],
+                scriptSrc: [
+                    "'self'",
+                    "'unsafe-inline'",
+                    "'unsafe-eval'",
+                    'https://lies-client-9ayj.onrender.com'
+                ],
+                styleSrc: ["'self'", "'unsafe-inline'"],
+                imgSrc: ["'self'", "data:", "blob:", "*"],
+                mediaSrc: ["'self'", "data:", "blob:", "*"],
+                fontSrc: ["'self'", "data:", "*"],
+                objectSrc: ["'none'"],
+                upgradeInsecureRequests: [],
+                workerSrc: ["'self'", "blob:"],
+                frameSrc: ["'self'"],
+                formAction: ["'self'"]
+            }
+        },
+        crossOriginEmbedderPolicy: false,
+        crossOriginResourcePolicy: { policy: "cross-origin" }
+    }));
 };
 
 module.exports = securityMiddleware; 
