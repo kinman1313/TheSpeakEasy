@@ -107,7 +107,7 @@ export default function Chat() {
         color1: '#1a1a40',
         color2: '#4a4a80',
         gradientDirection: '135deg',
-        opacity: 0.75,
+        opacity: 0.30,
         blur: 16,
         border: 'rgba(255, 255, 255, 0.125)'
     });
