@@ -147,8 +147,35 @@ app.get('/health', (req, res) => {
 // Store connected users
 const connectedUsers = new Map();
 
+// Create or get public lobby
+async function getOrCreatePublicLobby() {
+    try {
+        let publicLobby = await Room.findOne({ name: 'public-lobby' });
+        if (!publicLobby) {
+            publicLobby = new Room({
+                name: 'public-lobby',
+                topic: 'Welcome to The SpeakEasy',
+                isPrivate: false,
+                creator: null,
+                members: [],
+                admins: [],
+                memberCount: 0
+            });
+            await publicLobby.save();
+            console.log('Created public lobby:', publicLobby._id);
+        }
+        return publicLobby;
+    } catch (error) {
+        console.error('Error creating public lobby:', error);
+        throw error;
+    }
+}
+
+// Initialize public lobby
+getOrCreatePublicLobby().catch(console.error);
+
 // Socket.IO event handlers
-io.on('connection', (socket) => {
+io.on('connection', async (socket) => {
     console.log('New client connected:', socket.id);
 
     // Handle errors on the socket
@@ -156,12 +183,34 @@ io.on('connection', (socket) => {
         console.error('Socket error:', error);
     });
 
-    socket.on('join', (username) => {
+    socket.on('join', async (username) => {
         try {
             console.log('User joined:', username);
             connectedUsers.set(socket.id, {
                 username,
                 joinedAt: new Date().toISOString()
+            });
+
+            // Get public lobby and join it automatically
+            const publicLobby = await getOrCreatePublicLobby();
+            socket.join(publicLobby._id.toString());
+
+            // Emit room joined event
+            socket.emit('room_joined', {
+                roomId: publicLobby._id.toString(),
+                name: publicLobby.name,
+                topic: publicLobby.topic
+            });
+
+            // Get recent messages for public lobby
+            const messages = await Message.find({ roomId: publicLobby._id })
+                .sort('-timestamp')
+                .limit(50)
+                .exec();
+
+            socket.emit('room_messages', {
+                roomId: publicLobby._id.toString(),
+                messages: messages.reverse()
             });
 
             // Broadcast updated user list
@@ -232,34 +281,54 @@ io.on('connection', (socket) => {
     // Join room
     socket.on('join_room', async (roomId) => {
         try {
-            const room = await Room.findById(roomId);
+            let room;
+            if (roomId === 'public-lobby') {
+                room = await getOrCreatePublicLobby();
+            } else {
+                room = await Room.findById(roomId);
+            }
+
             if (!room) {
+                console.error('Room not found:', roomId);
                 socket.emit('error', { message: 'Room not found' });
                 return;
             }
 
             const user = connectedUsers.get(socket.id);
             if (!user) {
+                console.error('User not found for socket:', socket.id);
                 socket.emit('error', { message: 'User not found' });
                 return;
             }
 
-            socket.join(roomId);
-            socket.to(roomId).emit('user_joined', {
+            // Join the room's Socket.IO room
+            socket.join(room._id.toString());
+
+            // Notify others in the room
+            socket.to(room._id.toString()).emit('user_joined', {
                 socketId: socket.id,
                 username: user.username
             });
 
             // Get recent messages for this room
-            const messages = await Message.find({ roomId })
+            const messages = await Message.find({ roomId: room._id })
                 .sort('-timestamp')
                 .limit(50)
                 .exec();
 
+            // Send room details and messages to the user
+            socket.emit('room_joined', {
+                roomId: room._id.toString(),
+                name: room.name,
+                topic: room.topic
+            });
+
             socket.emit('room_messages', {
-                roomId,
+                roomId: room._id.toString(),
                 messages: messages.reverse()
             });
+
+            console.log(`User ${user.username} joined room ${room.name}`);
         } catch (error) {
             console.error('Error joining room:', error);
             socket.emit('error', { message: 'Failed to join room' });
