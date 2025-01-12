@@ -26,6 +26,8 @@ axios.interceptors.request.use(
         };
         // Ensure credentials are sent
         config.withCredentials = true;
+        // Set the correct origin
+        config.headers['Origin'] = config.API_URL || 'https://lies-client-9ayj.onrender.com';
         return config;
     },
     error => Promise.reject(error)
@@ -37,8 +39,18 @@ axios.interceptors.response.use(
     error => {
         console.error('API Error:', error);
 
+        // Handle network errors
+        if (error.code === 'ERR_NETWORK') {
+            throw new Error('Network error. Please check your connection and try again.');
+        }
+
         if (error.code === 'ECONNABORTED') {
             throw new Error('Request timed out. Please check your connection and try again.');
+        }
+
+        // Handle CORS errors
+        if (error.message.includes('CORS')) {
+            throw new Error('Connection error. Please try again later.');
         }
 
         if (!error.response) {
@@ -48,6 +60,7 @@ axios.interceptors.response.use(
         if (error.response.status === 401) {
             localStorage.removeItem('token');
             delete axios.defaults.headers.common['Authorization'];
+            throw new Error('Invalid credentials or session expired. Please log in again.');
         }
 
         // Handle specific error messages from the server
