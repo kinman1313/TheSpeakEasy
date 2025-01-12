@@ -26,8 +26,6 @@ axios.interceptors.request.use(
         };
         // Ensure credentials are sent
         config.withCredentials = true;
-        // Set the correct origin
-        config.headers['Origin'] = config.API_URL || 'https://lies-client-9ayj.onrender.com';
         return config;
     },
     error => Promise.reject(error)
