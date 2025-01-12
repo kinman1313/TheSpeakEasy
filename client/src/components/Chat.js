@@ -52,8 +52,8 @@ const drawerWidth = {
 // Add glassmorphism styles
 const glassStyle = {
     background: 'rgba(15, 23, 42, 0.65)',
-    backdropFilter: 'blur(10px)',
-    WebkitBackdropFilter: 'blur(28px)',
+    backdropFilter: 'blur(28px) invert()',
+    WebkitBackdropFilter: 'blur(28px) invert()',
     borderRadius: '16px',
     border: '1px solid rgba(255, 255, 255, 0.08)',
     boxShadow: '0 4px 24px -1px rgba(0, 0, 0, 0.25)',
@@ -284,57 +284,51 @@ export default function Chat() {
                 console.log('Fetched rooms:', data);
 
                 // Check if public lobby exists
-                let publicLobby = data.rooms?.find(room => room.name === 'Public Lobby');
+                let publicLobby = data.rooms?.find(room => room.name === 'public-lobby');
 
                 if (!publicLobby) {
-                    console.log('Creating public lobby...');
-                    // Create public lobby if it doesn't exist
-                    const createResponse = await fetch(`${config.API_URL}/api/rooms`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`
-                        },
-                        credentials: 'include',
-                        body: JSON.stringify({
-                            name: 'Public Lobby',
-                            topic: 'Welcome to the chat!',
-                            isPrivate: false,
-                            isLobby: true
-                        })
-                    });
-
-                    if (!createResponse.ok) {
-                        const errorText = await createResponse.text();
-                        console.error('Failed to create lobby:', errorText);
-                        throw new Error('Failed to create public lobby');
-                    }
-
-                    const createData = await createResponse.json();
-                    publicLobby = createData.room;
-                    data.rooms = [...(data.rooms || []), publicLobby];
+                    console.log('Public lobby not found in fetched rooms');
+                    // Use the default public lobby
+                    publicLobby = {
+                        _id: 'public-lobby',
+                        name: 'public-lobby',
+                        topic: 'Welcome to The SpeakEasy',
+                        isPrivate: false,
+                        isLobby: true,
+                        members: [],
+                        admins: []
+                    };
                 }
 
-                setRooms(data.rooms || []);
+                // Ensure public lobby is first in the list
+                const roomsWithLobby = [
+                    publicLobby,
+                    ...(data.rooms || []).filter(room => room.name !== 'public-lobby')
+                ];
+
+                setRooms(roomsWithLobby);
 
                 // Always join public lobby first if no active room
-                if (!activeRoom && publicLobby) {
-                    setActiveRoom(publicLobby.id);
-                    socket?.emit('join_room', publicLobby.id);
+                if (!activeRoom) {
+                    console.log('Joining public lobby:', publicLobby._id);
+                    setActiveRoom(publicLobby);
+                    socket?.emit('join_room', publicLobby._id);
                 }
             } catch (error) {
-                console.error('Error fetching/creating rooms:', error);
+                console.error('Error fetching rooms:', error);
                 // Set default public lobby in state if everything fails
                 const defaultLobby = {
-                    id: 'public-lobby',
-                    name: 'Public Lobby',
-                    topic: 'Welcome to the chat!',
+                    _id: 'public-lobby',
+                    name: 'public-lobby',
+                    topic: 'Welcome to The SpeakEasy',
                     isPrivate: false,
-                    isLobby: true
+                    isLobby: true,
+                    members: [],
+                    admins: []
                 };
                 setRooms([defaultLobby]);
-                setActiveRoom(defaultLobby.id);
-                socket?.emit('join_room', defaultLobby.id);
+                setActiveRoom(defaultLobby);
+                socket?.emit('join_room', defaultLobby._id);
 
                 // Show error in UI
                 setConnectionError(true);

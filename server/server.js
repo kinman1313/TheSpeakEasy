@@ -123,11 +123,27 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Import and mount routes
 const userRoutes = require('./routes/users');
+const chatRoutes = require('./routes/chat');
+const roomRoutes = require('./routes/rooms');
+const messageRoutes = require('./routes/messages');
+
+// Mount routes
 app.use('/api/users', userRoutes);
+app.use('/api/chat', chatRoutes);
+app.use('/api/rooms', roomRoutes);
+app.use('/api/messages', messageRoutes);
+
+// Make io available to routes
+app.set('io', io);
 
 // Add a root test route
 app.get('/', (req, res) => {
     res.json({ message: 'Server is running' });
+});
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok' });
 });
 
 // Add a catch-all route for debugging
@@ -137,11 +153,6 @@ app.use('*', (req, res) => {
         path: req.originalUrl,
         method: req.method
     });
-});
-
-// Health check endpoint
-app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'ok' });
 });
 
 // Store connected users
