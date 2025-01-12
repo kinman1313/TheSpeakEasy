@@ -62,7 +62,7 @@ const glassStyle = {
 
 export default function Chat() {
     // Context hooks
-    const { socket } = useSocket();
+    const { socket, isConnected, joinRoom } = useSocket();
     const { user } = useAuth();
     const { theme } = useTheme();
 
@@ -303,7 +303,7 @@ export default function Chat() {
                 setRooms(roomsWithLobby);
 
                 // Join public lobby if no active room
-                if (!activeRoom && socket?.connected) {
+                if (!activeRoom && isConnected) {
                     console.log('Joining public lobby:', publicLobby._id);
                     try {
                         await joinRoom(publicLobby._id);
@@ -330,7 +330,7 @@ export default function Chat() {
                 };
 
                 setRooms([defaultLobby]);
-                if (!activeRoom && socket?.connected) {
+                if (!activeRoom && isConnected) {
                     try {
                         await joinRoom(defaultLobby._id);
                         setActiveRoom(defaultLobby);
@@ -343,20 +343,20 @@ export default function Chat() {
             }
         };
 
-        if (socket?.connected) {
+        if (isConnected) {
             fetchRooms();
         }
-    }, [socket?.connected, joinRoom]);
+    }, [isConnected, joinRoom, activeRoom]);
 
     useEffect(() => {
         if (connectionError) {
             setShowConnectionError(true);
             setConnectionStatus('Connection lost. Attempting to reconnect...');
-        } else if (socketConnected) {
+        } else if (isConnected) {
             setShowConnectionError(false);
             setConnectionStatus('Connected');
         }
-    }, [socketConnected, connectionError]);
+    }, [isConnected, connectionError]);
 
     return (
         <Box sx={{
