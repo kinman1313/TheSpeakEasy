@@ -11,21 +11,17 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs').promises;
 const { v4: uuidv4 } = require('uuid');
+const config = require('../config');
 
-// Define base upload directory based on environment
-const BASE_UPLOAD_DIR = process.env.NODE_ENV === 'production'
-    ? '/opt/render/project/uploads'
-    : path.join(__dirname, '..', 'uploads');
-
-// Configure multer for file upload
+// Configure multer for avatar uploads
 const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        const avatarsDir = path.join(BASE_UPLOAD_DIR, 'avatars');
-        // Ensure the avatars directory exists
-        if (!fs.existsSync(avatarsDir)) {
-            fs.mkdirSync(avatarsDir, { recursive: true });
+    destination: async function (req, file, cb) {
+        try {
+            await fs.access(config.AVATAR_DIR);
+        } catch {
+            await fs.mkdir(config.AVATAR_DIR, { recursive: true });
         }
-        cb(null, avatarsDir);
+        cb(null, config.AVATAR_DIR);
     },
     filename: function (req, file, cb) {
         const uniqueId = uuidv4();
@@ -36,11 +32,10 @@ const storage = multer.diskStorage({
 const upload = multer({
     storage: storage,
     limits: {
-        fileSize: 5 * 1024 * 1024 // 5MB limit
+        fileSize: config.MAX_AVATAR_SIZE
     },
     fileFilter: (req, file, cb) => {
-        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
-        if (!allowedTypes.includes(file.mimetype)) {
+        if (!config.ALLOWED_AVATAR_TYPES.includes(file.mimetype)) {
             cb(new Error('Invalid file type. Only JPEG, PNG and GIF are allowed.'));
             return;
         }
@@ -187,12 +182,26 @@ router.post('/upload-avatar', auth, upload.single('avatar'), async (req, res) =>
             return res.status(400).json({ error: 'No file uploaded' });
         }
 
-        // Generate the URL for the uploaded file
-        const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+        // Get the old avatar filename if it exists
+        const user = await User.findById(req.user._id);
+        const oldAvatarPath = user.avatarUrl ? path.join(config.AVATAR_DIR, path.basename(user.avatarUrl)) : null;
+
+        // Generate the URL for the new uploaded file
+        const avatarUrl = `${config.AVATAR_URL_PATH}/${req.file.filename}`;
 
         // Update user's avatarUrl in the database
-        req.user.avatarUrl = avatarUrl;
-        await req.user.save();
+        user.avatarUrl = avatarUrl;
+        await user.save();
+
+        // Delete old avatar file if it exists and isn't the default avatar
+        if (oldAvatarPath && !oldAvatarPath.includes('default-avatar')) {
+            try {
+                await fs.unlink(oldAvatarPath);
+            } catch (error) {
+                console.error('Error deleting old avatar:', error);
+                // Don't throw error if file deletion fails
+            }
+        }
 
         // Return success response with the new avatar URL
         res.json({
@@ -212,6 +221,16 @@ router.post('/upload-avatar', auth, upload.single('avatar'), async (req, res) =>
         return res.status(400).json({ error: error.message });
     }
     res.status(500).json({ error: error.message });
+});
+
+// Serve avatar files
+router.get('/avatars/:filename', (req, res) => {
+    const filePath = path.join(config.AVATAR_DIR, req.params.filename);
+    res.sendFile(filePath, (err) => {
+        if (err) {
+            res.status(404).json({ error: 'Avatar not found' });
+        }
+    });
 });
 
 // Request password reset

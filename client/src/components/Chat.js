@@ -42,18 +42,19 @@ import ChatBubbleCustomizer from './ChatBubbleCustomizer';
 import NewRoomDialog from './NewRoomDialog';
 import RoomSettings from './RoomSettings';
 import { config } from '../config';
+import ProfileSettings from './ProfileSettings';
 
 const drawerWidth = {
-    xs: '100%',
-    sm: 280,
-    md: 320
+    xs: '240px',
+    sm: '280px',
+    md: '320px'
 };
 
 // Add glassmorphism styles
 const glassStyle = {
     background: 'rgba(15, 23, 42, 0.65)',
-    backdropFilter: 'blur(12px) 
-    WebkitBackdropFilter: 'blur(12px) brightness(1.5) invert()',
+    backdropFilter: 'blur(12px)',
+    WebkitBackdropFilter: 'blur(12px) brightness(1.4) invert()',
     borderRadius: '16px',
     border: '1px solid rgba(255, 255, 255, 0.08)',
     boxShadow: '0 4px 24px -1px rgba(0, 0, 0, 0.25)',
@@ -136,6 +137,28 @@ export default function Chat() {
         setUserMenuAnchor(null);
         setShowProfileSettings(true);
     };
+
+    // Handle bubble customization
+    const handleBubbleCustomize = () => {
+        setUserMenuAnchor(null);
+        setShowBubbleCustomizer(true);
+    };
+
+    // Handle bubble settings save
+    const handleBubbleSettingsSave = (newSettings) => {
+        setBubbleSettings(newSettings);
+        setShowBubbleCustomizer(false);
+        // Save to localStorage for persistence
+        localStorage.setItem('bubbleSettings', JSON.stringify(newSettings));
+    };
+
+    // Load saved bubble settings on mount
+    useEffect(() => {
+        const savedSettings = localStorage.getItem('bubbleSettings');
+        if (savedSettings) {
+            setBubbleSettings(JSON.parse(savedSettings));
+        }
+    }, []);
 
     // Handle logout
     const handleLogout = () => {
@@ -769,25 +792,28 @@ export default function Chat() {
                 anchorEl={userMenuAnchor}
                 open={Boolean(userMenuAnchor)}
                 onClose={handleUserMenuClose}
+                PaperProps={{
+                    sx: {
+                        ...glassStyle,
+                        mt: 1
+                    }
+                }}
             >
                 <MenuItem onClick={handleProfileSettings}>
                     <ListItemIcon>
-                        <AccountIcon />
+                        <AccountIcon sx={{ color: 'white' }} />
                     </ListItemIcon>
                     <ListItemText primary="Profile Settings" />
                 </MenuItem>
-                <MenuItem onClick={() => {
-                    setUserMenuAnchor(null);
-                    setShowBubbleCustomizer(true);
-                }}>
+                <MenuItem onClick={handleBubbleCustomize}>
                     <ListItemIcon>
-                        <FormatPaintIcon />
+                        <FormatPaintIcon sx={{ color: 'white' }} />
                     </ListItemIcon>
                     <ListItemText primary="Customize Chat" />
                 </MenuItem>
                 <MenuItem onClick={handleLogout}>
                     <ListItemIcon>
-                        <LogoutIcon />
+                        <LogoutIcon sx={{ color: 'white' }} />
                     </ListItemIcon>
                     <ListItemText primary="Logout" />
                 </MenuItem>
@@ -828,20 +854,12 @@ export default function Chat() {
                 </DialogContent>
             </Dialog>
 
-            <Dialog
+            <ChatBubbleCustomizer
                 open={showBubbleCustomizer}
                 onClose={() => setShowBubbleCustomizer(false)}
-                maxWidth="sm"
-                fullWidth
-            >
-                <DialogTitle>Customize Chat Bubbles</DialogTitle>
-                <DialogContent>
-                    <ChatBubbleCustomizer
-                        settings={bubbleSettings}
-                        onChange={setBubbleSettings}
-                    />
-                </DialogContent>
-            </Dialog>
+                onSave={handleBubbleSettingsSave}
+                initialSettings={bubbleSettings}
+            />
 
             <Snackbar
                 open={connectionError}
