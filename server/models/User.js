@@ -1,237 +1,80 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const validator = require('validator');
-const jwt = require('jsonwebtoken');
-
-const profileSchema = new mongoose.Schema({
-    displayName: {
-        type: String,
-        trim: true
-    },
-    bio: {
-        type: String,
-        trim: true,
-        maxLength: 500
-    },
-    avatar: {
-        url: String,
-        color: String
-    },
-    status: {
-        text: {
-            type: String,
-            trim: true,
-            maxLength: 100
-        },
-        emoji: String,
-        expiresAt: Date
-    },
-    links: [{
-        platform: {
-            type: String,
-            enum: ['github', 'twitter', 'linkedin', 'website'],
-            required: true
-        },
-        url: {
-            type: String,
-            required: true
-        }
-    }],
-    timezone: String,
-    language: {
-        type: String,
-        default: 'en'
-    }
-});
 
 const userSchema = new mongoose.Schema({
     username: {
         type: String,
-        required: true,
+        required: [true, 'Username is required'],
         unique: true,
         trim: true,
-        minLength: 3,
-        maxLength: 30,
-        validate: {
-            validator: function (v) {
-                return /^[a-zA-Z0-9_-]+$/.test(v);
-            },
-            message: 'Username can only contain letters, numbers, underscores, and hyphens'
-        }
+        minlength: [3, 'Username must be at least 3 characters long'],
+        maxlength: [30, 'Username cannot exceed 30 characters']
     },
     email: {
         type: String,
-        required: true,
+        required: [true, 'Email is required'],
         unique: true,
         trim: true,
         lowercase: true,
-        validate: {
-            validator: validator.isEmail,
-            message: 'Invalid email format'
-        }
+        validate: [validator.isEmail, 'Please provide a valid email']
     },
     password: {
         type: String,
-        required: true,
-        minLength: 8
+        required: [true, 'Password is required'],
+        minlength: [8, 'Password must be at least 8 characters long'],
+        select: false
     },
-    resetPasswordToken: String,
-    resetPasswordExpires: Date,
-    profile: profileSchema,
-    friends: [{
-        user: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'User'
-        },
-        status: {
-            type: String,
-            enum: ['pending', 'accepted', 'blocked'],
-            default: 'pending'
-        },
-        addedAt: {
-            type: Date,
-            default: Date.now
-        }
-    }],
-    preferences: {
-        theme: {
-            type: String,
-            enum: ['light', 'dark', 'system'],
-            default: 'system'
-        },
-        messageColor: {
-            type: String,
-            default: '#7C4DFF'
-        },
-        bubbleStyle: {
-            type: String,
-            enum: ['modern', 'classic', 'minimal'],
-            default: 'modern'
-        },
-        notifications: {
-            sound: {
-                type: Boolean,
-                default: true
-            },
-            desktop: {
-                type: Boolean,
-                default: true
-            },
-            email: {
-                type: Boolean,
-                default: false
-            }
-        },
-        privacy: {
-            showOnlineStatus: {
-                type: Boolean,
-                default: true
-            },
-            allowFriendRequests: {
-                type: Boolean,
-                default: true
-            },
-            allowMentions: {
-                type: String,
-                enum: ['everyone', 'friends', 'none'],
-                default: 'everyone'
-            }
-        }
+    avatarUrl: {
+        type: String,
+        default: 'default-avatar.png'
     },
-    lastSeen: Date,
     isOnline: {
         type: Boolean,
         default: false
     },
-    tokens: [{
-        token: {
-            type: String,
-            required: true
-        },
-        device: String,
-        lastUsed: Date
-    }],
-    avatarUrl: {
-        type: String,
-        default: null
+    lastSeen: {
+        type: Date,
+        default: Date.now
     },
-    status: {
-        type: String,
-        enum: ['online', 'offline', 'away'],
-        default: 'offline'
-    }
+    rooms: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Room'
+    }],
+    notifications: {
+        sound: {
+            type: Boolean,
+            default: true
+        },
+        desktop: {
+            type: Boolean,
+            default: true
+        }
+    },
+    resetPasswordToken: String,
+    resetPasswordExpire: Date
 }, {
     timestamps: true
 });
 
 // Hash password before saving
 userSchema.pre('save', async function (next) {
-    const user = this;
-    if (user.isModified('password')) {
-        user.password = await bcrypt.hash(user.password, 8);
+    if (!this.isModified('password')) return next();
+
+    try {
+        const salt = await bcrypt.genSalt(10);
+        this.password = await bcrypt.hash(this.password, salt);
+        next();
+    } catch (error) {
+        next(error);
     }
-    next();
 });
 
-// Method to check password
-userSchema.methods.checkPassword = async function (password) {
-    return bcrypt.compare(password, this.password);
-};
-
-// Method to generate auth token
-userSchema.methods.generateAuthToken = async function () {
-    const user = this;
-    const token = jwt.sign({ _id: user._id.toString() }, process.env.JWT_SECRET);
-    user.tokens = user.tokens.concat({ token });
-    await user.save();
-    return token;
-};
-
-// Add indexes for faster searches
-userSchema.index({ username: 'text', 'profile.displayName': 'text' });
-userSchema.index({ email: 1 });
-userSchema.index({ isOnline: 1 });
-userSchema.index({ 'friends.user': 1, 'friends.status': 1 });
-
-// Find user by credentials
-userSchema.statics.findByCredentials = async (email, password) => {
-    const user = await User.findOne({ email });
-    if (!user) {
-        throw new Error('Invalid login credentials');
-    }
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-        throw new Error('Invalid login credentials');
-    }
-    return user;
-};
-
-// Add password reset token methods
-userSchema.methods.createPasswordResetToken = function () {
-    const crypto = require('crypto');
-    const resetToken = crypto.randomBytes(32).toString('hex');
-
-    this.resetPasswordToken = crypto
-        .createHash('sha256')
-        .update(resetToken)
-        .digest('hex');
-
-    this.resetPasswordExpires = Date.now() + 3600000; // 1 hour
-
-    return resetToken;
-};
-
-// Compare password method
-userSchema.methods.comparePassword = async function (candidatePassword) {
-    return bcrypt.compare(candidatePassword, this.password);
-};
-
-// Method to return user data without sensitive information
-userSchema.methods.toJSON = function () {
-    const user = this.toObject();
-    delete user.password;
-    return user;
+// Method to check if password matches
+userSchema.methods.matchPassword = async function (enteredPassword) {
+    return await bcrypt.compare(enteredPassword, this.password);
 };
 
 const User = mongoose.model('User', userSchema);
+
 module.exports = User; 
