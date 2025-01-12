@@ -52,8 +52,9 @@ const drawerWidth = {
 // Add glassmorphism styles
 const glassStyle = {
     background: 'rgba(15, 23, 42, 0.65)',
-    backdropFilter: 'blur(28px) invert()',
-    WebkitBackdropFilter: 'blur(28px) invert()',
+    backdropFilter: 'blur(12px) invert()',
+    WebkitBackdropFilter: 'blur(12px) invert()',
+    opacity: '0.20',
     borderRadius: '16px',
     border: '1px solid rgba(255, 255, 255, 0.08)',
     boxShadow: '0 4px 24px -1px rgba(0, 0, 0, 0.25)',
@@ -107,7 +108,7 @@ export default function Chat() {
         color1: '#1a1a40',
         color2: '#4a4a80',
         gradientDirection: '135deg',
-        opacity: 0.30,
+        opacity: 3,
         blur: 16,
         border: 'rgba(255, 255, 255, 0.125)'
     });
