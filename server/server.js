@@ -25,11 +25,16 @@ app.use(express.urlencoded({ extended: true }));
 // Socket.IO setup with CORS
 const io = new Server(server, {
     cors: {
-        origin: process.env.CLIENT_URL || 'https://lies-client-9ayj.onrender.com',
+        origin: [
+            process.env.CLIENT_URL || 'https://lies-client-9ayj.onrender.com',
+            'http://localhost:3000'
+        ],
         methods: ['GET', 'POST'],
         credentials: true,
         allowedHeaders: ['Content-Type', 'Authorization']
-    }
+    },
+    allowEIO3: true,
+    transports: ['websocket', 'polling']
 });
 
 // Initialize message services
