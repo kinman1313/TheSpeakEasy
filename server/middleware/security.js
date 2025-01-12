@@ -1,13 +1,18 @@
 const helmet = require('helmet');
 const cors = require('cors');
 
+const CLIENT_URL = process.env.CLIENT_URL || 'https://lies-client-9ayj.onrender.com';
+const SERVER_URL = process.env.SERVER_URL || 'https://lies-server-9ayj.onrender.com';
+
 const securityMiddleware = (app) => {
     // CORS configuration
     app.use(cors({
-        origin: process.env.CLIENT_URL || 'https://lies-client-9ayj.onrender.com',
+        origin: CLIENT_URL,
         credentials: true,
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-        allowedHeaders: ['Content-Type', 'Authorization']
+        allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+        exposedHeaders: ['Content-Range', 'X-Content-Range'],
+        maxAge: 600 // Increase preflight cache time to 10 minutes
     }));
 
     // Helmet configuration
@@ -17,15 +22,16 @@ const securityMiddleware = (app) => {
                 defaultSrc: ["'self'"],
                 connectSrc: [
                     "'self'",
-                    process.env.CLIENT_URL || 'https://lies-client-9ayj.onrender.com',
-                    'wss://lies-server-9ayj.onrender.com',
-                    'ws://lies-server-9ayj.onrender.com'
+                    CLIENT_URL,
+                    SERVER_URL,
+                    SERVER_URL.replace('https', 'wss'),
+                    SERVER_URL.replace('https', 'ws')
                 ],
                 scriptSrc: [
                     "'self'",
                     "'unsafe-inline'",
                     "'unsafe-eval'",
-                    'https://lies-client-9ayj.onrender.com'
+                    CLIENT_URL
                 ],
                 styleSrc: ["'self'", "'unsafe-inline'"],
                 imgSrc: ["'self'", "data:", "blob:", "*"],
