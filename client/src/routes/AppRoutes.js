@@ -32,53 +32,56 @@ const PublicRoute = ({ children }) => {
 const AppRoutes = () => {
     const location = useLocation();
 
-    return (
-        <AnimatePresence mode="wait">
-            <Routes location={location} key={location.pathname}>
-                <Route
-                    path="/login"
-                    element={
-                        <PublicRoute>
-                            <Login />
-                        </PublicRoute>
-                    }
-                />
-                <Route
-                    path="/register"
-                    element={
-                        <PublicRoute>
-                            <Register />
-                        </PublicRoute>
-                    }
-                />
-                <Route
-                    path="/reset-password"
-                    element={
-                        <PublicRoute>
-                            <ResetPassword />
-                        </PublicRoute>
-                    }
-                />
-                <Route
-                    path="/reset-password/:token"
-                    element={
-                        <AnimatedRoute>
-                            <NewPassword />
-                        </AnimatedRoute>
-                    }
-                />
-                <Route
-                    path="/chat"
-                    element={
-                        <PrivateRoute>
-                            <Chat />
-                        </PrivateRoute>
-                    }
-                />
-                <Route path="/" element={<Navigate to="/chat" />} />
-            </Routes>
-        </AnimatePresence>
+    const renderRoutes = () => (
+        <Routes location={location} key={location.pathname}>
+            <Route
+                path="/login"
+                element={
+                    <PublicRoute>
+                        <Login />
+                    </PublicRoute>
+                }
+            />
+            <Route
+                path="/register"
+                element={
+                    <PublicRoute>
+                        <Register />
+                    </PublicRoute>
+                }
+            />
+            <Route
+                path="/reset-password"
+                element={
+                    <PublicRoute>
+                        <ResetPassword />
+                    </PublicRoute>
+                }
+            />
+            <Route
+                path="/reset-password/:token"
+                element={
+                    <AnimatedRoute>
+                        <NewPassword />
+                    </AnimatedRoute>
+                }
+            />
+            <Route
+                path="/chat"
+                element={
+                    <PrivateRoute>
+                        <Chat />
+                    </PrivateRoute>
+                }
+            />
+            <Route path="/" element={<Navigate to="/chat" />} />
+            <Route path="*" element={<Navigate to="/chat" />} />
+        </Routes>
     );
+
+    return <AnimatePresence mode="wait">{renderRoutes()}</AnimatePresence>;
 };
 
-export default AppRoutes; 
+export default AppRoutes;
+
+

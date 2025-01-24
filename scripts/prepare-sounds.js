@@ -51,4 +51,4 @@ const downloadAllSounds = async () => {
     }
 };
 
-downloadAllSounds(); 
+downloadAllSounds();

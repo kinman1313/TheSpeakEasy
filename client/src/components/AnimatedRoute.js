@@ -1,6 +1,8 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { motion } from 'framer-motion';
 
+// Define transition variants
 const transitions = {
     slide: {
         initial: { opacity: 0, x: -20 },
@@ -19,13 +21,17 @@ const transitions = {
     }
 };
 
+// AnimatedRoute component
 const AnimatedRoute = ({ children, type = 'slide' }) => {
+    // Handle invalid transition type
+    const transitionType = transitions[type] ? type : 'slide';
+
     return (
         <motion.div
             initial="initial"
             animate="in"
             exit="out"
-            variants={transitions[type]}
+            variants={transitions[transitionType]}
             transition={{
                 type: 'tween',
                 ease: 'anticipate',
@@ -37,4 +43,15 @@ const AnimatedRoute = ({ children, type = 'slide' }) => {
     );
 };
 
-export default AnimatedRoute; 
+// Prop types validation
+AnimatedRoute.propTypes = {
+    children: PropTypes.node.isRequired,
+    type: PropTypes.oneOf(['slide', 'fade', 'scale'])
+};
+
+// Default props
+AnimatedRoute.defaultProps = {
+    type: 'slide'
+};
+
+export default AnimatedRoute;

@@ -1,6 +1,19 @@
 const nodemailer = require('nodemailer');
 
+// Constants for timeout values
+const CONNECTION_TIMEOUT = 5000;
+const GREETING_TIMEOUT = 5000;
+const SOCKET_TIMEOUT = 5000;
+
+/**
+ * Creates a nodemailer transporter using Gmail service.
+ * @returns {Object} - The nodemailer transporter.
+ */
 const createTransporter = () => {
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+        throw new Error('SMTP_USER and SMTP_PASS environment variables are required');
+    }
+
     return nodemailer.createTransport({
         service: 'gmail',
         auth: {
@@ -11,12 +24,18 @@ const createTransporter = () => {
         tls: {
             rejectUnauthorized: false
         },
-        connectionTimeout: 5000,
-        greetingTimeout: 5000,
-        socketTimeout: 5000
+        connectionTimeout: CONNECTION_TIMEOUT,
+        greetingTimeout: GREETING_TIMEOUT,
+        socketTimeout: SOCKET_TIMEOUT
     });
 };
 
+/**
+ * Sends a password reset email to the specified email address.
+ * @param {string} email - The email address to send the reset link to.
+ * @param {string} resetToken - The reset token to include in the email.
+ * @returns {Object} - The result of the email sending operation.
+ */
 const sendResetPasswordEmail = async (email, resetToken) => {
     try {
         console.log('Creating transporter...');
@@ -62,4 +81,4 @@ const sendResetPasswordEmail = async (email, resetToken) => {
 
 module.exports = {
     sendResetPasswordEmail
-}; 
+};

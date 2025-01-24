@@ -12,6 +12,18 @@ const path = require('path');
 const fs = require('fs').promises;
 const { v4: uuidv4 } = require('uuid');
 const config = require('../config');
+const { check, validationResult } = require('express-validator');
+const asyncHandler = require('../middleware/asyncHandler');
+const rateLimit = require('express-rate-limit');
+const sanitize = require('sanitize-filename');
+
+// Rate limiter middleware
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100 // limit each IP to 100 requests per windowMs
+});
+
+router.use(limiter);
 
 // Configure multer for avatar uploads
 const storage = multer.diskStorage({
@@ -45,7 +57,7 @@ const upload = multer({
 
 // Ensure upload directory exists
 const ensureUploadDir = async () => {
-    const dir = 'uploads/avatars';
+    const dir = config.AVATAR_DIR;
     try {
         await fs.access(dir);
     } catch {
@@ -55,92 +67,92 @@ const ensureUploadDir = async () => {
 
 ensureUploadDir();
 
+// Validation middleware
+const validateUserRegistration = [
+    check('username').notEmpty().withMessage('Username is required'),
+    check('email').isEmail().withMessage('Valid email is required'),
+    check('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long')
+];
+
+const validateUserLogin = [
+    check('email').isEmail().withMessage('Valid email is required'),
+    check('password').notEmpty().withMessage('Password is required')
+];
+
 // Register a new user
-router.post('/register', async (req, res) => {
-    try {
-        console.log('Register attempt:', req.body);
-        const { username, email, password } = req.body;
-
-        // Check if username or email already exists
-        const existingUser = await User.findOne({
-            $or: [{ username }, { email }]
-        });
-
-        if (existingUser) {
-            return res.status(400).json({
-                error: 'Username or email already exists'
-            });
-        }
-
-        const user = new User({ username, email, password });
-        await user.save();
-
-        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-            expiresIn: '7d'
-        });
-
-        console.log('User registered successfully:', { id: user._id, username: user.username });
-
-        res.status(201).json({
-            user: {
-                id: user._id,
-                username: user.username,
-                email: user.email
-            },
-            token
-        });
-    } catch (error) {
-        console.error('Registration error:', error);
-        res.status(400).json({ error: error.message });
+router.post('/register', validateUserRegistration, asyncHandler(async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
     }
-});
+
+    const { username, email, password } = req.body;
+
+    // Check if username or email already exists
+    const existingUser = await User.findOne({
+        $or: [{ username }, { email }]
+    });
+
+    if (existingUser) {
+        return res.status(400).json({
+            error: 'Username or email already exists'
+        });
+    }
+
+    const user = new User({ username, email, password });
+    await user.save();
+
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+        expiresIn: '7d'
+    });
+
+    res.status(201).json({
+        user: {
+            id: user._id,
+            username: user.username,
+            email: user.email
+        },
+        token
+    });
+}));
 
 // Login user
-router.post('/login', async (req, res) => {
-    try {
-        console.log('Login attempt:', { email: req.body.email });
-        const { email, password } = req.body;
-
-        if (!email || !password) {
-            return res.status(400).json({ error: 'Email and password are required' });
-        }
-
-        const user = await User.findOne({ email: email.toLowerCase() });
-
-        if (!user) {
-            console.log('User not found:', email);
-            return res.status(401).json({ error: 'Invalid login credentials' });
-        }
-
-        const isMatch = await user.comparePassword(password);
-        if (!isMatch) {
-            console.log('Invalid password for user:', email);
-            return res.status(401).json({ error: 'Invalid login credentials' });
-        }
-
-        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-            expiresIn: '7d'
-        });
-
-        console.log('Login successful:', { id: user._id, username: user.username });
-
-        res.json({
-            user: {
-                id: user._id,
-                username: user.username,
-                email: user.email,
-                avatarUrl: user.avatarUrl
-            },
-            token
-        });
-    } catch (error) {
-        console.error('Login error:', error);
-        res.status(400).json({ error: 'Invalid login credentials' });
+router.post('/login', validateUserLogin, asyncHandler(async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
     }
-});
+
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+
+    if (!user) {
+        return res.status(401).json({ error: 'Invalid login credentials' });
+    }
+
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) {
+        return res.status(401).json({ error: 'Invalid login credentials' });
+    }
+
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+        expiresIn: '7d'
+    });
+
+    res.json({
+        user: {
+            id: user._id,
+            username: user.username,
+            email: user.email,
+            avatarUrl: user.avatarUrl
+        },
+        token
+    });
+}));
 
 // Get current user profile
-router.get('/me', auth, async (req, res) => {
+router.get('/me', auth, asyncHandler(async (req, res) => {
     res.json({
         user: {
             id: req.user._id,
@@ -148,10 +160,10 @@ router.get('/me', auth, async (req, res) => {
             email: req.user.email
         }
     });
-});
+}));
 
 // Update user profile
-router.patch('/me', auth, async (req, res) => {
+router.patch('/me', auth, asyncHandler(async (req, res) => {
     const updates = Object.keys(req.body);
     const allowedUpdates = ['username', 'email', 'password'];
     const isValidOperation = updates.every(update => allowedUpdates.includes(update));
@@ -160,59 +172,50 @@ router.patch('/me', auth, async (req, res) => {
         return res.status(400).json({ error: 'Invalid updates' });
     }
 
-    try {
-        updates.forEach(update => req.user[update] = req.body[update]);
-        await req.user.save();
-        res.json({
-            user: {
-                id: req.user._id,
-                username: req.user.username,
-                email: req.user.email
-            }
-        });
-    } catch (error) {
-        res.status(400).json({ error: error.message });
-    }
-});
+    updates.forEach(update => req.user[update] = req.body[update]);
+    await req.user.save();
+    res.json({
+        user: {
+            id: req.user._id,
+            username: req.user.username,
+            email: req.user.email
+        }
+    });
+}));
 
 // Upload avatar
-router.post('/upload-avatar', auth, upload.single('avatar'), async (req, res) => {
-    try {
-        if (!req.file) {
-            return res.status(400).json({ error: 'No file uploaded' });
-        }
-
-        // Get the old avatar filename if it exists
-        const user = await User.findById(req.user._id);
-        const oldAvatarPath = user.avatarUrl ? path.join(config.AVATAR_DIR, path.basename(user.avatarUrl)) : null;
-
-        // Generate the URL for the new uploaded file
-        const avatarUrl = `${config.AVATAR_URL_PATH}/${req.file.filename}`;
-
-        // Update user's avatarUrl in the database
-        user.avatarUrl = avatarUrl;
-        await user.save();
-
-        // Delete old avatar file if it exists and isn't the default avatar
-        if (oldAvatarPath && !oldAvatarPath.includes('default-avatar')) {
-            try {
-                await fs.unlink(oldAvatarPath);
-            } catch (error) {
-                console.error('Error deleting old avatar:', error);
-                // Don't throw error if file deletion fails
-            }
-        }
-
-        // Return success response with the new avatar URL
-        res.json({
-            success: true,
-            avatarUrl: avatarUrl
-        });
-    } catch (error) {
-        console.error('Avatar upload error:', error);
-        res.status(500).json({ error: 'Failed to upload avatar' });
+router.post('/upload-avatar', auth, upload.single('avatar'), asyncHandler(async (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ error: 'No file uploaded' });
     }
-}, (error, req, res, next) => {
+
+    // Get the old avatar filename if it exists
+    const user = await User.findById(req.user._id);
+    const oldAvatarPath = user.avatarUrl ? path.join(config.AVATAR_DIR, path.basename(user.avatarUrl)) : null;
+
+    // Generate the URL for the new uploaded file
+    const avatarUrl = `${config.AVATAR_URL_PATH}/${req.file.filename}`;
+
+    // Update user's avatarUrl in the database
+    user.avatarUrl = avatarUrl;
+    await user.save();
+
+    // Delete old avatar file if it exists and isn't the default avatar
+    if (oldAvatarPath && !oldAvatarPath.includes('default-avatar')) {
+        try {
+            await fs.unlink(oldAvatarPath);
+        } catch (error) {
+            console.error('Error deleting old avatar:', error);
+            // Don't throw error if file deletion fails
+        }
+    }
+
+    // Return success response with the new avatar URL
+    res.json({
+        success: true,
+        avatarUrl: avatarUrl
+    });
+}), (error, req, res, next) => {
     // Error handling middleware for multer errors
     if (error instanceof multer.MulterError) {
         if (error.code === 'LIMIT_FILE_SIZE') {
@@ -224,112 +227,91 @@ router.post('/upload-avatar', auth, upload.single('avatar'), async (req, res) =>
 });
 
 // Serve avatar files
-router.get('/avatars/:filename', (req, res) => {
-    const filePath = path.join(config.AVATAR_DIR, req.params.filename);
+router.get('/avatars/:filename', asyncHandler(async (req, res) => {
+    const sanitizedFilename = sanitize(req.params.filename);
+    const filePath = path.join(config.AVATAR_DIR, sanitizedFilename);
     res.sendFile(filePath, (err) => {
         if (err) {
             res.status(404).json({ error: 'Avatar not found' });
         }
     });
-});
+}));
 
 // Request password reset
-router.post('/reset-password', cors(), async (req, res) => {
-    try {
-        const { email } = req.body;
-        console.log('Reset password request received for:', email);
+router.post('/reset-password', cors(), asyncHandler(async (req, res) => {
+    const { email } = req.body;
 
-        if (!email) {
-            return res.status(400).json({ error: 'Email is required' });
-        }
+    if (!email) {
+        return res.status(400).json({ error: 'Email is required' });
+    }
 
-        const user = await User.findOne({ email: email.toLowerCase() });
+    const user = await User.findOne({ email: email.toLowerCase() });
 
-        if (!user) {
-            console.log('No user found with email:', email);
-            return res.json({
-                message: 'If an account exists with that email, a password reset link will be sent.'
-            });
-        }
-
-        console.log('Generating reset token...');
-        const resetToken = user.createPasswordResetToken();
-        await user.save();
-
-        try {
-            console.log('Attempting to send reset email...');
-            await Promise.race([
-                sendResetPasswordEmail(email, resetToken),
-                new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error('Email send timeout')), 30000)
-                )
-            ]);
-
-            res.json({
-                message: 'If an account exists with that email, a password reset link will be sent.',
-                resetToken: resetToken // Remove in production
-            });
-        } catch (emailError) {
-            console.error('Failed to send reset email:', emailError);
-            user.resetPasswordToken = undefined;
-            user.resetPasswordExpires = undefined;
-            await user.save();
-
-            throw new Error(`Failed to send password reset email: ${emailError.message}`);
-        }
-    } catch (error) {
-        console.error('Password reset error:', error);
-        res.status(500).json({
-            error: 'Error processing your request. Please try again later.',
-            details: error.message
+    if (!user) {
+        return res.json({
+            message: 'If an account exists with that email, a password reset link will be sent.'
         });
     }
-});
 
-// Verify token and reset password
-router.post('/reset-password/:token', cors(), async (req, res) => {
+    const resetToken = user.createPasswordResetToken();
+    await user.save();
+
     try {
-        const { password } = req.body;
-        const { token } = req.params;
+        await Promise.race([
+            sendResetPasswordEmail(email, resetToken),
+            new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('Email send timeout')), 30000)
+            )
+        ]);
 
-        if (!password) {
-            return res.status(400).json({ error: 'New password is required' });
-        }
-
-        const hashedToken = crypto
-            .createHash('sha256')
-            .update(token)
-            .digest('hex');
-
-        const user = await User.findOne({
-            resetPasswordToken: hashedToken,
-            resetPasswordExpires: { $gt: Date.now() }
+        res.json({
+            message: 'If an account exists with that email, a password reset link will be sent.'
         });
-
-        if (!user) {
-            return res.status(400).json({
-                error: 'Password reset token is invalid or has expired'
-            });
-        }
-
-        // Set new password
-        user.password = password;
+    } catch (emailError) {
         user.resetPasswordToken = undefined;
         user.resetPasswordExpires = undefined;
         await user.save();
 
-        res.json({ message: 'Password has been reset successfully' });
-    } catch (error) {
-        console.error('Password reset verification error:', error);
-        res.status(500).json({
-            error: 'Error resetting password. Please try again later.'
+        throw new Error(`Failed to send password reset email: ${emailError.message}`);
+    }
+}));
+
+// Verify token and reset password
+router.post('/reset-password/:token', cors(), asyncHandler(async (req, res) => {
+    const { password } = req.body;
+    const { token } = req.params;
+
+    if (!password) {
+        return res.status(400).json({ error: 'New password is required' });
+    }
+
+    const hashedToken = crypto
+        .createHash('sha256')
+        .update(token)
+        .digest('hex');
+
+    const user = await User.findOne({
+        resetPasswordToken: hashedToken,
+        resetPasswordExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+        return res.status(400).json({
+            error: 'Password reset token is invalid or has expired'
         });
     }
-});
+
+    // Set new password
+    user.password = password;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    res.json({ message: 'Password has been reset successfully' });
+}));
 
 // Add this route to test email configuration
-router.get('/test-email-config', async (req, res) => {
-    console.log('Test email config endpoint hit');
+router.get('/test-email-config', asyncHandler(async (req, res) => {
     try {
         const transporter = nodemailer.createTransport({
             host: process.env.SMTP_HOST,
@@ -356,7 +338,6 @@ router.get('/test-email-config', async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('Email config test error:', error);
         res.status(500).json({
             success: false,
             error: error.message,
@@ -368,10 +349,10 @@ router.get('/test-email-config', async (req, res) => {
             }
         });
     }
-});
+}));
 
 // Add Gmail specific test endpoint
-router.get('/test-gmail', async (req, res) => {
+router.get('/test-gmail', asyncHandler(async (req, res) => {
     try {
         const transporter = nodemailer.createTransport({
             service: 'gmail',
@@ -401,7 +382,6 @@ router.get('/test-gmail', async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('Gmail test error:', error);
         res.status(500).json({
             success: false,
             error: error.message,
@@ -411,7 +391,7 @@ router.get('/test-gmail', async (req, res) => {
             }
         });
     }
-});
+}));
 
 // Add a simple test route
 router.get('/test', (req, res) => {
@@ -419,28 +399,24 @@ router.get('/test', (req, res) => {
 });
 
 // Add user search endpoint
-router.get('/search', auth, async (req, res) => {
-    try {
-        const { q } = req.query;
-        if (!q) {
-            return res.json({ users: [] });
-        }
-
-        const users = await User.find({
-            $or: [
-                { username: { $regex: q, $options: 'i' } },
-                { email: { $regex: q, $options: 'i' } }
-            ],
-            _id: { $ne: req.user._id } // Exclude current user
-        })
-            .select('username email')
-            .limit(10);
-
-        res.json({ users });
-    } catch (error) {
-        console.error('User search error:', error);
-        res.status(500).json({ error: 'Error searching users' });
+router.get('/search', auth, asyncHandler(async (req, res) => {
+    const { q } = req.query;
+    if (!q) {
+        return res.json({ users: [] });
     }
-});
 
-module.exports = router; 
+    const users = await User.find({
+        $or: [
+            { username: { $regex: q, $options: 'i' } },
+            { email: { $regex: q, $options: 'i' } }
+        ],
+        _id: { $ne: req.user._id } // Exclude current user
+    })
+        .select('username email')
+        .limit(10);
+
+    res.json({ users });
+}));
+
+module.exports = router;
+

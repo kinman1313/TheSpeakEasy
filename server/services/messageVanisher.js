@@ -7,7 +7,17 @@ class MessageVanisher {
         this.checkInterval = setInterval(() => this.checkVanishingMessages(), 1000);
     }
 
+    /**
+     * Adds a message to the vanishing queue.
+     * @param {Object} message - The message object.
+     * @param {number} vanishTime - The time in minutes after which the message should vanish.
+     * @returns {Object} - The message ID and expiry time.
+     */
     addVanishingMessage(message, vanishTime) {
+        if (vanishTime <= 0) {
+            throw new Error('Vanish time must be greater than zero');
+        }
+
         const expiryTime = Date.now() + (vanishTime * 60 * 1000); // Convert minutes to milliseconds
         const timeoutId = setTimeout(async () => {
             try {
@@ -41,6 +51,11 @@ class MessageVanisher {
         };
     }
 
+    /**
+     * Cancels a vanishing message.
+     * @param {string} messageId - The ID of the message to cancel vanishing.
+     * @returns {boolean} - True if the message was found and cancelled, false otherwise.
+     */
     cancelVanishing(messageId) {
         const vanishing = this.vanishingMessages.get(messageId);
         if (vanishing) {
@@ -51,6 +66,11 @@ class MessageVanisher {
         return false;
     }
 
+    /**
+     * Gets information about a vanishing message.
+     * @param {string} messageId - The ID of the message.
+     * @returns {Object|null} - The message ID and remaining time in seconds, or null if not found.
+     */
     getVanishingInfo(messageId) {
         const vanishing = this.vanishingMessages.get(messageId);
         if (vanishing) {
@@ -63,6 +83,9 @@ class MessageVanisher {
         return null;
     }
 
+    /**
+     * Checks and cleans up expired vanishing messages.
+     */
     checkVanishingMessages() {
         const now = Date.now();
         for (const [messageId, info] of this.vanishingMessages) {
@@ -73,6 +96,9 @@ class MessageVanisher {
         }
     }
 
+    /**
+     * Cleans up resources and stops the interval check.
+     */
     cleanup() {
         clearInterval(this.checkInterval);
         for (const { timeoutId } of this.vanishingMessages.values()) {
@@ -82,4 +108,4 @@ class MessageVanisher {
     }
 }
 
-module.exports = MessageVanisher; 
+module.exports = MessageVanisher;

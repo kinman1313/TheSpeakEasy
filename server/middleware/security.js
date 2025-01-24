@@ -72,4 +72,6 @@ const securityMiddleware = (app) => {
     }));
 };
 
-module.exports = securityMiddleware; 
+module.exports = securityMiddleware;
+
+

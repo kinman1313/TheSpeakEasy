@@ -31,40 +31,43 @@ axios.interceptors.request.use(
     error => Promise.reject(error)
 );
 
+// Centralized error handling function
+const handleError = (error) => {
+    console.error('API Error:', error);
+
+    // Handle network errors
+    if (error.code === 'ERR_NETWORK') {
+        throw new Error('Network error. Please check your connection and try again.');
+    }
+
+    if (error.code === 'ECONNABORTED') {
+        throw new Error('Request timed out. Please check your connection and try again.');
+    }
+
+    // Handle CORS errors
+    if (error.message.includes('CORS')) {
+        throw new Error('Connection error. Please try again later.');
+    }
+
+    if (!error.response) {
+        throw new Error('Network error. Please check your connection and try again.');
+    }
+
+    if (error.response.status === 401) {
+        localStorage.removeItem('token');
+        delete axios.defaults.headers.common['Authorization'];
+        throw new Error('Invalid credentials or session expired. Please log in again.');
+    }
+
+    // Handle specific error messages from the server
+    const errorMessage = error.response?.data?.error || error.message;
+    throw new Error(errorMessage);
+};
+
 // Add response interceptor for error handling
 axios.interceptors.response.use(
     response => response,
-    error => {
-        console.error('API Error:', error);
-
-        // Handle network errors
-        if (error.code === 'ERR_NETWORK') {
-            throw new Error('Network error. Please check your connection and try again.');
-        }
-
-        if (error.code === 'ECONNABORTED') {
-            throw new Error('Request timed out. Please check your connection and try again.');
-        }
-
-        // Handle CORS errors
-        if (error.message.includes('CORS')) {
-            throw new Error('Connection error. Please try again later.');
-        }
-
-        if (!error.response) {
-            throw new Error('Network error. Please check your connection and try again.');
-        }
-
-        if (error.response.status === 401) {
-            localStorage.removeItem('token');
-            delete axios.defaults.headers.common['Authorization'];
-            throw new Error('Invalid credentials or session expired. Please log in again.');
-        }
-
-        // Handle specific error messages from the server
-        const errorMessage = error.response?.data?.error || error.message;
-        throw new Error(errorMessage);
-    }
+    error => handleError(error)
 );
 
 export const AuthProvider = ({ children }) => {
@@ -176,4 +179,5 @@ export const AuthProvider = ({ children }) => {
             {!loading && children}
         </AuthContext.Provider>
     );
-}; 
+};
+

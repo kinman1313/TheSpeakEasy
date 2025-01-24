@@ -8,8 +8,18 @@ class MessageScheduler {
         this.checkInterval = setInterval(() => this.checkScheduledMessages(), 1000);
     }
 
+    /**
+     * Schedules a message to be sent at a later time.
+     * @param {Object} message - The message object containing content, roomId, userId, and scheduledTime.
+     * @returns {string} - The ID of the scheduled message.
+     */
     scheduleMessage(message) {
         const { content, roomId, userId, scheduledTime } = message;
+
+        if (new Date(scheduledTime).getTime() <= Date.now()) {
+            throw new Error('Scheduled time must be in the future');
+        }
+
         const timeoutId = setTimeout(async () => {
             try {
                 // Create and save the message
@@ -49,6 +59,11 @@ class MessageScheduler {
         return message.id;
     }
 
+    /**
+     * Cancels a scheduled message.
+     * @param {string} messageId - The ID of the message to cancel.
+     * @returns {boolean} - True if the message was found and cancelled, false otherwise.
+     */
     cancelScheduledMessage(messageId) {
         const scheduled = this.scheduledMessages.get(messageId);
         if (scheduled) {
@@ -59,6 +74,12 @@ class MessageScheduler {
         return false;
     }
 
+    /**
+     * Gets all scheduled messages for a specific room and user.
+     * @param {string} roomId - The ID of the room.
+     * @param {string} userId - The ID of the user.
+     * @returns {Array} - An array of scheduled messages.
+     */
     getScheduledMessages(roomId, userId) {
         const messages = [];
         for (const [id, { message }] of this.scheduledMessages) {
@@ -73,6 +94,9 @@ class MessageScheduler {
         return messages;
     }
 
+    /**
+     * Checks and cleans up expired scheduled messages.
+     */
     checkScheduledMessages() {
         const now = Date.now();
         for (const [id, { message, timeoutId }] of this.scheduledMessages) {
@@ -83,6 +107,9 @@ class MessageScheduler {
         }
     }
 
+    /**
+     * Cleans up resources and stops the interval check.
+     */
     cleanup() {
         clearInterval(this.checkInterval);
         for (const { timeoutId } of this.scheduledMessages.values()) {
@@ -92,4 +119,4 @@ class MessageScheduler {
     }
 }
 
-module.exports = MessageScheduler; 
+module.exports = MessageScheduler;

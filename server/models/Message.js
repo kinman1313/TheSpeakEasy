@@ -1,5 +1,16 @@
 const mongoose = require('mongoose');
 
+const reactionSchema = new mongoose.Schema({
+    emoji: {
+        type: String,
+        required: true
+    },
+    username: {
+        type: String,
+        required: true
+    }
+});
+
 const messageSchema = new mongoose.Schema({
     type: {
         type: String,
@@ -34,10 +45,7 @@ const messageSchema = new mongoose.Schema({
         type: Date,
         sparse: true
     },
-    reactions: [{
-        emoji: String,
-        username: String
-    }],
+    reactions: [reactionSchema],
     replyTo: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Message',
@@ -50,4 +58,4 @@ const messageSchema = new mongoose.Schema({
 messageSchema.index({ roomId: 1, createdAt: -1 });
 messageSchema.index({ isPinned: 1 });
 
-module.exports = mongoose.model('Message', messageSchema); 
+module.exports = mongoose.model('Message', messageSchema);

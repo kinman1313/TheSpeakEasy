@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
+import PropTypes from 'prop-types';
 
 const TypingDots = () => (
     <Box component="span" sx={{ display: 'inline-flex', gap: 0.5, ml: 0.5 }}>
@@ -56,4 +57,8 @@ const TypingIndicator = ({ users }) => {
     );
 };
 
-export default TypingIndicator; 
+TypingIndicator.propTypes = {
+    users: PropTypes.instanceOf(Set).isRequired,
+};
+
+export default TypingIndicator;

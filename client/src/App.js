@@ -2,12 +2,21 @@ import React from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { SocketProvider } from './contexts/SocketContext';
-import { ThemeProvider } from './contexts/ThemeContext';
+import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
 import AppRoutes from './routes/AppRoutes';
 import { CssBaseline } from '@mui/material';
-import { useTheme } from './contexts/ThemeContext';
+
+const Providers = ({ children }) => (
+    <AuthProvider>
+        <SocketProvider>
+            <NotificationProvider>
+                {children}
+            </NotificationProvider>
+        </SocketProvider>
+    </AuthProvider>
+);
 
 const ThemedApp = () => {
     const { theme } = useTheme();
@@ -16,13 +25,9 @@ const ThemedApp = () => {
         <MuiThemeProvider theme={theme}>
             <CssBaseline />
             <Router>
-                <AuthProvider>
-                    <SocketProvider>
-                        <NotificationProvider>
-                            <AppRoutes />
-                        </NotificationProvider>
-                    </SocketProvider>
-                </AuthProvider>
+                <Providers>
+                    <AppRoutes />
+                </Providers>
             </Router>
         </MuiThemeProvider>
     );
@@ -36,4 +41,4 @@ function App() {
     );
 }
 
-export default App; 
+export default App;

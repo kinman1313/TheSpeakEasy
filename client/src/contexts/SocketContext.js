@@ -10,21 +10,7 @@ export function SocketProvider({ children }) {
     const [isConnected, setIsConnected] = useState(false);
     const { user } = useAuth();
 
-    const connectSocket = useCallback(() => {
-        if (!user?.token) return;
-
-        const newSocket = io(config.API_URL, {
-            auth: {
-                token: user.token
-            },
-            transports: ['websocket'],
-            reconnection: true,
-            reconnectionAttempts: 5,
-            reconnectionDelay: 1000,
-            reconnectionDelayMax: 5000,
-            timeout: 20000,
-        });
-
+    const handleSocketEvents = (newSocket) => {
         newSocket.on('connect', () => {
             console.log('Socket connected:', newSocket.id);
             setIsConnected(true);
@@ -59,6 +45,24 @@ export function SocketProvider({ children }) {
             // Attempt to create a new socket connection
             setTimeout(connectSocket, 5000);
         });
+    };
+
+    const connectSocket = useCallback(() => {
+        if (!user?.token) return;
+
+        const newSocket = io(config.API_URL, {
+            auth: {
+                token: user.token
+            },
+            transports: ['websocket'],
+            reconnection: true,
+            reconnectionAttempts: 5,
+            reconnectionDelay: 1000,
+            reconnectionDelayMax: 5000,
+            timeout: 20000,
+        });
+
+        handleSocketEvents(newSocket);
 
         setSocket(newSocket);
 
@@ -121,4 +125,5 @@ export function useSocket() {
         throw new Error('useSocket must be used within a SocketProvider');
     }
     return context;
-} 
+}
+

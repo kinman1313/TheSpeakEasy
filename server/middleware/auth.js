@@ -8,7 +8,7 @@ const auth = async (req, res, next) => {
         const user = await User.findOne({ _id: decoded.userId });
 
         if (!user) {
-            throw new Error();
+            throw new Error('User not found');
         }
 
         req.token = token;
@@ -19,4 +19,4 @@ const auth = async (req, res, next) => {
     }
 };
 
-module.exports = auth; 
+module.exports = auth;

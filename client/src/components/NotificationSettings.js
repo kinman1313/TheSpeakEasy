@@ -11,13 +11,11 @@ import {
     InputLabel,
     Paper,
     Divider,
-    IconButton,
-    Button
+    IconButton
 } from '@mui/material';
 import {
     Notifications as NotificationsIcon,
     VolumeUp as VolumeUpIcon,
-    DoNotDisturb as DoNotDisturbIcon,
     PlayArrow as PlayArrowIcon
 } from '@mui/icons-material';
 import { useNotifications } from '../contexts/NotificationContext';
@@ -35,6 +33,41 @@ const NotificationSettings = () => {
         { value: 'none', label: 'None' }
     ];
 
+    const handleChange = (key) => (event) => {
+        updateSettings({ [key]: event.target.checked });
+    };
+
+    const renderSoundSelect = (label, value, key) => (
+        <FormControl fullWidth sx={{ mb: 2 }}>
+            <InputLabel>{label}</InputLabel>
+            <Select
+                value={value}
+                label={label}
+                onChange={(e) => updateSettings({ [key]: e.target.value })}
+                disabled={!settings.soundEnabled}
+            >
+                {soundOptions.map(option => (
+                    <MenuItem key={option.value} value={option.value}>
+                        {option.label}
+                        {option.value !== 'none' && (
+                            <IconButton
+                                size="small"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleSoundPreview(key);
+                                }}
+                                sx={{ ml: 1 }}
+                                aria-label={`Play ${label} sound`}
+                            >
+                                <PlayArrowIcon fontSize="small" />
+                            </IconButton>
+                        )}
+                    </MenuItem>
+                ))}
+            </Select>
+        </FormControl>
+    );
+
     return (
         <Paper sx={{ p: 3, maxWidth: 600, mx: 'auto' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
@@ -49,7 +82,7 @@ const NotificationSettings = () => {
                     control={
                         <Switch
                             checked={settings.enabled}
-                            onChange={(e) => updateSettings({ enabled: e.target.checked })}
+                            onChange={handleChange('enabled')}
                         />
                     }
                     label="Enable Notifications"
@@ -61,7 +94,7 @@ const NotificationSettings = () => {
                     control={
                         <Switch
                             checked={settings.soundEnabled}
-                            onChange={(e) => updateSettings({ soundEnabled: e.target.checked })}
+                            onChange={handleChange('soundEnabled')}
                         />
                     }
                     label="Enable Sound Notifications"
@@ -84,89 +117,9 @@ const NotificationSettings = () => {
             </Box>
 
             <Box sx={{ mb: 3 }}>
-                <FormControl fullWidth sx={{ mb: 2 }}>
-                    <InputLabel>Message Sound</InputLabel>
-                    <Select
-                        value={settings.messageSound}
-                        label="Message Sound"
-                        onChange={(e) => updateSettings({ messageSound: e.target.value })}
-                        disabled={!settings.soundEnabled}
-                    >
-                        {soundOptions.map(option => (
-                            <MenuItem key={option.value} value={option.value}>
-                                {option.label}
-                                {option.value !== 'none' && (
-                                    <IconButton
-                                        size="small"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleSoundPreview('message');
-                                        }}
-                                        sx={{ ml: 1 }}
-                                    >
-                                        <PlayArrowIcon fontSize="small" />
-                                    </IconButton>
-                                )}
-                            </MenuItem>
-                        ))}
-                    </Select>
-                </FormControl>
-
-                <FormControl fullWidth sx={{ mb: 2 }}>
-                    <InputLabel>Mention Sound</InputLabel>
-                    <Select
-                        value={settings.mentionSound}
-                        label="Mention Sound"
-                        onChange={(e) => updateSettings({ mentionSound: e.target.value })}
-                        disabled={!settings.soundEnabled}
-                    >
-                        {soundOptions.map(option => (
-                            <MenuItem key={option.value} value={option.value}>
-                                {option.label}
-                                {option.value !== 'none' && (
-                                    <IconButton
-                                        size="small"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleSoundPreview('mention');
-                                        }}
-                                        sx={{ ml: 1 }}
-                                    >
-                                        <PlayArrowIcon fontSize="small" />
-                                    </IconButton>
-                                )}
-                            </MenuItem>
-                        ))}
-                    </Select>
-                </FormControl>
-
-                <FormControl fullWidth>
-                    <InputLabel>Join/Leave Sound</InputLabel>
-                    <Select
-                        value={settings.joinLeaveSound}
-                        label="Join/Leave Sound"
-                        onChange={(e) => updateSettings({ joinLeaveSound: e.target.value })}
-                        disabled={!settings.soundEnabled}
-                    >
-                        {soundOptions.map(option => (
-                            <MenuItem key={option.value} value={option.value}>
-                                {option.label}
-                                {option.value !== 'none' && (
-                                    <IconButton
-                                        size="small"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleSoundPreview('joinLeave');
-                                        }}
-                                        sx={{ ml: 1 }}
-                                    >
-                                        <PlayArrowIcon fontSize="small" />
-                                    </IconButton>
-                                )}
-                            </MenuItem>
-                        ))}
-                    </Select>
-                </FormControl>
+                {renderSoundSelect('Message Sound', settings.messageSound, 'messageSound')}
+                {renderSoundSelect('Mention Sound', settings.mentionSound, 'mentionSound')}
+                {renderSoundSelect('Join/Leave Sound', settings.joinLeaveSound, 'joinLeaveSound')}
             </Box>
 
             <Divider sx={{ my: 2 }} />
@@ -176,7 +129,7 @@ const NotificationSettings = () => {
                     control={
                         <Switch
                             checked={settings.desktopNotifications}
-                            onChange={(e) => updateSettings({ desktopNotifications: e.target.checked })}
+                            onChange={handleChange('desktopNotifications')}
                         />
                     }
                     label="Desktop Notifications"
@@ -188,7 +141,7 @@ const NotificationSettings = () => {
                     control={
                         <Switch
                             checked={settings.mentionsOnly}
-                            onChange={(e) => updateSettings({ mentionsOnly: e.target.checked })}
+                            onChange={handleChange('mentionsOnly')}
                         />
                     }
                     label="Only Notify on Mentions"
@@ -200,7 +153,7 @@ const NotificationSettings = () => {
                     control={
                         <Switch
                             checked={settings.doNotDisturb}
-                            onChange={(e) => updateSettings({ doNotDisturb: e.target.checked })}
+                            onChange={handleChange('doNotDisturb')}
                         />
                     }
                     label="Do Not Disturb"
@@ -210,4 +163,4 @@ const NotificationSettings = () => {
     );
 };
 
-export default NotificationSettings; 
+export default NotificationSettings;

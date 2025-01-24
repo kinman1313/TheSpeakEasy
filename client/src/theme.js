@@ -119,4 +119,4 @@ const darkTheme = {
     },
 };
 
-export default baseTheme; 
+export { baseTheme, darkTheme };

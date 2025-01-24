@@ -9,6 +9,13 @@ const roomRoutes = require('./routes/rooms');
 
 const app = express();
 
+// Constants
+const ALLOWED_ORIGINS = [
+    "https://lies-client-9ayj.onrender.com",
+    "http://localhost:3000",
+    "https://thespeakeasy.onrender.com"
+];
+
 // Define base upload directory based on environment
 const BASE_UPLOAD_DIR = process.env.NODE_ENV === 'production'
     ? '/opt/render/project/uploads'
@@ -27,12 +34,7 @@ const avatarsDir = path.join(BASE_UPLOAD_DIR, 'avatars');
 // Middleware
 app.use(cors({
     origin: function (origin, callback) {
-        const allowedOrigins = [
-            "https://lies-client-9ayj.onrender.com",
-            "http://localhost:3000",
-            "https://thespeakeasy.onrender.com"
-        ];
-        if (!origin || allowedOrigins.includes(origin)) {
+        if (!origin || ALLOWED_ORIGINS.includes(origin)) {
             callback(null, true);
         } else {
             callback(new Error('Origin not allowed'));
@@ -57,4 +59,4 @@ app.use((err, req, res, next) => {
     res.status(500).json({ error: 'Something went wrong!' });
 });
 
-module.exports = app; 
+module.exports = app;

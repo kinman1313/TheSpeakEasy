@@ -31,4 +31,9 @@ const config = {
     ALLOWED_VOICE_TYPES: ['audio/webm', 'audio/mp4', 'audio/mpeg', 'audio/ogg']
 };
 
-module.exports = config; 
+// Validate required environment variables
+if (process.env.NODE_ENV === 'production' && !process.env.RENDER_DISK_PATH) {
+    throw new Error('RENDER_DISK_PATH environment variable is required in production');
+}
+
+module.exports = config;

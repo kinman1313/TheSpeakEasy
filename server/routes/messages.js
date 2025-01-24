@@ -5,6 +5,17 @@ const path = require('path');
 const fs = require('fs').promises;
 const auth = require('../middleware/auth');
 const { v4: uuidv4 } = require('uuid');
+const asyncHandler = require('../middleware/asyncHandler');
+const rateLimit = require('express-rate-limit');
+const sanitize = require('sanitize-filename');
+
+// Rate limiter middleware
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100 // limit each IP to 100 requests per windowMs
+});
+
+router.use(limiter);
 
 // Configure multer for voice message uploads
 const storage = multer.diskStorage({
@@ -26,7 +37,7 @@ const storage = multer.diskStorage({
 const upload = multer({
     storage: storage,
     limits: {
-        fileSize: 10 * 1024 * 1024 // 10MB limit
+        fileSize: process.env.MAX_FILE_SIZE || 10 * 1024 * 1024 // 10MB limit
     },
     fileFilter: (req, file, cb) => {
         const allowedTypes = ['audio/webm', 'audio/mp4', 'audio/mpeg', 'audio/ogg'];
@@ -39,35 +50,31 @@ const upload = multer({
 });
 
 // Upload voice message
-router.post('/voice', auth, upload.single('audio'), async (req, res) => {
-    try {
-        if (!req.file) {
-            return res.status(400).json({ error: 'No audio file uploaded' });
-        }
-
-        // Generate URL for the uploaded file
-        const voiceUrl = `/uploads/voice-messages/${req.file.filename}`;
-
-        res.json({
-            success: true,
-            voiceUrl: voiceUrl,
-            duration: req.body.duration
-        });
-    } catch (error) {
-        console.error('Voice message upload error:', error);
-        res.status(500).json({ error: 'Failed to upload voice message' });
+router.post('/voice', auth, upload.single('audio'), asyncHandler(async (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ error: 'No audio file uploaded' });
     }
-});
+
+    // Generate URL for the uploaded file
+    const voiceUrl = `/uploads/voice-messages/${req.file.filename}`;
+
+    res.json({
+        success: true,
+        voiceUrl: voiceUrl,
+        duration: req.body.duration
+    });
+}));
 
 // Get voice message
-router.get('/voice/:filename', auth, async (req, res) => {
-    try {
-        const filePath = path.join(__dirname, '..', 'uploads', 'voice-messages', req.params.filename);
-        res.sendFile(filePath);
-    } catch (error) {
-        console.error('Voice message retrieval error:', error);
-        res.status(404).json({ error: 'Voice message not found' });
-    }
-});
+router.get('/voice/:filename', auth, asyncHandler(async (req, res) => {
+    const sanitizedFilename = sanitize(req.params.filename);
+    const filePath = path.join(__dirname, '..', 'uploads', 'voice-messages', sanitizedFilename);
+    res.sendFile(filePath, (err) => {
+        if (err) {
+            console.error('Voice message retrieval error:', err);
+            res.status(404).json({ error: 'Voice message not found' });
+        }
+    });
+}));
 
-module.exports = router; 
+module.exports = router;

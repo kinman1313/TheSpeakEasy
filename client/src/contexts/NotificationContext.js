@@ -33,28 +33,17 @@ export const NotificationProvider = ({ children }) => {
     }, [user]);
 
     const updateSettings = async (newSettings) => {
-        setSettings(prev => ({ ...prev, ...newSettings }));
-        // Here you would typically save to the backend
-        // await updateUserPreferences({ notifications: newSettings });
+        try {
+            setSettings(prev => ({ ...prev, ...newSettings }));
+            // Here you would typically save to the backend
+            // await updateUserPreferences({ notifications: newSettings });
+        } catch (error) {
+            console.error('Failed to update settings:', error);
+        }
     };
 
-    const handleNotification = (type, data) => {
-        if (!settings.enabled || settings.doNotDisturb) return;
-        if (settings.mentionsOnly && !data.isMention) return;
-
-        // Play sound notification
-        if (settings.soundEnabled) {
-            const soundType = type === 'mention' ? 'mention' :
-                type === 'message' ? 'message' :
-                    type === 'join' ? 'roomJoin' :
-                        type === 'leave' ? 'roomLeave' : 'notification';
-
-            const variant = settings[`${soundType}Sound`] || 'default';
-            playSound(soundType, variant);
-        }
-
-        // Show desktop notification if enabled
-        if (settings.desktopNotifications && 'Notification' in window) {
+    const showDesktopNotification = (data) => {
+        if ('Notification' in window) {
             if (Notification.permission === 'granted') {
                 new Notification(data.title, {
                     body: data.message,
@@ -73,6 +62,27 @@ export const NotificationProvider = ({ children }) => {
         }
     };
 
+    const handleNotification = (type, data) => {
+        if (!settings.enabled || settings.doNotDisturb) return;
+        if (settings.mentionsOnly && !data.isMention) return;
+
+        // Play sound notification
+        if (settings.soundEnabled) {
+            const soundType = type === 'mention' ? 'mention' :
+                type === 'message' ? 'message' :
+                    type === 'join' ? 'roomJoin' :
+                        type === 'leave' ? 'roomLeave' : 'notification';
+
+            const variant = settings[`${soundType}Sound`] || 'default';
+            playSound(soundType, variant);
+        }
+
+        // Show desktop notification if enabled
+        if (settings.desktopNotifications) {
+            showDesktopNotification(data);
+        }
+    };
+
     const value = {
         settings,
         updateSettings,
@@ -86,4 +96,5 @@ export const NotificationProvider = ({ children }) => {
     );
 };
 
-export default NotificationContext; 
+export default NotificationContext;
+

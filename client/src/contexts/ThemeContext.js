@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useMemo } from 'react';
 import { createTheme, ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
 
@@ -9,7 +9,11 @@ export const useTheme = () => useContext(ThemeContext);
 export const ThemeProvider = ({ children }) => {
     const [mode, setMode] = useState('dark');
 
-    const theme = createTheme({
+    const toggleMode = () => {
+        setMode((prevMode) => (prevMode === 'dark' ? 'light' : 'dark'));
+    };
+
+    const theme = useMemo(() => createTheme({
         palette: {
             mode,
             primary: {
@@ -19,12 +23,12 @@ export const ThemeProvider = ({ children }) => {
                 contrastText: '#FFFFFF'
             },
             background: {
-                default: '#0A0F1E',
-                paper: 'rgba(15, 23, 42, 0.65)'
+                default: mode === 'dark' ? '#0A0F1E' : '#FFFFFF',
+                paper: mode === 'dark' ? 'rgba(15, 23, 42, 0.65)' : '#F5F5F5'
             },
             text: {
-                primary: '#F1F5F9',
-                secondary: '#94A3B8'
+                primary: mode === 'dark' ? '#F1F5F9' : '#0A0F1E',
+                secondary: mode === 'dark' ? '#94A3B8' : '#4A4A4A'
             }
         },
         typography: {
@@ -60,7 +64,7 @@ export const ThemeProvider = ({ children }) => {
             MuiDrawer: {
                 styleOverrides: {
                     paper: {
-                        background: 'rgba(15, 23, 42, 0.65)',
+                        background: mode === 'dark' ? 'rgba(15, 23, 42, 0.65)' : '#FFFFFF',
                         backdropFilter: 'blur(10px)',
                         WebkitBackdropFilter: 'blur(10px)',
                         border: '1px solid rgba(255, 255, 255, 0.08)'
@@ -70,7 +74,7 @@ export const ThemeProvider = ({ children }) => {
             MuiDialog: {
                 styleOverrides: {
                     paper: {
-                        background: 'rgba(15, 23, 42, 0.95)',
+                        background: mode === 'dark' ? 'rgba(15, 23, 42, 0.95)' : '#FFFFFF',
                         backdropFilter: 'blur(10px)',
                         WebkitBackdropFilter: 'blur(10px)',
                         border: '1px solid rgba(255, 255, 255, 0.08)',
@@ -81,7 +85,7 @@ export const ThemeProvider = ({ children }) => {
             MuiMenu: {
                 styleOverrides: {
                     paper: {
-                        background: 'rgba(15, 23, 42, 0.95)',
+                        background: mode === 'dark' ? 'rgba(15, 23, 42, 0.95)' : '#FFFFFF',
                         backdropFilter: 'blur(10px)',
                         WebkitBackdropFilter: 'blur(10px)',
                         border: '1px solid rgba(255, 255, 255, 0.08)',
@@ -119,10 +123,10 @@ export const ThemeProvider = ({ children }) => {
                 }
             }
         }
-    });
+    }), [mode]);
 
     return (
-        <ThemeContext.Provider value={{ mode, setMode, theme }}>
+        <ThemeContext.Provider value={{ mode, setMode, toggleMode, theme }}>
             <MuiThemeProvider theme={theme}>
                 <CssBaseline />
                 {children}
@@ -131,4 +135,6 @@ export const ThemeProvider = ({ children }) => {
     );
 };
 
-export default ThemeContext; 
+export default ThemeContext;
+
+

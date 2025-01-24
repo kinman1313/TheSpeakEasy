@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: lies-Server-9ayj
+    name: lies-server-9ayj
     env: node
     plan: free
     buildCommand: cd server && npm install

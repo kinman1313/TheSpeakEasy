@@ -27,4 +27,4 @@ const config = {
     CLIENT_URL: isDevelopment ? 'http://localhost:3000' : 'https://lies-client-9ayj.onrender.com'
 };
 
-export { config }; 
+export { config };

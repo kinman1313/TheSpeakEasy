@@ -1,0 +1,200 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\Kevin\\source\\repos\\kinman1313\\TheSpeakEasy\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Kevin\\source\\repos\\kinman1313\\TheSpeakEasy\\client\\src\\components\\PinnedMessages.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:client\\src\\components\\PinnedMessages.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Kevin\\source\\repos\\kinman1313\\TheSpeakEasy\\server\\models\\Message.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:server\\models\\Message.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Kevin\\source\\repos\\kinman1313\\TheSpeakEasy\\server\\middleware\\security.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:server\\middleware\\security.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Kevin\\source\\repos\\kinman1313\\TheSpeakEasy\\server\\middleware\\auth.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:server\\middleware\\auth.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Kevin\\source\\repos\\kinman1313\\TheSpeakEasy\\scripts\\prepare-sounds.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:scripts\\prepare-sounds.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Kevin\\source\\repos\\kinman1313\\TheSpeakEasy\\client\\package.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:client\\package.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Kevin\\source\\repos\\kinman1313\\TheSpeakEasy\\client\\src\\theme.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:client\\src\\theme.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Kevin\\source\\repos\\kinman1313\\TheSpeakEasy\\client\\src\\contexts\\NotificationContext.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:client\\src\\contexts\\NotificationContext.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Kevin\\source\\repos\\kinman1313\\TheSpeakEasy\\client\\src\\components\\NotificationSettings.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:client\\src\\components\\NotificationSettings.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Kevin\\source\\repos\\kinman1313\\TheSpeakEasy\\server\\services\\messageVanisher.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:server\\services\\messageVanisher.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 2,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "messageVanisher.js",
+              "DocumentMoniker": "C:\\Users\\Kevin\\source\\repos\\kinman1313\\TheSpeakEasy\\server\\services\\messageVanisher.js",
+              "RelativeDocumentMoniker": "server\\services\\messageVanisher.js",
+              "ToolTip": "C:\\Users\\Kevin\\source\\repos\\kinman1313\\TheSpeakEasy\\server\\services\\messageVanisher.js",
+              "RelativeToolTip": "server\\services\\messageVanisher.js",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2025-01-24T19:44:11.414Z",
+              "IsPinned": true,
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "NotificationSettings.js",
+              "DocumentMoniker": "C:\\Users\\Kevin\\source\\repos\\kinman1313\\TheSpeakEasy\\client\\src\\components\\NotificationSettings.js",
+              "RelativeDocumentMoniker": "client\\src\\components\\NotificationSettings.js",
+              "ToolTip": "C:\\Users\\Kevin\\source\\repos\\kinman1313\\TheSpeakEasy\\client\\src\\components\\NotificationSettings.js",
+              "RelativeToolTip": "client\\src\\components\\NotificationSettings.js",
+              "ViewState": "AgIAAF0AAAAAAAAAAAAcwKYAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2025-01-24T20:16:48.724Z",
+              "IsPinned": true,
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "PinnedMessages.js",
+              "DocumentMoniker": "C:\\Users\\Kevin\\source\\repos\\kinman1313\\TheSpeakEasy\\client\\src\\components\\PinnedMessages.js",
+              "RelativeDocumentMoniker": "client\\src\\components\\PinnedMessages.js",
+              "ToolTip": "C:\\Users\\Kevin\\source\\repos\\kinman1313\\TheSpeakEasy\\client\\src\\components\\PinnedMessages.js",
+              "RelativeToolTip": "client\\src\\components\\PinnedMessages.js",
+              "ViewState": "AgIAAIEAAAAAAAAAAAAcwMoAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2025-01-24T20:32:10.55Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "Message.js",
+              "DocumentMoniker": "C:\\Users\\Kevin\\source\\repos\\kinman1313\\TheSpeakEasy\\server\\models\\Message.js",
+              "RelativeDocumentMoniker": "server\\models\\Message.js",
+              "ToolTip": "C:\\Users\\Kevin\\source\\repos\\kinman1313\\TheSpeakEasy\\server\\models\\Message.js",
+              "RelativeToolTip": "server\\models\\Message.js",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2025-01-24T20:30:58.637Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "security.js",
+              "DocumentMoniker": "C:\\Users\\Kevin\\source\\repos\\kinman1313\\TheSpeakEasy\\server\\middleware\\security.js",
+              "RelativeDocumentMoniker": "server\\middleware\\security.js",
+              "ToolTip": "C:\\Users\\Kevin\\source\\repos\\kinman1313\\TheSpeakEasy\\server\\middleware\\security.js",
+              "RelativeToolTip": "server\\middleware\\security.js",
+              "ViewState": "AgIAAAUAAAAAAAAAAAAowE0AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2025-01-24T20:29:22.755Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "auth.js",
+              "DocumentMoniker": "C:\\Users\\Kevin\\source\\repos\\kinman1313\\TheSpeakEasy\\server\\middleware\\auth.js",
+              "RelativeDocumentMoniker": "server\\middleware\\auth.js",
+              "ToolTip": "C:\\Users\\Kevin\\source\\repos\\kinman1313\\TheSpeakEasy\\server\\middleware\\auth.js",
+              "RelativeToolTip": "server\\middleware\\auth.js",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2025-01-24T20:28:59.948Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "prepare-sounds.js",
+              "DocumentMoniker": "C:\\Users\\Kevin\\source\\repos\\kinman1313\\TheSpeakEasy\\scripts\\prepare-sounds.js",
+              "RelativeDocumentMoniker": "scripts\\prepare-sounds.js",
+              "ToolTip": "C:\\Users\\Kevin\\source\\repos\\kinman1313\\TheSpeakEasy\\scripts\\prepare-sounds.js",
+              "RelativeToolTip": "scripts\\prepare-sounds.js",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2025-01-24T20:28:25.164Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "package.json",
+              "DocumentMoniker": "C:\\Users\\Kevin\\source\\repos\\kinman1313\\TheSpeakEasy\\client\\package.json",
+              "RelativeDocumentMoniker": "client\\package.json",
+              "ToolTip": "C:\\Users\\Kevin\\source\\repos\\kinman1313\\TheSpeakEasy\\client\\package.json",
+              "RelativeToolTip": "client\\package.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2025-01-24T20:27:48.986Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "theme.js",
+              "DocumentMoniker": "C:\\Users\\Kevin\\source\\repos\\kinman1313\\TheSpeakEasy\\client\\src\\theme.js",
+              "RelativeDocumentMoniker": "client\\src\\theme.js",
+              "ToolTip": "C:\\Users\\Kevin\\source\\repos\\kinman1313\\TheSpeakEasy\\client\\src\\theme.js",
+              "RelativeToolTip": "client\\src\\theme.js",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2025-01-24T20:27:16.506Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "NotificationContext.js",
+              "DocumentMoniker": "C:\\Users\\Kevin\\source\\repos\\kinman1313\\TheSpeakEasy\\client\\src\\contexts\\NotificationContext.js",
+              "RelativeDocumentMoniker": "client\\src\\contexts\\NotificationContext.js",
+              "ToolTip": "C:\\Users\\Kevin\\source\\repos\\kinman1313\\TheSpeakEasy\\client\\src\\contexts\\NotificationContext.js",
+              "RelativeToolTip": "client\\src\\contexts\\NotificationContext.js",
+              "ViewState": "AgIAABsAAAAAAAAAAAAcwGQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2025-01-24T20:20:34.918Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{3ae79031-e1bc-11d0-8f78-00a0c9110057}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{1c64b9c2-e352-428e-a56d-0ace190b99a6}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
