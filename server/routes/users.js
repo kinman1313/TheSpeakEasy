@@ -398,21 +398,6 @@ router.get('/test', (req, res) => {
     res.json({ message: 'User routes are working' });
 });
 
-<<<<<<< HEAD
-module.exports = router;
-
-
-
-
-
-
-
-
-
-
-
-
-=======
 // Add user search endpoint
 router.get('/search', auth, asyncHandler(async (req, res) => {
     const { q } = req.query;
@@ -435,4 +420,3 @@ router.get('/search', auth, asyncHandler(async (req, res) => {
 
 module.exports = router;
 
->>>>>>> d031dbd8773ab07cd257f9851181f0649c627a54
