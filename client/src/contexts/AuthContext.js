@@ -6,6 +6,70 @@ const AuthContext = createContext(null);
 
 export const useAuth = () => useContext(AuthContext);
 
+// Configure axios defaults
+axios.defaults.timeout = 60000; // Increase timeout to 60 seconds
+axios.defaults.withCredentials = true;
+axios.defaults.headers.common['Content-Type'] = 'application/json';
+axios.defaults.headers.common['Accept'] = 'application/json';
+
+// Add request interceptor for authentication
+axios.interceptors.request.use(
+    config => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        // Add timestamp to prevent caching
+        config.params = {
+            ...config.params,
+            _t: Date.now()
+        };
+        // Ensure credentials are sent
+        config.withCredentials = true;
+        return config;
+    },
+    error => Promise.reject(error)
+);
+
+// Centralized error handling function
+const handleError = (error) => {
+    console.error('API Error:', error);
+
+    // Handle network errors
+    if (error.code === 'ERR_NETWORK') {
+        throw new Error('Network error. Please check your connection and try again.');
+    }
+
+    if (error.code === 'ECONNABORTED') {
+        throw new Error('Request timed out. Please check your connection and try again.');
+    }
+
+    // Handle CORS errors
+    if (error.message.includes('CORS')) {
+        throw new Error('Connection error. Please try again later.');
+    }
+
+    if (!error.response) {
+        throw new Error('Network error. Please check your connection and try again.');
+    }
+
+    if (error.response.status === 401) {
+        localStorage.removeItem('token');
+        delete axios.defaults.headers.common['Authorization'];
+        throw new Error('Invalid credentials or session expired. Please log in again.');
+    }
+
+    // Handle specific error messages from the server
+    const errorMessage = error.response?.data?.error || error.message;
+    throw new Error(errorMessage);
+};
+
+// Add response interceptor for error handling
+axios.interceptors.response.use(
+    response => response,
+    error => handleError(error)
+);
+
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -13,7 +77,6 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (token) {
-            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
             checkAuth();
         } else {
             setLoading(false);
@@ -25,6 +88,7 @@ export const AuthProvider = ({ children }) => {
             const response = await axios.get(`${config.API_URL}/api/users/me`);
             setUser(response.data.user);
         } catch (error) {
+            console.error('Auth check failed:', error.message);
             localStorage.removeItem('token');
             delete axios.defaults.headers.common['Authorization'];
             console.error('Authentication check failed:', error);
@@ -35,6 +99,7 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (email, password) => {
         try {
+<<<<<<< HEAD
             const response = await axios.post(`${config.API_URL}/api/users/login`, {
                 email,
                 password
@@ -46,6 +111,46 @@ export const AuthProvider = ({ children }) => {
             return user;
         } catch (error) {
             console.error('Login failed:', error);
+=======
+            console.log('Attempting login to:', `${config.API_URL}/api/users/login`);
+
+            // Add retry logic
+            let retries = 2;
+            let lastError;
+
+            while (retries >= 0) {
+                try {
+                    const response = await axios.post(`${config.API_URL}/api/users/login`, {
+                        email,
+                        password
+                    });
+
+                    const { token, user } = response.data;
+                    localStorage.setItem('token', token);
+                    setUser(user);
+                    return user;
+                } catch (err) {
+                    lastError = err;
+                    if (err.response?.status === 401) {
+                        // Don't retry on authentication errors
+                        throw err;
+                    }
+                    retries--;
+                    if (retries >= 0) {
+                        // Wait before retrying
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        console.log('Retrying login attempt...');
+                    }
+                }
+            }
+
+            throw lastError;
+        } catch (error) {
+            console.error('Login failed:', error);
+            if (error.response?.status === 401) {
+                throw new Error('Invalid email or password');
+            }
+>>>>>>> d031dbd8773ab07cd257f9851181f0649c627a54
             throw error;
         }
     };
@@ -59,11 +164,20 @@ export const AuthProvider = ({ children }) => {
             });
             const { token, user } = response.data;
             localStorage.setItem('token', token);
+<<<<<<< HEAD
             axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+=======
+>>>>>>> d031dbd8773ab07cd257f9851181f0649c627a54
             setUser(user);
             return user;
         } catch (error) {
             console.error('Registration failed:', error);
+<<<<<<< HEAD
+=======
+            if (error.response?.status === 409) {
+                throw new Error('Email already exists');
+            }
+>>>>>>> d031dbd8773ab07cd257f9851181f0649c627a54
             throw error;
         }
     };
@@ -89,6 +203,7 @@ export const AuthProvider = ({ children }) => {
     );
 };
 
+<<<<<<< HEAD
 
 
 
@@ -96,3 +211,5 @@ export const AuthProvider = ({ children }) => {
 
 
 
+=======
+>>>>>>> d031dbd8773ab07cd257f9851181f0649c627a54

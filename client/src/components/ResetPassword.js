@@ -1,39 +1,35 @@
 import React, { useState } from 'react';
-import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import {
     Container,
     Paper,
     TextField,
-    Button,
     Typography,
     Link,
     Box,
     Alert
 } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
-import axios from 'axios';
-import { config } from '../config';
 
 export default function ResetPassword() {
     const [email, setEmail] = useState('');
-    const [message, setMessage] = useState('');
     const [error, setError] = useState('');
+    const [message, setMessage] = useState('');
     const [loading, setLoading] = useState(false);
-    const navigate = useNavigate();
+    const { resetPassword } = useAuth();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        try {
-            setError('');
-            setMessage('');
-            setLoading(true);
+        setMessage('');
+        setError('');
+        setLoading(true);
 
-            const response = await axios.post(`${config.API_URL}/api/users/reset-password`, { email });
-            setMessage('Password reset instructions have been sent to your email.');
-            console.log('Reset Token (for testing):', response.data.resetToken);
+        try {
+            await resetPassword(email);
+            setMessage('Check your inbox for further instructions');
         } catch (err) {
-            setError(err.response?.data?.error || 'Failed to reset password');
-            console.error('Reset password error:', err);
+            setError('Failed to reset password');
         } finally {
             setLoading(false);
         }

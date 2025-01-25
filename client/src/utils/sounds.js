@@ -1,40 +1,33 @@
-// Message notification sounds
-const messageDefault = new Audio('/sounds/message-default.mp3');
-const messageSubtle = new Audio('/sounds/message-subtle.mp3');
+import { Howl } from 'howler';
 
-// Notification sounds
-const notificationDefault = new Audio('/sounds/notification-default.mp3');
-const notificationSubtle = new Audio('/sounds/notification-subtle.mp3');
+// Sound files mapping
+const sounds = {
+    message: {
+        default: '/sounds/message-default.mp3',
+        subtle: '/sounds/message-subtle.mp3',
+        none: null
+    },
+    mention: {
+        default: '/sounds/mention-default.mp3',
+        subtle: '/sounds/mention-subtle.mp3',
+        none: null
+    },
+    joinLeave: {
+        default: '/sounds/join-leave-default.mp3',
+        subtle: '/sounds/join-leave-subtle.mp3',
+        none: null
+    }
+};
 
-// Room join/leave sounds
-const roomJoin = new Audio('/sounds/room-join.mp3');
-const roomLeave = new Audio('/sounds/room-leave.mp3');
+export const playSound = (type, variant = 'default', volume = 0.5) => {
+    const soundFile = sounds[type]?.[variant];
 
-// Preload all sounds
-[messageDefault, messageSubtle, notificationDefault, notificationSubtle, roomJoin, roomLeave].forEach(sound => {
-    sound.load();
-    sound.volume = 0.5;
-});
-
-export const playSound = (type, variant = 'default') => {
-    let sound;
-    switch (type) {
-        case 'message':
-            sound = variant === 'default' ? messageDefault : messageSubtle;
-            break;
-        case 'notification':
-            sound = variant === 'default' ? notificationDefault : notificationSubtle;
-            break;
-        case 'roomJoin':
-            sound = roomJoin;
-            break;
-        case 'roomLeave':
-            sound = roomLeave;
-            break;
-        default:
-            return;
+    if (!soundFile) {
+        console.log('No sound file found for:', { type, variant });
+        return;
     }
 
+<<<<<<< HEAD
     if (sound.paused) {
         sound.currentTime = 0;
         sound.play().catch(err => console.log('Sound play failed:', err));
@@ -45,3 +38,12 @@ export const playSound = (type, variant = 'default') => {
 
 
 
+=======
+    const sound = new Howl({
+        src: [soundFile],
+        volume
+    });
+
+    sound.play();
+};
+>>>>>>> d031dbd8773ab07cd257f9851181f0649c627a54

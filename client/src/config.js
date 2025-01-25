@@ -1,5 +1,6 @@
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+const isDevelopment = process.env.NODE_ENV === 'development';
 
+<<<<<<< HEAD
 export const config = {
     API_URL,
     SOCKET_URL: API_URL
@@ -9,3 +10,33 @@ export const config = {
 
 
 
+=======
+const config = {
+    API_URL: isDevelopment ? 'http://localhost:5000' : 'https://lies-server-9ayj.onrender.com',
+    SOCKET_OPTIONS: {
+        transports: ['websocket', 'polling'],
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 5000,
+        timeout: 20000,
+        autoConnect: true,
+        forceNew: true,
+        withCredentials: true,
+        extraHeaders: {
+            'Access-Control-Allow-Credentials': 'true'
+        }
+    },
+    DEFAULT_AVATAR: 'https://via.placeholder.com/150',
+    MAX_FILE_SIZE: 5 * 1024 * 1024, // 5MB
+    SUPPORTED_FILE_TYPES: ['image/jpeg', 'image/png', 'image/gif', 'audio/webm'],
+    MAX_MESSAGE_LENGTH: 1000,
+    TYPING_TIMEOUT: 3000,
+    MESSAGE_FETCH_LIMIT: 50,
+    RECONNECT_ATTEMPTS: 5,
+    RECONNECT_DELAY: 3000,
+    CLIENT_URL: isDevelopment ? 'http://localhost:3000' : 'https://lies-client-9ayj.onrender.com'
+};
+
+export { config };
+>>>>>>> d031dbd8773ab07cd257f9851181f0649c627a54

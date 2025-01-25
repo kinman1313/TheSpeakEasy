@@ -1,137 +1,104 @@
-import React, { useState, useRef, useEffect } from 'react';
-import {
-    Box,
-    IconButton,
-    Typography,
-    Paper,
-    Slider,
-    CircularProgress,
-    Tooltip
-} from '@mui/material';
-import {
-    Mic as MicIcon,
-    Stop as StopIcon,
-    PlayArrow as PlayIcon,
-    Pause as PauseIcon,
-    Delete as DeleteIcon,
-    Send as SendIcon
-} from '@mui/icons-material';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { Box, Button, Typography, LinearProgress, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import { Mic as MicIcon, Stop as StopIcon, Delete as DeleteIcon, Send as SendIcon } from '@mui/icons-material';
 
-const VoiceMessage = ({ onSend, maxDuration = 300, onClose }) => {
+export default function VoiceMessage({ onComplete }) {
     const [isRecording, setIsRecording] = useState(false);
-    const [isPaused, setIsPaused] = useState(false);
+    const [audioBlob, setAudioBlob] = useState(null);
     const [duration, setDuration] = useState(0);
-    const [audioUrl, setAudioUrl] = useState(null);
-    const [isPlaying, setIsPlaying] = useState(false);
-    const [currentTime, setCurrentTime] = useState(0);
+    const [mediaRecorder, setMediaRecorder] = useState(null);
+    const [permissionGranted, setPermissionGranted] = useState(false);
+    const [error, setError] = useState(null);
 
-    const mediaRecorderRef = useRef(null);
-    const audioChunksRef = useRef([]);
-    const audioRef = useRef(new Audio());
-    const animationFrameRef = useRef();
-    const startTimeRef = useRef(0);
+    useEffect(() => {
+        let interval;
+        if (isRecording) {
+            interval = setInterval(() => {
+                setDuration(prev => prev + 1);
+            }, 1000);
+        }
+        return () => clearInterval(interval);
+    }, [isRecording]);
+
+    useEffect(() => {
+        const setupRecorder = async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                setPermissionGranted(true);
+                setError(null);
+
+                const recorder = new MediaRecorder(stream);
+                const chunks = [];
+
+                recorder.ondataavailable = (e) => {
+                    if (e.data.size > 0) {
+                        chunks.push(e.data);
+                    }
+                };
+
+                recorder.onstop = () => {
+                    const blob = new Blob(chunks, { type: 'audio/webm' });
+                    setAudioBlob(blob);
+                    setIsRecording(false);
+                };
+
+                setMediaRecorder(recorder);
+            } catch (err) {
+                console.error('Error accessing microphone:', err);
+                setError('Could not access microphone. Please check permissions.');
+                setPermissionGranted(false);
+            }
+        };
+
+        setupRecorder();
+    }, []);
 
     useEffect(() => {
         return () => {
-            if (audioUrl) {
-                URL.revokeObjectURL(audioUrl);
-            }
-            if (animationFrameRef.current) {
-                cancelAnimationFrame(animationFrameRef.current);
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
             }
         };
-    }, [audioUrl]);
+    }, [mediaRecorder]);
 
-    const formatTime = (seconds) => {
-        const mins = Math.floor(seconds / 60);
-        const secs = Math.floor(seconds % 60);
-        return `${mins}:${secs.toString().padStart(2, '0')}`;
-    };
-
-    const startRecording = async () => {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorderRef.current = new MediaRecorder(stream);
-            audioChunksRef.current = [];
-
-            mediaRecorderRef.current.ondataavailable = (event) => {
-                audioChunksRef.current.push(event.data);
-            };
-
-            mediaRecorderRef.current.onstop = () => {
-                const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
-                const url = URL.createObjectURL(audioBlob);
-                setAudioUrl(url);
-                audioRef.current.src = url;
-            };
-
-            mediaRecorderRef.current.start();
-            startTimeRef.current = Date.now();
+    const startRecording = () => {
+        if (mediaRecorder && mediaRecorder.state === 'inactive') {
+            setAudioBlob(null);
+            setDuration(0);
             setIsRecording(true);
-            setIsPaused(false);
-
-            const updateDuration = () => {
-                if (isRecording && !isPaused) {
-                    const elapsed = (Date.now() - startTimeRef.current) / 1000;
-                    setDuration(elapsed);
-                    if (elapsed < maxDuration) {
-                        animationFrameRef.current = requestAnimationFrame(updateDuration);
-                    } else {
-                        stopRecording();
-                    }
-                }
-            };
-            updateDuration();
-        } catch (error) {
-            console.error('Error accessing microphone:', error);
+            mediaRecorder.start();
         }
     };
 
     const stopRecording = () => {
-        if (mediaRecorderRef.current && isRecording) {
-            mediaRecorderRef.current.stop();
-            mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
-            setIsRecording(false);
-            setIsPaused(false);
-            if (animationFrameRef.current) {
-                cancelAnimationFrame(animationFrameRef.current);
-            }
-        }
-    };
-
-    const togglePlayback = () => {
-        if (isPlaying) {
-            audioRef.current.pause();
-            setIsPlaying(false);
-        } else {
-            audioRef.current.play();
-            setIsPlaying(true);
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+            mediaRecorder.stop();
         }
     };
 
     const handleSend = () => {
-        if (audioUrl) {
-            onSend(audioUrl);
-            setAudioUrl(null);
-            setDuration(0);
-            setCurrentTime(0);
-            onClose();
+        if (audioBlob) {
+            onComplete(audioBlob);
+            resetRecording();
         }
     };
 
-    useEffect(() => {
-        audioRef.current.onended = () => {
-            setIsPlaying(false);
-            setCurrentTime(0);
-        };
+    const resetRecording = () => {
+        setAudioBlob(null);
+        setDuration(0);
+        setIsRecording(false);
+    };
 
-        audioRef.current.ontimeupdate = () => {
-            setCurrentTime(audioRef.current.currentTime);
-        };
-    }, []);
+    if (error) {
+        return (
+            <Box sx={{ p: 3, textAlign: 'center' }}>
+                <Typography color="error">{error}</Typography>
+            </Box>
+        );
+    }
 
     return (
+<<<<<<< HEAD
         <Box sx={{ width: '100%' }}>
             <AnimatePresence>
                 <motion.div
@@ -207,8 +174,33 @@ const VoiceMessage = ({ onSend, maxDuration = 300, onClose }) => {
                                     </IconButton>
                                 </>
                             )}
+=======
+        <Box sx={{ width: '100%', p: 2 }}>
+            <DialogTitle>Record Voice Message</DialogTitle>
+            <DialogContent>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center', my: 2 }}>
+                    {isRecording && (
+                        <Box sx={{ width: '100%', mb: 2 }}>
+                            <LinearProgress
+                                variant="determinate"
+                                value={(duration % 60) * (100 / 60)}
+                                sx={{
+                                    height: 10,
+                                    borderRadius: 5,
+                                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                    '& .MuiLinearProgress-bar': {
+                                        backgroundColor: 'rgba(255, 82, 82, 0.8)',
+                                    }
+                                }}
+                            />
+                            <Typography variant="caption" sx={{ mt: 1, color: 'rgba(255, 255, 255, 0.7)' }}>
+                                Recording: {Math.floor(duration / 60)}:{(duration % 60).toString().padStart(2, '0')}
+                            </Typography>
+>>>>>>> d031dbd8773ab07cd257f9851181f0649c627a54
                         </Box>
+                    )}
 
+<<<<<<< HEAD
                         {isRecording && (
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                 <CircularProgress
@@ -231,3 +223,61 @@ const VoiceMessage = ({ onSend, maxDuration = 300, onClose }) => {
 
 export default VoiceMessage;
 
+=======
+                    {!audioBlob ? (
+                        <Button
+                            variant="contained"
+                            color={isRecording ? "error" : "primary"}
+                            onClick={isRecording ? stopRecording : startRecording}
+                            disabled={!permissionGranted}
+                            startIcon={isRecording ? <StopIcon /> : <MicIcon />}
+                            sx={{
+                                backdropFilter: 'blur(20px)',
+                                backgroundColor: isRecording ? 'rgba(255, 82, 82, 0.8)' : 'rgba(255, 255, 255, 0.1)',
+                                '&:hover': {
+                                    backgroundColor: isRecording ? 'rgba(255, 82, 82, 0.9)' : 'rgba(255, 255, 255, 0.2)'
+                                }
+                            }}
+                        >
+                            {isRecording ? 'Stop Recording' : 'Start Recording'}
+                        </Button>
+                    ) : (
+                        <Box sx={{ display: 'flex', gap: 2 }}>
+                            <Button
+                                variant="contained"
+                                color="error"
+                                onClick={resetRecording}
+                                startIcon={<DeleteIcon />}
+                                sx={{
+                                    backdropFilter: 'blur(20px)',
+                                    backgroundColor: 'rgba(255, 82, 82, 0.8)',
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(255, 82, 82, 0.9)'
+                                    }
+                                }}
+                            >
+                                Delete
+                            </Button>
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                onClick={handleSend}
+                                startIcon={<SendIcon />}
+                                sx={{
+                                    backdropFilter: 'blur(20px)',
+                                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(255, 255, 255, 0.2)'
+                                    }
+                                }}
+                            >
+                                Send
+                            </Button>
+                        </Box>
+                    )}
+                </Box>
+            </DialogContent>
+        </Box>
+    );
+} 
+>>>>>>> d031dbd8773ab07cd257f9851181f0649c627a54

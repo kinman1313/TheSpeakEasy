@@ -1,137 +1,134 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { createTheme, ThemeProvider as MuiThemeProvider } from '@mui/material';
+import React, { createContext, useContext, useState, useMemo } from 'react';
+import { createTheme, ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
+import { CssBaseline } from '@mui/material';
 
 const ThemeContext = createContext();
 
-export const useTheme = () => {
-    const context = useContext(ThemeContext);
-    if (!context) {
-        throw new Error('useTheme must be used within a ThemeProvider');
-    }
-    return context;
-};
+export const useTheme = () => useContext(ThemeContext);
 
 export const ThemeProvider = ({ children }) => {
-    const [themeMode, setThemeMode] = useState(() => {
-        const savedMode = localStorage.getItem('themeMode');
-        return savedMode || 'dark';
-    });
+    const [mode, setMode] = useState('dark');
 
-    const [messageColor, setMessageColor] = useState(() => {
-        const savedColor = localStorage.getItem('messageColor');
-        return savedColor || '#7C4DFF';
-    });
+    const toggleMode = () => {
+        setMode((prevMode) => (prevMode === 'dark' ? 'light' : 'dark'));
+    };
 
-    const [bubbleStyle, setBubbleStyle] = useState(() => {
-        const savedStyle = localStorage.getItem('bubbleStyle');
-        return savedStyle || 'modern';
-    });
-
-    const theme = createTheme({
+    const theme = useMemo(() => createTheme({
         palette: {
-            mode: themeMode,
+            mode,
             primary: {
-                main: '#7C4DFF',
-                light: '#B47CFF',
-                dark: '#3F1DCF'
-            },
-            secondary: {
-                main: '#FF4081',
-                light: '#FF79B0',
-                dark: '#C60055'
+                main: '#3B82F6',
+                light: '#60A5FA',
+                dark: '#2563EB',
+                contrastText: '#FFFFFF'
             },
             background: {
-                default: themeMode === 'dark' ? '#121212' : '#F5F5F5',
-                paper: themeMode === 'dark' ? '#1E1E1E' : '#FFFFFF',
-                message: messageColor
+                default: mode === 'dark' ? '#0A0F1E' : '#FFFFFF',
+                paper: mode === 'dark' ? 'rgba(15, 23, 42, 0.65)' : '#F5F5F5'
+            },
+            text: {
+                primary: mode === 'dark' ? '#F1F5F9' : '#0A0F1E',
+                secondary: mode === 'dark' ? '#94A3B8' : '#4A4A4A'
             }
         },
         typography: {
             fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-            h1: {
-                fontWeight: 600
-            },
-            h2: {
-                fontWeight: 600
-            },
-            h3: {
-                fontWeight: 600
+            h6: {
+                fontWeight: 600,
+                letterSpacing: '0.0075em'
             }
         },
         shape: {
-            borderRadius: 12
+            borderRadius: 16
         },
         components: {
+            MuiCssBaseline: {
+                styleOverrides: {
+                    body: {
+                        scrollbarColor: 'rgba(255, 255, 255, 0.1) rgba(0, 0, 0, 0.1)',
+                        '&::-webkit-scrollbar, & *::-webkit-scrollbar': {
+                            width: '8px',
+                            height: '8px',
+                            background: 'rgba(0, 0, 0, 0.1)'
+                        },
+                        '&::-webkit-scrollbar-thumb, & *::-webkit-scrollbar-thumb': {
+                            borderRadius: '4px',
+                            background: 'rgba(255, 255, 255, 0.1)',
+                            '&:hover': {
+                                background: 'rgba(255, 255, 255, 0.2)'
+                            }
+                        }
+                    }
+                }
+            },
+            MuiDrawer: {
+                styleOverrides: {
+                    paper: {
+                        background: mode === 'dark' ? 'rgba(15, 23, 42, 0.65)' : '#FFFFFF',
+                        backdropFilter: 'blur(10px)',
+                        WebkitBackdropFilter: 'blur(10px)',
+                        border: '1px solid rgba(255, 255, 255, 0.08)'
+                    }
+                }
+            },
+            MuiDialog: {
+                styleOverrides: {
+                    paper: {
+                        background: mode === 'dark' ? 'rgba(15, 23, 42, 0.95)' : '#FFFFFF',
+                        backdropFilter: 'blur(10px)',
+                        WebkitBackdropFilter: 'blur(10px)',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        boxShadow: '0 4px 24px -1px rgba(0, 0, 0, 0.25)'
+                    }
+                }
+            },
+            MuiMenu: {
+                styleOverrides: {
+                    paper: {
+                        background: mode === 'dark' ? 'rgba(15, 23, 42, 0.95)' : '#FFFFFF',
+                        backdropFilter: 'blur(10px)',
+                        WebkitBackdropFilter: 'blur(10px)',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        boxShadow: '0 4px 24px -1px rgba(0, 0, 0, 0.25)'
+                    }
+                }
+            },
+            MuiIconButton: {
+                styleOverrides: {
+                    root: {
+                        transition: 'all 0.2s ease-in-out',
+                        '&:hover': {
+                            background: 'rgba(255, 255, 255, 0.1)'
+                        }
+                    }
+                }
+            },
             MuiButton: {
                 styleOverrides: {
                     root: {
                         textTransform: 'none',
-                        borderRadius: 8,
-                        padding: '8px 16px'
+                        borderRadius: '8px',
+                        transition: 'all 0.2s ease-in-out'
                     }
                 }
             },
-            MuiPaper: {
+            MuiListItem: {
                 styleOverrides: {
                     root: {
-                        backgroundImage: 'none'
-                    }
-                }
-            },
-            MuiCard: {
-                styleOverrides: {
-                    root: {
-                        backgroundImage: 'none'
-                    }
-                }
-            },
-            MuiCssBaseline: {
-                styleOverrides: {
-                    body: {
-                        scrollbarWidth: 'thin',
-                        '&::-webkit-scrollbar': {
-                            width: '8px',
-                            height: '8px'
-                        },
-                        '&::-webkit-scrollbar-track': {
-                            background: themeMode === 'dark' ? '#1E1E1E' : '#F5F5F5'
-                        },
-                        '&::-webkit-scrollbar-thumb': {
-                            background: themeMode === 'dark' ? '#333333' : '#CCCCCC',
-                            borderRadius: '4px',
-                            '&:hover': {
-                                background: themeMode === 'dark' ? '#444444' : '#BBBBBB'
-                            }
+                        borderRadius: '8px',
+                        '&:hover': {
+                            background: 'rgba(255, 255, 255, 0.05)'
                         }
                     }
                 }
             }
         }
-    });
-
-    useEffect(() => {
-        localStorage.setItem('themeMode', themeMode);
-        localStorage.setItem('messageColor', messageColor);
-        localStorage.setItem('bubbleStyle', bubbleStyle);
-    }, [themeMode, messageColor, bubbleStyle]);
-
-    const toggleTheme = () => {
-        setThemeMode(prev => prev === 'light' ? 'dark' : 'light');
-    };
-
-    const value = {
-        themeMode,
-        setThemeMode,
-        toggleTheme,
-        messageColor,
-        setMessageColor,
-        bubbleStyle,
-        setBubbleStyle
-    };
+    }), [mode]);
 
     return (
-        <ThemeContext.Provider value={value}>
+        <ThemeContext.Provider value={{ mode, setMode, toggleMode, theme }}>
             <MuiThemeProvider theme={theme}>
+                <CssBaseline />
                 {children}
             </MuiThemeProvider>
         </ThemeContext.Provider>
@@ -141,6 +138,7 @@ export const ThemeProvider = ({ children }) => {
 export default ThemeContext;
 
 
+<<<<<<< HEAD
 
 
 
@@ -148,3 +146,5 @@ export default ThemeContext;
 
 
 
+=======
+>>>>>>> d031dbd8773ab07cd257f9851181f0649c627a54

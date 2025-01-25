@@ -1,109 +1,41 @@
-import React, { useState } from 'react';
-import {
-    Box,
-    IconButton,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    Button,
-    TextField,
-    Typography,
-    List,
-    ListItem,
-    ListItemText,
-    ListItemSecondaryAction,
-    Tooltip,
-    Paper,
-    Switch,
-    FormControlLabel,
-    Divider
-} from '@mui/material';
-import {
-    Schedule as ScheduleIcon,
-    Delete as DeleteIcon,
-    Edit as EditIcon,
-    CalendarToday as CalendarIcon,
-    AccessTime as TimeIcon,
-    Repeat as RepeatIcon
-} from '@mui/icons-material';
-import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import React, { useState, useRef, useEffect } from 'react';
+import { Box, TextField, Button, Typography } from '@mui/material';
+import { DateTimePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { motion, AnimatePresence } from 'framer-motion';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 
-const MessageScheduler = ({
-    onSchedule,
-    onEdit,
-    onDelete,
-    scheduledMessages = []
-}) => {
-    const [open, setOpen] = useState(false);
-    const [selectedDate, setSelectedDate] = useState(new Date());
+export default function MessageScheduler({ onSchedule, onClose }) {
     const [message, setMessage] = useState('');
-    const [repeat, setRepeat] = useState({
-        enabled: false,
-        interval: 'daily',
-        endDate: null
-    });
-    const [editingMessage, setEditingMessage] = useState(null);
+    const [scheduledTime, setScheduledTime] = useState(new Date());
+    const messageInputRef = useRef(null);
 
-    const handleOpen = () => {
-        setOpen(true);
-    };
-
-    const handleClose = () => {
-        setOpen(false);
-        setMessage('');
-        setSelectedDate(new Date());
-        setRepeat({
-            enabled: false,
-            interval: 'daily',
-            endDate: null
-        });
-        setEditingMessage(null);
-    };
-
-    const handleSchedule = () => {
-        const scheduleData = {
-            id: editingMessage?.id || Date.now(),
-            message,
-            scheduledDate: selectedDate,
-            repeat: repeat.enabled ? repeat : null,
-            status: 'pending'
-        };
-
-        if (editingMessage) {
-            onEdit(scheduleData);
-        } else {
-            onSchedule(scheduleData);
+    // Focus management
+    useEffect(() => {
+        // Focus the message input when component mounts
+        if (messageInputRef.current) {
+            messageInputRef.current.focus();
         }
 
-        handleClose();
-    };
+        // Cleanup function to restore focus when component unmounts
+        return () => {
+            if (document.activeElement instanceof HTMLElement) {
+                document.activeElement.blur();
+            }
+        };
+    }, []);
 
-    const handleEdit = (message) => {
-        setEditingMessage(message);
-        setMessage(message.message);
-        setSelectedDate(new Date(message.scheduledDate));
-        setRepeat(message.repeat || {
-            enabled: false,
-            interval: 'daily',
-            endDate: null
-        });
-        setOpen(true);
-    };
-
-    const formatDateTime = (date) => {
-        return new Date(date).toLocaleString();
-    };
-
-    const getRepeatText = (repeat) => {
-        if (!repeat?.enabled) return 'No repeat';
-        return `Repeats ${repeat.interval} until ${repeat.endDate ? formatDateTime(repeat.endDate) : 'forever'}`;
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        if (message.trim() && scheduledTime) {
+            onSchedule(message, scheduledTime);
+            setMessage('');
+            setScheduledTime(new Date());
+            onClose?.();
+        }
     };
 
     return (
+<<<<<<< HEAD
         <Box sx={{ width: '100%' }}>
             <Paper elevation={3} sx={{ p: 2 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
@@ -277,3 +209,96 @@ export default MessageScheduler;
 
 
 
+=======
+        <LocalizationProvider dateAdapter={AdapterDateFns}>
+            <Box
+                component="form"
+                onSubmit={handleSubmit}
+                sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 2,
+                    p: 2,
+                    minWidth: 300
+                }}
+            >
+                <TextField
+                    inputRef={messageInputRef}
+                    label="Message"
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    multiline
+                    rows={4}
+                    fullWidth
+                    required
+                    sx={{
+                        '& .MuiInputBase-input': {
+                            color: 'rgba(255, 255, 255, 0.9)'
+                        },
+                        '& .MuiInputLabel-root': {
+                            color: 'rgba(255, 255, 255, 0.7)'
+                        },
+                        '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                                borderColor: 'rgba(255, 255, 255, 0.23)'
+                            },
+                            '&:hover fieldset': {
+                                borderColor: 'rgba(255, 255, 255, 0.4)'
+                            },
+                            '&.Mui-focused fieldset': {
+                                borderColor: 'rgba(255, 255, 255, 0.7)'
+                            }
+                        }
+                    }}
+                />
+
+                <DateTimePicker
+                    label="Schedule Time"
+                    value={scheduledTime}
+                    onChange={(newValue) => setScheduledTime(newValue)}
+                    minDateTime={new Date()}
+                    sx={{
+                        '& .MuiInputBase-input': {
+                            color: 'rgba(255, 255, 255, 0.9)'
+                        },
+                        '& .MuiInputLabel-root': {
+                            color: 'rgba(255, 255, 255, 0.7)'
+                        },
+                        '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                                borderColor: 'rgba(255, 255, 255, 0.23)'
+                            },
+                            '&:hover fieldset': {
+                                borderColor: 'rgba(255, 255, 255, 0.4)'
+                            },
+                            '&.Mui-focused fieldset': {
+                                borderColor: 'rgba(255, 255, 255, 0.7)'
+                            }
+                        }
+                    }}
+                />
+
+                <Button
+                    type="submit"
+                    variant="contained"
+                    disabled={!message.trim() || !scheduledTime}
+                    sx={{
+                        mt: 2,
+                        backdropFilter: 'blur(20px)',
+                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                        '&:hover': {
+                            backgroundColor: 'rgba(255, 255, 255, 0.2)'
+                        },
+                        '&:disabled': {
+                            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                            color: 'rgba(255, 255, 255, 0.3)'
+                        }
+                    }}
+                >
+                    Schedule Message
+                </Button>
+            </Box>
+        </LocalizationProvider>
+    );
+} 
+>>>>>>> d031dbd8773ab07cd257f9851181f0649c627a54

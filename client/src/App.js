@@ -1,56 +1,47 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import Login from './components/Login';
-import Register from './components/Register';
-import Chat from './components/Chat';
-import ResetPassword from './components/ResetPassword';
+import { BrowserRouter as Router } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
+import { SocketProvider } from './contexts/SocketContext';
+import { ThemeProvider, useTheme } from './contexts/ThemeContext';
+import { NotificationProvider } from './contexts/NotificationContext';
+import { ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
+import AppRoutes from './routes/AppRoutes';
+import { CssBaseline } from '@mui/material';
 
-// Protected Route Component
-const PrivateRoute = ({ children }) => {
-    const { user } = useAuth();
-    return user ? children : <Navigate to="/login" />;
+const Providers = ({ children }) => (
+    <AuthProvider>
+        <SocketProvider>
+            <NotificationProvider>
+                {children}
+            </NotificationProvider>
+        </SocketProvider>
+    </AuthProvider>
+);
+
+const ThemedApp = () => {
+    const { theme } = useTheme();
+
+    return (
+        <MuiThemeProvider theme={theme}>
+            <CssBaseline />
+            <Router>
+                <Providers>
+                    <AppRoutes />
+                </Providers>
+            </Router>
+        </MuiThemeProvider>
+    );
 };
 
-// Public Route Component (redirects to chat if already logged in)
-const PublicRoute = ({ children }) => {
-    const { user } = useAuth();
-    return !user ? children : <Navigate to="/chat" />;
-};
-
-// Chat component (moved from previous App.js)
 function App() {
     return (
-        <Router>
-            <AuthProvider>
-                <Routes>
-                    <Route path="/login" element={
-                        <PublicRoute>
-                            <Login />
-                        </PublicRoute>
-                    } />
-                    <Route path="/register" element={
-                        <PublicRoute>
-                            <Register />
-                        </PublicRoute>
-                    } />
-                    <Route path="/reset-password" element={
-                        <PublicRoute>
-                            <ResetPassword />
-                        </PublicRoute>
-                    } />
-                    <Route path="/chat" element={
-                        <PrivateRoute>
-                            <Chat />
-                        </PrivateRoute>
-                    } />
-                    <Route path="/" element={<Navigate to="/chat" />} />
-                </Routes>
-            </AuthProvider>
-        </Router>
+        <ThemeProvider>
+            <ThemedApp />
+        </ThemeProvider>
     );
 }
 
+<<<<<<< HEAD
 export default App;
 
 
@@ -58,3 +49,6 @@ export default App;
 
 
 
+=======
+export default App;
+>>>>>>> d031dbd8773ab07cd257f9851181f0649c627a54

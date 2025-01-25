@@ -5,31 +5,55 @@ import {
     Container,
     Paper,
     TextField,
-    Button,
     Typography,
     Link,
     Box,
-    Alert
+    Alert,
+    CircularProgress
 } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
+import { config } from '../config';
 
 export default function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [retryCount, setRetryCount] = useState(0);
     const { login } = useAuth();
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setError('');
+        setLoading(true);
+
+        console.log('Login attempt:', { email, apiUrl: config.API_URL, retryCount });
+
         try {
-            setError('');
-            setLoading(true);
-            await login(email, password);
+            const user = await login(email, password);
+            console.log('Login successful:', user);
             navigate('/chat');
         } catch (err) {
-            setError(err.response?.data?.error || 'Failed to login');
+            console.error('Login error:', err);
+            let errorMessage = err.message;
+
+            if (err.message.includes('timeout') || err.message.includes('Network Error')) {
+                if (retryCount < 2) {
+                    setRetryCount(prev => prev + 1);
+                    setError(`Connection issue. Retrying... (Attempt ${retryCount + 1}/2)`);
+                    setTimeout(() => handleSubmit(e), 1000);
+                    return;
+                }
+                errorMessage = 'Unable to connect to server. Please check your connection and try again.';
+            } else if (err.response?.status === 401) {
+                errorMessage = 'Invalid email or password';
+            } else if (err.response?.status === 429) {
+                errorMessage = 'Too many login attempts. Please try again later.';
+            }
+
+            setError(errorMessage);
+            setRetryCount(0);
         } finally {
             setLoading(false);
         }
@@ -44,7 +68,10 @@ export default function Login() {
                     </Typography>
 
                     {error && (
-                        <Alert severity="error" sx={{ mb: 2 }}>
+                        <Alert
+                            severity={error.includes('Retrying') ? 'info' : 'error'}
+                            sx={{ mb: 2 }}
+                        >
                             {error}
                         </Alert>
                     )}
@@ -59,7 +86,12 @@ export default function Login() {
                             onChange={(e) => setEmail(e.target.value)}
                             required
                             autoComplete="email"
+<<<<<<< HEAD
                             aria-label="email"
+=======
+                            disabled={loading}
+                            error={!!error && !error.includes('Retrying')}
+>>>>>>> d031dbd8773ab07cd257f9851181f0649c627a54
                         />
 
                         <TextField
@@ -71,7 +103,12 @@ export default function Login() {
                             onChange={(e) => setPassword(e.target.value)}
                             required
                             autoComplete="current-password"
+<<<<<<< HEAD
                             aria-label="password"
+=======
+                            disabled={loading}
+                            error={!!error && !error.includes('Retrying')}
+>>>>>>> d031dbd8773ab07cd257f9851181f0649c627a54
                         />
 
                         <LoadingButton
@@ -83,7 +120,11 @@ export default function Login() {
                             sx={{ mt: 3, mb: 2 }}
                             aria-label="login"
                         >
-                            Login
+                            {loading ? (
+                                error?.includes('Retrying') ? 'Retrying...' : 'Logging in...'
+                            ) : (
+                                'Login'
+                            )}
                         </LoadingButton>
 
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
