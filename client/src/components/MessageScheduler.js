@@ -114,6 +114,7 @@ const MessageScheduler = ({
                         variant="contained"
                         startIcon={<ScheduleIcon />}
                         onClick={handleOpen}
+                        aria-label="schedule new message"
                     >
                         Schedule New
                     </Button>
@@ -144,12 +145,12 @@ const MessageScheduler = ({
                                 />
                                 <ListItemSecondaryAction>
                                     <Tooltip title="Edit">
-                                        <IconButton edge="end" onClick={() => handleEdit(msg)} sx={{ mr: 1 }}>
+                                        <IconButton edge="end" onClick={() => handleEdit(msg)} sx={{ mr: 1 }} aria-label="edit message">
                                             <EditIcon />
                                         </IconButton>
                                     </Tooltip>
                                     <Tooltip title="Delete">
-                                        <IconButton edge="end" onClick={() => onDelete(msg.id)}>
+                                        <IconButton edge="end" onClick={() => onDelete(msg.id)} aria-label="delete message">
                                             <DeleteIcon />
                                         </IconButton>
                                     </Tooltip>
@@ -171,8 +172,9 @@ const MessageScheduler = ({
                 onClose={handleClose}
                 maxWidth="sm"
                 fullWidth
+                aria-labelledby="schedule-dialog-title"
             >
-                <DialogTitle>
+                <DialogTitle id="schedule-dialog-title">
                     {editingMessage ? 'Edit Scheduled Message' : 'Schedule New Message'}
                 </DialogTitle>
                 <DialogContent>
@@ -185,6 +187,7 @@ const MessageScheduler = ({
                             value={message}
                             onChange={(e) => setMessage(e.target.value)}
                             placeholder="Type your message..."
+                            aria-label="message input"
                         />
 
                         <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -194,6 +197,7 @@ const MessageScheduler = ({
                                 onChange={setSelectedDate}
                                 minDateTime={new Date()}
                                 renderInput={(params) => <TextField {...params} fullWidth />}
+                                aria-label="schedule date and time"
                             />
                         </LocalizationProvider>
 
@@ -206,6 +210,7 @@ const MessageScheduler = ({
                                             ...prev,
                                             enabled: e.target.checked
                                         }))}
+                                        aria-label="repeat switch"
                                     />
                                 }
                                 label="Repeat"
@@ -225,6 +230,7 @@ const MessageScheduler = ({
                                         SelectProps={{
                                             native: true
                                         }}
+                                        aria-label="repeat interval"
                                     >
                                         <option value="daily">Daily</option>
                                         <option value="weekly">Weekly</option>
@@ -241,6 +247,7 @@ const MessageScheduler = ({
                                             }))}
                                             minDateTime={selectedDate}
                                             renderInput={(params) => <TextField {...params} fullWidth />}
+                                            aria-label="end date"
                                         />
                                     </LocalizationProvider>
                                 </Box>
@@ -249,11 +256,12 @@ const MessageScheduler = ({
                     </Box>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={handleClose}>Cancel</Button>
+                    <Button onClick={handleClose} aria-label="cancel">Cancel</Button>
                     <Button
                         variant="contained"
                         onClick={handleSchedule}
                         disabled={!message.trim() || !selectedDate}
+                        aria-label="schedule message"
                     >
                         {editingMessage ? 'Update' : 'Schedule'}
                     </Button>
@@ -263,4 +271,9 @@ const MessageScheduler = ({
     );
 };
 
-export default MessageScheduler; 
+export default MessageScheduler;
+
+
+
+
+

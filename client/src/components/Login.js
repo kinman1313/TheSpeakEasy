@@ -59,6 +59,7 @@ export default function Login() {
                             onChange={(e) => setEmail(e.target.value)}
                             required
                             autoComplete="email"
+                            aria-label="email"
                         />
 
                         <TextField
@@ -70,6 +71,7 @@ export default function Login() {
                             onChange={(e) => setPassword(e.target.value)}
                             required
                             autoComplete="current-password"
+                            aria-label="password"
                         />
 
                         <LoadingButton
@@ -79,15 +81,16 @@ export default function Login() {
                             size="large"
                             loading={loading}
                             sx={{ mt: 3, mb: 2 }}
+                            aria-label="login"
                         >
                             Login
                         </LoadingButton>
 
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Link component={RouterLink} to="/register" variant="body2">
+                            <Link component={RouterLink} to="/register" variant="body2" aria-label="register">
                                 {"Don't have an account? Sign Up"}
                             </Link>
-                            <Link component={RouterLink} to="/reset-password" variant="body2">
+                            <Link component={RouterLink} to="/reset-password" variant="body2" aria-label="reset password">
                                 {"Forgot Password?"}
                             </Link>
                         </Box>

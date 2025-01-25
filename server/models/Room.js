@@ -161,4 +161,13 @@ roomSchema.index({ type: 1 });
 roomSchema.index({ 'invitations.invitedUser': 1 });
 
 const Room = mongoose.model('Room', roomSchema);
-module.exports = Room; 
+module.exports = Room;
+
+
+
+
+
+
+
+
+

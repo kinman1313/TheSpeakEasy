@@ -69,6 +69,7 @@ const PinnedMessages = ({
                     }
                 }}
                 onClick={onToggle}
+                aria-label="toggle pinned messages"
             >
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                     <Badge
@@ -88,6 +89,7 @@ const PinnedMessages = ({
                         e.stopPropagation();
                         onToggle();
                     }}
+                    aria-label="expand collapse pinned messages"
                 >
                     {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                 </IconButton>
@@ -121,6 +123,7 @@ const PinnedMessages = ({
                                             bgcolor: 'action.hover'
                                         }
                                     }}
+                                    aria-label="pinned message item"
                                 >
                                     <ListItemText
                                         primary={
@@ -164,6 +167,7 @@ const PinnedMessages = ({
                                                     onMessageClick(message);
                                                 }}
                                                 sx={{ mr: 1 }}
+                                                aria-label="go to message"
                                             >
                                                 <UnfoldMoreIcon />
                                             </IconButton>
@@ -176,6 +180,7 @@ const PinnedMessages = ({
                                                         size="small"
                                                         onClick={(e) => handleUnpin(message.id, e)}
                                                         color="error"
+                                                        aria-label="unpin message"
                                                     >
                                                         <DeleteIcon />
                                                     </IconButton>
@@ -195,4 +200,10 @@ const PinnedMessages = ({
     );
 };
 
-export default PinnedMessages; 
+export default PinnedMessages;
+
+
+
+
+
+

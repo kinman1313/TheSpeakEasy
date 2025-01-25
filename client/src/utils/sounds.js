@@ -39,4 +39,9 @@ export const playSound = (type, variant = 'default') => {
         sound.currentTime = 0;
         sound.play().catch(err => console.log('Sound play failed:', err));
     }
-}; 
+};
+
+
+
+
+

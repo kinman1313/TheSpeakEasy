@@ -64,6 +64,7 @@ const ThemeMenu = ({
                             transform: 'rotate(30deg)'
                         }
                     }}
+                    aria-label="theme settings"
                 >
                     <PaletteIcon />
                 </IconButton>
@@ -118,6 +119,7 @@ const ThemeMenu = ({
                                     bgcolor: 'primary.light'
                                 }
                             }}
+                            aria-label="light theme"
                         >
                             <LightModeIcon />
                             <Typography>Light</Typography>
@@ -137,6 +139,7 @@ const ThemeMenu = ({
                                     bgcolor: 'primary.light'
                                 }
                             }}
+                            aria-label="dark theme"
                         >
                             <DarkModeIcon />
                             <Typography>Dark</Typography>
@@ -164,6 +167,7 @@ const ThemeMenu = ({
                                 borderRadius: 4,
                                 cursor: 'pointer'
                             }}
+                            aria-label="message color"
                         />
                     </Box>
                 </Box>
@@ -191,6 +195,7 @@ const ThemeMenu = ({
                                         bgcolor: 'primary.light'
                                     }
                                 }}
+                                aria-label={`bubble style ${style.label}`}
                             >
                                 <StyleIcon />
                                 <Typography>{style.label}</Typography>
@@ -203,4 +208,8 @@ const ThemeMenu = ({
     );
 };
 
-export default ThemeMenu; 
+export default ThemeMenu;
+
+
+
+

@@ -103,6 +103,7 @@ const MentionInput = ({
                     }
                 }}
                 dangerouslySetInnerHTML={{ __html: value }}
+                aria-label="mention input"
             />
 
             <Popper
@@ -137,6 +138,7 @@ const MentionInput = ({
                                                     bgcolor: 'action.hover'
                                                 }
                                             }}
+                                            aria-label={`mention ${user.username}`}
                                         >
                                             <ListItemAvatar>
                                                 <Avatar
@@ -169,4 +171,7 @@ const MentionInput = ({
     );
 };
 
-export default MentionInput; 
+export default MentionInput;
+
+
+

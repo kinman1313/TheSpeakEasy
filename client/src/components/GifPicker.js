@@ -34,7 +34,11 @@ const GifPicker = ({ onSelect, onClose }) => {
             });
             const response = await fetch(`${GIPHY_API_URL}/${endpoint}?${queryParams}`);
             const data = await response.json();
-            setGifs(data.data);
+            if (response.ok) {
+                setGifs(data.data);
+            } else {
+                setError(data.message || 'Failed to load GIFs');
+            }
         } catch (err) {
             setError('Failed to load GIFs');
             console.error('Error fetching GIFs:', err);
@@ -87,7 +91,7 @@ const GifPicker = ({ onSelect, onClose }) => {
                     <Typography variant="h6">
                         Select a GIF
                     </Typography>
-                    <IconButton onClick={onClose} size="small">
+                    <IconButton onClick={onClose} size="small" aria-label="close">
                         <CloseIcon />
                     </IconButton>
                 </Box>
@@ -106,6 +110,7 @@ const GifPicker = ({ onSelect, onClose }) => {
                                     size="small"
                                     onClick={handleSearch}
                                     disabled={loading}
+                                    aria-label="search"
                                 >
                                     <SearchIcon />
                                 </IconButton>
@@ -139,6 +144,7 @@ const GifPicker = ({ onSelect, onClose }) => {
                                         }
                                     }}
                                     onClick={() => handleGifSelect(gif)}
+                                    aria-label={`select ${gif.title}`}
                                 >
                                     <img
                                         src={gif.images.fixed_height.url}
@@ -161,4 +167,5 @@ const GifPicker = ({ onSelect, onClose }) => {
     );
 };
 
-export default GifPicker; 
+export default GifPicker;
+

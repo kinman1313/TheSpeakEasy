@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Paper, Typography, Box, IconButton, Slider } from '@mui/material';
 import { PlayArrow as PlayIcon, Pause as PauseIcon } from '@mui/icons-material';
 import { motion } from 'framer-motion';
@@ -43,13 +43,15 @@ const MessageBubble = ({ message, isOwn }) => {
         } else {
             if (message.text.startsWith('[VOICE] ')) {
                 audioRef.current.src = message.text.replace('[VOICE] ', '');
-                audioRef.current.play();
+                audioRef.current.play().catch((error) => {
+                    console.error('Audio playback error:', error);
+                });
             }
         }
         setIsPlaying(!isPlaying);
     };
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (message.text.startsWith('[VOICE] ')) {
             audioRef.current.src = message.text.replace('[VOICE] ', '');
             audioRef.current.addEventListener('loadedmetadata', () => {
@@ -115,6 +117,7 @@ const MessageBubble = ({ message, isOwn }) => {
                             size="small"
                             onClick={handlePlayPause}
                             sx={{ color: isOwn ? 'white' : 'inherit' }}
+                            aria-label={isPlaying ? 'Pause' : 'Play'}
                         >
                             {isPlaying ? <PauseIcon /> : <PlayIcon />}
                         </IconButton>
@@ -137,6 +140,7 @@ const MessageBubble = ({ message, isOwn }) => {
                                         opacity: 0.3,
                                     }
                                 }}
+                                aria-label="Audio progress"
                             />
                         </Box>
                         <Typography variant="caption" sx={{ minWidth: 45 }}>
@@ -153,4 +157,4 @@ const MessageBubble = ({ message, isOwn }) => {
     );
 };
 
-export default MessageBubble; 
+export default MessageBubble;

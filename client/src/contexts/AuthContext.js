@@ -27,34 +27,45 @@ export const AuthProvider = ({ children }) => {
         } catch (error) {
             localStorage.removeItem('token');
             delete axios.defaults.headers.common['Authorization'];
+            console.error('Authentication check failed:', error);
         } finally {
             setLoading(false);
         }
     };
 
     const login = async (email, password) => {
-        const response = await axios.post(`${config.API_URL}/api/users/login`, {
-            email,
-            password
-        });
-        const { token, user } = response.data;
-        localStorage.setItem('token', token);
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        setUser(user);
-        return user;
+        try {
+            const response = await axios.post(`${config.API_URL}/api/users/login`, {
+                email,
+                password
+            });
+            const { token, user } = response.data;
+            localStorage.setItem('token', token);
+            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+            setUser(user);
+            return user;
+        } catch (error) {
+            console.error('Login failed:', error);
+            throw error;
+        }
     };
 
     const register = async (username, email, password) => {
-        const response = await axios.post(`${config.API_URL}/api/users/register`, {
-            username,
-            email,
-            password
-        });
-        const { token, user } = response.data;
-        localStorage.setItem('token', token);
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        setUser(user);
-        return user;
+        try {
+            const response = await axios.post(`${config.API_URL}/api/users/register`, {
+                username,
+                email,
+                password
+            });
+            const { token, user } = response.data;
+            localStorage.setItem('token', token);
+            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+            setUser(user);
+            return user;
+        } catch (error) {
+            console.error('Registration failed:', error);
+            throw error;
+        }
     };
 
     const logout = () => {
@@ -76,4 +87,12 @@ export const AuthProvider = ({ children }) => {
             {!loading && children}
         </AuthContext.Provider>
     );
-}; 
+};
+
+
+
+
+
+
+
+

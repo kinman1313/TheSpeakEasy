@@ -64,6 +64,7 @@ export default function Register() {
                             onChange={(e) => setUsername(e.target.value)}
                             required
                             autoComplete="username"
+                            aria-label="username"
                         />
 
                         <TextField
@@ -75,6 +76,7 @@ export default function Register() {
                             onChange={(e) => setEmail(e.target.value)}
                             required
                             autoComplete="email"
+                            aria-label="email"
                         />
 
                         <TextField
@@ -86,6 +88,7 @@ export default function Register() {
                             onChange={(e) => setPassword(e.target.value)}
                             required
                             autoComplete="new-password"
+                            aria-label="password"
                         />
 
                         <TextField
@@ -97,6 +100,7 @@ export default function Register() {
                             onChange={(e) => setConfirmPassword(e.target.value)}
                             required
                             autoComplete="new-password"
+                            aria-label="confirm password"
                         />
 
                         <LoadingButton
@@ -106,6 +110,7 @@ export default function Register() {
                             size="large"
                             loading={loading}
                             sx={{ mt: 3, mb: 2 }}
+                            aria-label="register"
                         >
                             Register
                         </LoadingButton>
@@ -113,7 +118,7 @@ export default function Register() {
                         <Box sx={{ textAlign: 'center' }}>
                             <Typography variant="body2">
                                 Already have an account?{' '}
-                                <Link component={RouterLink} to="/login">
+                                <Link component={RouterLink} to="/login" aria-label="login">
                                     Login
                                 </Link>
                             </Typography>
@@ -123,4 +128,8 @@ export default function Register() {
             </Box>
         </Container>
     );
-} 
+}
+
+
+
+

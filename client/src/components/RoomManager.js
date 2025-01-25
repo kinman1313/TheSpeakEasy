@@ -115,6 +115,7 @@ const RoomManager = ({
                             </InputAdornment>
                         )
                     }}
+                    aria-label="search rooms"
                 />
             </Box>
 
@@ -126,6 +127,7 @@ const RoomManager = ({
                         setSelectedRoom(null);
                         setOpen(true);
                     }}
+                    aria-label="create room"
                 >
                     Create Room
                 </Button>
@@ -150,7 +152,7 @@ const RoomManager = ({
                             }}
                         >
                             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                                <Avatar src={room.avatar?.url}>
+                                <Avatar src={room.avatar?.url} aria-label="room avatar">
                                     {room.name[0].toUpperCase()}
                                 </Avatar>
                                 <Box sx={{ ml: 2, flexGrow: 1 }}>
@@ -160,6 +162,7 @@ const RoomManager = ({
                                             <LockIcon
                                                 fontSize="small"
                                                 sx={{ ml: 1, verticalAlign: 'middle' }}
+                                                aria-label="private room"
                                             />
                                         )}
                                     </Typography>
@@ -180,12 +183,14 @@ const RoomManager = ({
                                             });
                                             setOpen(true);
                                         }}
+                                        aria-label="edit room"
                                     >
                                         <EditIcon />
                                     </IconButton>
                                     <IconButton
                                         onClick={() => onDeleteRoom(room.id)}
                                         color="error"
+                                        aria-label="delete room"
                                     >
                                         <DeleteIcon />
                                     </IconButton>
@@ -199,6 +204,7 @@ const RoomManager = ({
                                         icon={<CategoryIcon />}
                                         label={category}
                                         size="small"
+                                        aria-label={`category ${category}`}
                                     />
                                 ))}
                                 {room.tags.map((tag) => (
@@ -208,6 +214,7 @@ const RoomManager = ({
                                         label={tag}
                                         size="small"
                                         variant="outlined"
+                                        aria-label={`tag ${tag}`}
                                     />
                                 ))}
                             </Box>
@@ -221,8 +228,9 @@ const RoomManager = ({
                 onClose={() => setOpen(false)}
                 maxWidth="md"
                 fullWidth
+                aria-labelledby="room-dialog-title"
             >
-                <DialogTitle>
+                <DialogTitle id="room-dialog-title">
                     {selectedRoom ? 'Edit Room' : 'Create Room'}
                 </DialogTitle>
                 <DialogContent>
@@ -230,9 +238,10 @@ const RoomManager = ({
                         value={tab}
                         onChange={(e, newValue) => setTab(newValue)}
                         sx={{ mb: 2 }}
+                        aria-label="room tabs"
                     >
-                        <Tab label="Details" />
-                        <Tab label="Settings" disabled={!selectedRoom} />
+                        <Tab label="Details" aria-label="details tab" />
+                        <Tab label="Settings" disabled={!selectedRoom} aria-label="settings tab" />
                     </Tabs>
 
                     {tab === 0 ? (
@@ -242,6 +251,7 @@ const RoomManager = ({
                                 fullWidth
                                 value={roomForm.name}
                                 onChange={(e) => setRoomForm({ ...roomForm, name: e.target.value })}
+                                aria-label="room name"
                             />
                             <TextField
                                 label="Description"
@@ -250,6 +260,7 @@ const RoomManager = ({
                                 rows={3}
                                 value={roomForm.description}
                                 onChange={(e) => setRoomForm({ ...roomForm, description: e.target.value })}
+                                aria-label="room description"
                             />
                             <FormControl>
                                 <FormGroup>
@@ -261,6 +272,7 @@ const RoomManager = ({
                                                     ...roomForm,
                                                     type: e.target.checked ? 'private' : 'public'
                                                 })}
+                                                aria-label="private room switch"
                                             />
                                         }
                                         label="Private Room"
@@ -280,6 +292,7 @@ const RoomManager = ({
                                         {...params}
                                         label="Categories"
                                         placeholder="Add categories"
+                                        aria-label="categories"
                                     />
                                 )}
                             />
@@ -292,6 +305,7 @@ const RoomManager = ({
                                     ...roomForm,
                                     tags: e.target.value.split(',').map(tag => tag.trim())
                                 })}
+                                aria-label="tags"
                             />
                         </Box>
                     ) : (
@@ -305,6 +319,7 @@ const RoomManager = ({
                                                 ...settingsForm,
                                                 allowInvites: e.target.checked
                                             })}
+                                            aria-label="allow invites switch"
                                         />
                                     }
                                     label="Allow Invites"
@@ -317,6 +332,7 @@ const RoomManager = ({
                                                 ...settingsForm,
                                                 allowFileSharing: e.target.checked
                                             })}
+                                            aria-label="allow file sharing switch"
                                         />
                                     }
                                     label="Allow File Sharing"
@@ -329,6 +345,7 @@ const RoomManager = ({
                                                 ...settingsForm,
                                                 requireApproval: e.target.checked
                                             })}
+                                            aria-label="require approval switch"
                                         />
                                     }
                                     label="Require Approval for New Members"
@@ -341,6 +358,7 @@ const RoomManager = ({
                                                 ...settingsForm,
                                                 readOnly: e.target.checked
                                             })}
+                                            aria-label="read only switch"
                                         />
                                     }
                                     label="Read Only"
@@ -356,6 +374,7 @@ const RoomManager = ({
                                                     enabled: e.target.checked
                                                 }
                                             })}
+                                            aria-label="slow mode switch"
                                         />
                                     }
                                     label="Slow Mode"
@@ -374,6 +393,7 @@ const RoomManager = ({
                                             delay: parseInt(e.target.value)
                                         }
                                     })}
+                                    aria-label="slow mode delay"
                                 />
                             )}
 
@@ -386,18 +406,20 @@ const RoomManager = ({
                                         ...settingsForm,
                                         maxFileSize: parseInt(e.target.value)
                                     })}
+                                    aria-label="max file size"
                                 />
                             )}
                         </Box>
                     )}
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setOpen(false)}>Cancel</Button>
+                    <Button onClick={() => setOpen(false)} aria-label="cancel">Cancel</Button>
                     {tab === 0 ? (
                         <Button
                             onClick={selectedRoom ? handleEditRoom : handleCreateRoom}
                             variant="contained"
                             disabled={!roomForm.name.trim()}
+                            aria-label={selectedRoom ? 'save changes' : 'create room'}
                         >
                             {selectedRoom ? 'Save Changes' : 'Create'}
                         </Button>
@@ -405,6 +427,7 @@ const RoomManager = ({
                         <Button
                             onClick={handleUpdateSettings}
                             variant="contained"
+                            aria-label="update settings"
                         >
                             Update Settings
                         </Button>
@@ -415,4 +438,9 @@ const RoomManager = ({
     );
 };
 
-export default RoomManager; 
+export default RoomManager;
+
+
+
+
+

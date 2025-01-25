@@ -140,12 +140,14 @@ const FileUpload = ({ onUpload, maxSize = 10 * 1024 * 1024, allowedTypes = ['ima
                     onChange={handleFileSelect}
                     style={{ display: 'none' }}
                     accept={allowedTypes.join(',')}
+                    aria-label="file input"
                 />
 
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                     <IconButton
                         onClick={() => fileInputRef.current.click()}
                         disabled={uploading}
+                        aria-label="attach file"
                     >
                         <AttachFileIcon />
                     </IconButton>
@@ -174,6 +176,7 @@ const FileUpload = ({ onUpload, maxSize = 10 * 1024 * 1024, allowedTypes = ['ima
                                             key={index}
                                             button={file.type.startsWith('image/')}
                                             onClick={() => file.type.startsWith('image/') && handlePreview(file)}
+                                            aria-label={`file ${file.name}`}
                                         >
                                             <ListItemIcon>
                                                 {getFileIcon(file.type)}
@@ -187,6 +190,7 @@ const FileUpload = ({ onUpload, maxSize = 10 * 1024 * 1024, allowedTypes = ['ima
                                                     edge="end"
                                                     onClick={() => handleRemoveFile(index)}
                                                     disabled={uploading}
+                                                    aria-label="remove file"
                                                 >
                                                     <CloseIcon />
                                                 </IconButton>
@@ -201,6 +205,7 @@ const FileUpload = ({ onUpload, maxSize = 10 * 1024 * 1024, allowedTypes = ['ima
                                             variant="determinate"
                                             value={progress}
                                             sx={{ mt: 1 }}
+                                            aria-label="upload progress"
                                         />
                                     </Box>
                                 )}
@@ -211,6 +216,7 @@ const FileUpload = ({ onUpload, maxSize = 10 * 1024 * 1024, allowedTypes = ['ima
                                         startIcon={<CloudUploadIcon />}
                                         onClick={handleUpload}
                                         disabled={uploading}
+                                        aria-label="upload files"
                                     >
                                         Upload
                                     </Button>
@@ -226,12 +232,14 @@ const FileUpload = ({ onUpload, maxSize = 10 * 1024 * 1024, allowedTypes = ['ima
                 onClose={() => setPreviewOpen(false)}
                 maxWidth="md"
                 fullWidth
+                aria-labelledby="preview-dialog-title"
             >
-                <DialogTitle>
+                <DialogTitle id="preview-dialog-title">
                     Preview
                     <IconButton
                         onClick={() => setPreviewOpen(false)}
                         sx={{ position: 'absolute', right: 8, top: 8 }}
+                        aria-label="close preview"
                     >
                         <CloseIcon />
                     </IconButton>
@@ -254,4 +262,4 @@ const FileUpload = ({ onUpload, maxSize = 10 * 1024 * 1024, allowedTypes = ['ima
     );
 };
 
-export default FileUpload; 
+export default FileUpload;

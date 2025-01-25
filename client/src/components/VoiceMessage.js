@@ -160,6 +160,7 @@ const VoiceMessage = ({ onSend, maxDuration = 300, onClose }) => {
                                         color="primary"
                                         onClick={startRecording}
                                         sx={{ width: 56, height: 56 }}
+                                        aria-label="start recording"
                                     >
                                         <MicIcon />
                                     </IconButton>
@@ -172,6 +173,7 @@ const VoiceMessage = ({ onSend, maxDuration = 300, onClose }) => {
                                         color="error"
                                         onClick={stopRecording}
                                         sx={{ width: 56, height: 56 }}
+                                        aria-label="stop recording"
                                     >
                                         <StopIcon />
                                     </IconButton>
@@ -180,7 +182,7 @@ const VoiceMessage = ({ onSend, maxDuration = 300, onClose }) => {
 
                             {audioUrl && (
                                 <>
-                                    <IconButton onClick={togglePlayback}>
+                                    <IconButton onClick={togglePlayback} aria-label={isPlaying ? 'pause' : 'play'}>
                                         {isPlaying ? <PauseIcon /> : <PlayIcon />}
                                     </IconButton>
                                     <Box sx={{ width: 200 }}>
@@ -191,15 +193,16 @@ const VoiceMessage = ({ onSend, maxDuration = 300, onClose }) => {
                                                 audioRef.current.currentTime = value;
                                                 setCurrentTime(value);
                                             }}
+                                            aria-label="audio progress"
                                         />
                                     </Box>
                                     <Typography variant="caption">
                                         {formatTime(currentTime)} / {formatTime(duration)}
                                     </Typography>
-                                    <IconButton color="error" onClick={() => setAudioUrl(null)}>
+                                    <IconButton color="error" onClick={() => setAudioUrl(null)} aria-label="delete">
                                         <DeleteIcon />
                                     </IconButton>
-                                    <IconButton color="primary" onClick={handleSend}>
+                                    <IconButton color="primary" onClick={handleSend} aria-label="send">
                                         <SendIcon />
                                     </IconButton>
                                 </>
@@ -212,6 +215,7 @@ const VoiceMessage = ({ onSend, maxDuration = 300, onClose }) => {
                                     variant="determinate"
                                     value={(duration / maxDuration) * 100}
                                     size={24}
+                                    aria-label="recording progress"
                                 />
                                 <Typography variant="body2">
                                     {formatTime(duration)} / {formatTime(maxDuration)}
@@ -225,4 +229,5 @@ const VoiceMessage = ({ onSend, maxDuration = 300, onClose }) => {
     );
 };
 
-export default VoiceMessage; 
+export default VoiceMessage;
+

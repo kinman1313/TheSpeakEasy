@@ -84,15 +84,15 @@ const MessageThread = ({
                 }}
             >
                 <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
-                    <Avatar src={message?.user?.avatar?.url}>
+                    <Avatar src={message?.user?.avatar?.url} aria-label="user avatar">
                         {message?.user?.username ? message.user.username[0].toUpperCase() : '?'}
                     </Avatar>
                     <Box sx={{ flexGrow: 1 }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                            <Typography variant="subtitle2">
+                            <Typography variant="subtitle2" aria-label="username">
                                 {message?.user?.username || 'Unknown User'}
                             </Typography>
-                            <Typography variant="caption" color="text.secondary">
+                            <Typography variant="caption" color="text.secondary" aria-label="timestamp">
                                 {message?.timestamp ? formatTimestamp(message.timestamp) : 'Unknown time'}
                             </Typography>
                         </Box>
@@ -114,6 +114,7 @@ const MessageThread = ({
                                 startIcon={<ReplyIcon />}
                                 onClick={() => setShowReplyInput(!showReplyInput)}
                                 sx={{ mr: 2 }}
+                                aria-label="reply"
                             >
                                 Reply
                             </Button>
@@ -122,6 +123,7 @@ const MessageThread = ({
                                     size="small"
                                     startIcon={expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                                     onClick={() => setExpanded(!expanded)}
+                                    aria-label="toggle replies"
                                 >
                                     {replies.length} {replies.length === 1 ? 'reply' : 'replies'}
                                 </Button>
@@ -141,6 +143,7 @@ const MessageThread = ({
                                 <Avatar
                                     src={currentUser?.profile?.avatar?.url}
                                     sx={{ width: 32, height: 32 }}
+                                    aria-label="current user avatar"
                                 >
                                     {currentUser?.username ? currentUser.username[0].toUpperCase() : '?'}
                                 </Avatar>
@@ -160,16 +163,19 @@ const MessageThread = ({
                                                     onClick={handleReply}
                                                     disabled={!replyText.trim()}
                                                     color="primary"
+                                                    aria-label="send reply"
                                                 >
                                                     <SendIcon />
                                                 </IconButton>
                                             )
                                         }}
+                                        aria-label="reply input"
                                     />
                                 </Box>
                                 <IconButton
                                     size="small"
                                     onClick={() => setShowReplyInput(false)}
+                                    aria-label="close reply input"
                                 >
                                     <CloseIcon />
                                 </IconButton>
@@ -187,11 +193,13 @@ const MessageThread = ({
                                         <ListItem
                                             alignItems="flex-start"
                                             sx={{ px: 0 }}
+                                            aria-label="reply item"
                                         >
                                             <ListItemAvatar>
                                                 <Avatar
                                                     src={reply?.user?.avatar?.url}
                                                     sx={{ width: 32, height: 32 }}
+                                                    aria-label="reply user avatar"
                                                 >
                                                     {reply?.user?.username ? reply.user.username[0].toUpperCase() : '?'}
                                                 </Avatar>
@@ -199,10 +207,10 @@ const MessageThread = ({
                                             <ListItemText
                                                 primary={
                                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                        <Typography variant="subtitle2">
+                                                        <Typography variant="subtitle2" aria-label="reply username">
                                                             {reply?.user?.username || 'Unknown User'}
                                                         </Typography>
-                                                        <Typography variant="caption" color="text.secondary">
+                                                        <Typography variant="caption" color="text.secondary" aria-label="reply timestamp">
                                                             {reply?.timestamp ? formatTimestamp(reply.timestamp) : 'Unknown time'}
                                                         </Typography>
                                                     </Box>
@@ -222,6 +230,7 @@ const MessageThread = ({
                                     onClick={onLoadMore}
                                     disabled={isLoadingReplies}
                                     sx={{ mt: 1 }}
+                                    aria-label="load more replies"
                                 >
                                     {isLoadingReplies ? 'Loading...' : 'Load more replies'}
                                 </Button>
@@ -234,4 +243,9 @@ const MessageThread = ({
     );
 };
 
-export default MessageThread; 
+export default MessageThread;
+
+
+
+
+

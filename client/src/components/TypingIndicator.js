@@ -12,7 +12,7 @@ const TypingIndicator = ({ users }) => {
             : `${users[0]} and ${users.length - 1} others are typing...`;
 
     return (
-        <Box sx={{ p: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Box sx={{ p: 1, display: 'flex', alignItems: 'center', gap: 1 }} aria-label="typing indicator">
             <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
@@ -42,4 +42,6 @@ const TypingIndicator = ({ users }) => {
     );
 };
 
-export default TypingIndicator; 
+export default TypingIndicator;
+
+

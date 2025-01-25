@@ -71,6 +71,7 @@ export default function ResetPassword() {
                             autoFocus
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
+                            aria-label="email address"
                         />
 
                         <LoadingButton
@@ -79,12 +80,13 @@ export default function ResetPassword() {
                             variant="contained"
                             sx={{ mt: 3, mb: 2 }}
                             loading={loading}
+                            aria-label="reset password"
                         >
                             Reset Password
                         </LoadingButton>
 
                         <Box sx={{ textAlign: 'center' }}>
-                            <Link component={RouterLink} to="/login" variant="body2">
+                            <Link component={RouterLink} to="/login" variant="body2" aria-label="back to login">
                                 Back to Login
                             </Link>
                         </Box>
@@ -93,4 +95,9 @@ export default function ResetPassword() {
             </Box>
         </Container>
     );
-} 
+}
+
+
+
+
+

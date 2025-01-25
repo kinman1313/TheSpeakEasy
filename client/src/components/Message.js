@@ -45,11 +45,12 @@ const Message = ({ message, isCurrentUser }) => {
                             borderRadius: 1,
                             mt: message.text ? 1 : 0
                         }}
+                        aria-label="gif message"
                     />
                 );
             default:
                 return (
-                    <Typography variant="body1">
+                    <Typography variant="body1" aria-label="text message">
                         {message.content}
                     </Typography>
                 );
@@ -73,6 +74,7 @@ const Message = ({ message, isCurrentUser }) => {
                     height: 32,
                     bgcolor: isCurrentUser ? 'primary.main' : 'secondary.main'
                 }}
+                aria-label="user avatar"
             >
                 {message.username?.[0]?.toUpperCase()}
             </Avatar>
@@ -86,6 +88,7 @@ const Message = ({ message, isCurrentUser }) => {
                             display: 'block',
                             color: 'text.secondary'
                         }}
+                        aria-label="username"
                     >
                         {message.username}
                     </Typography>
@@ -98,4 +101,6 @@ const Message = ({ message, isCurrentUser }) => {
     );
 };
 
-export default Message; 
+export default Message;
+
+

@@ -120,6 +120,7 @@ const UserProfile = ({
                                 boxShadow: 1,
                                 '&:hover': { bgcolor: 'background.paper' }
                             }}
+                            aria-label="edit avatar"
                         >
                             <EditIcon fontSize="small" />
                         </IconButton>
@@ -150,6 +151,7 @@ const UserProfile = ({
                     startIcon={editMode ? null : <EditIcon />}
                     onClick={() => setEditMode(!editMode)}
                     sx={{ mt: 2 }}
+                    aria-label={editMode ? 'cancel editing' : 'edit profile'}
                 >
                     {editMode ? 'Cancel Editing' : 'Edit Profile'}
                 </Button>
@@ -161,8 +163,8 @@ const UserProfile = ({
                     onChange={(_, newValue) => setActiveTab(newValue)}
                     variant="fullWidth"
                 >
-                    <Tab label="Profile" />
-                    <Tab label="Preferences" />
+                    <Tab label="Profile" aria-label="profile tab" />
+                    <Tab label="Preferences" aria-label="preferences tab" />
                 </Tabs>
             </Box>
 
@@ -182,12 +184,14 @@ const UserProfile = ({
                                     label="Bio"
                                     value={profile.bio}
                                     onChange={(e) => setProfile(prev => ({ ...prev, bio: e.target.value }))}
+                                    aria-label="bio"
                                 />
                                 <TextField
                                     fullWidth
                                     label="Location"
                                     value={profile.location}
                                     onChange={(e) => setProfile(prev => ({ ...prev, location: e.target.value }))}
+                                    aria-label="location"
                                 />
                                 <TextField
                                     fullWidth
@@ -197,6 +201,7 @@ const UserProfile = ({
                                     InputProps={{
                                         startAdornment: <GitHubIcon sx={{ mr: 1 }} />
                                     }}
+                                    aria-label="github"
                                 />
                                 <TextField
                                     fullWidth
@@ -206,6 +211,7 @@ const UserProfile = ({
                                     InputProps={{
                                         startAdornment: <TwitterIcon sx={{ mr: 1 }} />
                                     }}
+                                    aria-label="twitter"
                                 />
                                 <TextField
                                     fullWidth
@@ -215,6 +221,7 @@ const UserProfile = ({
                                     InputProps={{
                                         startAdornment: <LinkedInIcon sx={{ mr: 1 }} />
                                     }}
+                                    aria-label="linkedin"
                                 />
                                 <TextField
                                     fullWidth
@@ -224,11 +231,13 @@ const UserProfile = ({
                                     InputProps={{
                                         startAdornment: <WebsiteIcon sx={{ mr: 1 }} />
                                     }}
+                                    aria-label="website"
                                 />
                                 <Button
                                     variant="contained"
                                     onClick={handleSaveProfile}
                                     sx={{ mt: 2 }}
+                                    aria-label="save profile"
                                 >
                                     Save Changes
                                 </Button>
@@ -255,6 +264,7 @@ const UserProfile = ({
                                         href={value}
                                         target="_blank"
                                         rel="noopener noreferrer"
+                                        aria-label={key}
                                     >
                                         <ListItemIcon>
                                             <Icon />
@@ -290,6 +300,7 @@ const UserProfile = ({
                                     SelectProps={{
                                         native: true
                                     }}
+                                    aria-label="theme"
                                 >
                                     <option value="light">Light</option>
                                     <option value="dark">Dark</option>
@@ -313,6 +324,7 @@ const UserProfile = ({
                                     SelectProps={{
                                         native: true
                                     }}
+                                    aria-label="language"
                                 >
                                     <option value="en">English</option>
                                     <option value="es">Spanish</option>
@@ -331,6 +343,7 @@ const UserProfile = ({
                                 <Switch
                                     checked={preferences.notifications}
                                     onChange={(e) => setPreferences(prev => ({ ...prev, notifications: e.target.checked }))}
+                                    aria-label="notifications"
                                 />
                             </ListItem>
 
@@ -350,6 +363,7 @@ const UserProfile = ({
                                     SelectProps={{
                                         native: true
                                     }}
+                                    aria-label="message style"
                                 >
                                     <option value="modern">Modern</option>
                                     <option value="classic">Classic</option>
@@ -370,6 +384,7 @@ const UserProfile = ({
                                     value={preferences.messageColor}
                                     onChange={(e) => setPreferences(prev => ({ ...prev, messageColor: e.target.value }))}
                                     style={{ width: 40, height: 40, padding: 0, border: 'none' }}
+                                    aria-label="message color"
                                 />
                             </ListItem>
                         </List>
@@ -379,6 +394,7 @@ const UserProfile = ({
                                 fullWidth
                                 variant="contained"
                                 onClick={handleSavePreferences}
+                                aria-label="save preferences"
                             >
                                 Save Preferences
                             </Button>
@@ -392,8 +408,9 @@ const UserProfile = ({
                 onClose={() => setAvatarDialogOpen(false)}
                 maxWidth="xs"
                 fullWidth
+                aria-labelledby="avatar-dialog-title"
             >
-                <DialogTitle>Update Profile Picture</DialogTitle>
+                <DialogTitle id="avatar-dialog-title">Update Profile Picture</DialogTitle>
                 <DialogContent>
                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, pt: 2 }}>
                         <Avatar
@@ -405,6 +422,7 @@ const UserProfile = ({
                         <Button
                             variant="outlined"
                             component="label"
+                            aria-label="choose file"
                         >
                             Choose File
                             <input
@@ -417,11 +435,12 @@ const UserProfile = ({
                     </Box>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setAvatarDialogOpen(false)}>Cancel</Button>
+                    <Button onClick={() => setAvatarDialogOpen(false)} aria-label="cancel">Cancel</Button>
                     <Button
                         onClick={handleSaveAvatar}
                         disabled={!newAvatar}
                         variant="contained"
+                        aria-label="save avatar"
                     >
                         Save
                     </Button>
@@ -431,4 +450,6 @@ const UserProfile = ({
     );
 };
 
-export default UserProfile; 
+export default UserProfile;
+
+

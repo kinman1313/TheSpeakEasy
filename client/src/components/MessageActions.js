@@ -48,14 +48,22 @@ const MessageActions = ({ message, onEdit, onDelete, onReply }) => {
         handleClose();
     };
 
-    const handleEditSubmit = () => {
-        onEdit(editedText);
-        setEditDialogOpen(false);
+    const handleEditSubmit = async () => {
+        try {
+            await onEdit(editedText);
+            setEditDialogOpen(false);
+        } catch (error) {
+            console.error('Edit error:', error);
+        }
     };
 
-    const handleDeleteConfirm = () => {
-        onDelete();
-        setDeleteDialogOpen(false);
+    const handleDeleteConfirm = async () => {
+        try {
+            await onDelete();
+            setDeleteDialogOpen(false);
+        } catch (error) {
+            console.error('Delete error:', error);
+        }
     };
 
     const handleReplyClick = () => {
@@ -69,6 +77,7 @@ const MessageActions = ({ message, onEdit, onDelete, onReply }) => {
                 size="small"
                 onClick={handleClick}
                 sx={{ opacity: 0.7, '&:hover': { opacity: 1 } }}
+                aria-label="message actions"
             >
                 <MoreVertIcon fontSize="small" />
             </IconButton>
@@ -84,17 +93,17 @@ const MessageActions = ({ message, onEdit, onDelete, onReply }) => {
                     }
                 }}
             >
-                <MenuItem onClick={handleReplyClick}>
+                <MenuItem onClick={handleReplyClick} aria-label="reply">
                     <ReplyIcon fontSize="small" sx={{ mr: 1 }} />
                     Reply
                 </MenuItem>
                 {isOwner && (
                     <>
-                        <MenuItem onClick={handleEditClick}>
+                        <MenuItem onClick={handleEditClick} aria-label="edit">
                             <EditIcon fontSize="small" sx={{ mr: 1 }} />
                             Edit
                         </MenuItem>
-                        <MenuItem onClick={handleDeleteClick} sx={{ color: 'error.main' }}>
+                        <MenuItem onClick={handleDeleteClick} sx={{ color: 'error.main' }} aria-label="delete">
                             <DeleteIcon fontSize="small" sx={{ mr: 1 }} />
                             Delete
                         </MenuItem>
@@ -108,8 +117,9 @@ const MessageActions = ({ message, onEdit, onDelete, onReply }) => {
                 onClose={() => setEditDialogOpen(false)}
                 maxWidth="sm"
                 fullWidth
+                aria-labelledby="edit-dialog-title"
             >
-                <DialogTitle>Edit Message</DialogTitle>
+                <DialogTitle id="edit-dialog-title">Edit Message</DialogTitle>
                 <DialogContent>
                     <TextField
                         fullWidth
@@ -119,6 +129,7 @@ const MessageActions = ({ message, onEdit, onDelete, onReply }) => {
                         onChange={(e) => setEditedText(e.target.value)}
                         variant="outlined"
                         margin="dense"
+                        aria-label="edit message"
                     />
                 </DialogContent>
                 <DialogActions>
@@ -139,8 +150,9 @@ const MessageActions = ({ message, onEdit, onDelete, onReply }) => {
                 onClose={() => setDeleteDialogOpen(false)}
                 maxWidth="xs"
                 fullWidth
+                aria-labelledby="delete-dialog-title"
             >
-                <DialogTitle>Delete Message</DialogTitle>
+                <DialogTitle id="delete-dialog-title">Delete Message</DialogTitle>
                 <DialogContent>
                     <Typography>
                         Are you sure you want to delete this message? This action cannot be undone.
@@ -161,4 +173,5 @@ const MessageActions = ({ message, onEdit, onDelete, onReply }) => {
     );
 };
 
-export default MessageActions; 
+export default MessageActions;
+

@@ -52,14 +52,16 @@ const ChatInput = ({ onSendMessage }) => {
                             borderRadius: 2
                         }
                     }}
+                    aria-label="message input"
                 />
                 <IconButton
                     color="primary"
                     onClick={(e) => setGifAnchorEl(e.currentTarget)}
+                    aria-label="open gif picker"
                 >
                     <GifIcon />
                 </IconButton>
-                <IconButton type="submit" color="primary" disabled={!message.trim()}>
+                <IconButton type="submit" color="primary" disabled={!message.trim()} aria-label="send message">
                     <SendIcon />
                 </IconButton>
             </form>
@@ -89,4 +91,6 @@ const ChatInput = ({ onSendMessage }) => {
     );
 };
 
-export default ChatInput; 
+export default ChatInput;
+
+

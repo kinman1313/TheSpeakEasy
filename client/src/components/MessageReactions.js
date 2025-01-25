@@ -8,7 +8,6 @@ import {
     Typography,
     Chip,
     Avatar,
-    Badge,
     Divider,
     List,
     ListItem,
@@ -21,7 +20,7 @@ import {
     EmojiEmotions as EmojiIcon,
     People as PeopleIcon
 } from '@mui/icons-material';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import data from '@emoji-mart/data';
 import Picker from '@emoji-mart/react';
 
@@ -125,6 +124,7 @@ const MessageReactions = ({
                                         : 'action.hover'
                                 }
                             }}
+                            aria-label={`reaction ${emoji}`}
                         />
                     </motion.div>
                 ))}
@@ -139,6 +139,7 @@ const MessageReactions = ({
                                 bgcolor: 'action.hover'
                             }
                         }}
+                        aria-label="add reaction"
                     >
                         <AddReactionIcon fontSize="small" />
                     </IconButton>
@@ -167,7 +168,7 @@ const MessageReactions = ({
                 {showPicker ? (
                     <Box>
                         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
-                            <IconButton size="small" onClick={() => setShowPicker(false)}>
+                            <IconButton size="small" onClick={() => setShowPicker(false)} aria-label="close picker">
                                 <EmojiIcon />
                             </IconButton>
                         </Box>
@@ -185,6 +186,7 @@ const MessageReactions = ({
                                 key={emoji}
                                 size="small"
                                 onClick={() => handleQuickReaction(emoji)}
+                                aria-label={`quick reaction ${emoji}`}
                             >
                                 {emoji}
                             </IconButton>
@@ -193,6 +195,7 @@ const MessageReactions = ({
                         <IconButton
                             size="small"
                             onClick={() => setShowPicker(true)}
+                            aria-label="open picker"
                         >
                             <EmojiIcon />
                         </IconButton>
@@ -250,4 +253,6 @@ const MessageReactions = ({
     );
 };
 
-export default MessageReactions; 
+export default MessageReactions;
+
+

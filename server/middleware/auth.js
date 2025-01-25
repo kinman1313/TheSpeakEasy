@@ -5,10 +5,10 @@ const auth = async (req, res, next) => {
     try {
         const token = req.header('Authorization').replace('Bearer ', '');
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const user = await User.findOne({ _id: decoded.userId });
+        const user = await User.findOne({ _id: decoded._id, 'tokens.token': token });
 
         if (!user) {
-            throw new Error();
+            throw new Error('User not found');
         }
 
         req.token = token;
@@ -19,4 +19,16 @@ const auth = async (req, res, next) => {
     }
 };
 
-module.exports = auth; 
+module.exports = auth;
+
+
+
+
+
+
+
+
+
+
+
+
