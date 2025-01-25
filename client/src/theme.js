@@ -73,18 +73,6 @@ const baseTheme = {
             light: '#B47CFF',
             dark: '#3F1DCB',
         },
-<<<<<<< HEAD
-        h6: {
-            fontWeight: 600
-        }
-    }
-});
-
-
-
-
-
-=======
         secondary: {
             main: '#FF4081',
             light: '#FF79B0',
@@ -132,4 +120,3 @@ const darkTheme = {
 };
 
 export { baseTheme, darkTheme };
->>>>>>> d031dbd8773ab07cd257f9851181f0649c627a54

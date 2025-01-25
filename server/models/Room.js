@@ -93,18 +93,5 @@ roomSchema.methods.isMember = function (userId) {
 };
 
 const Room = mongoose.model('Room', roomSchema);
-<<<<<<< HEAD
+
 module.exports = Room;
-
-
-
-
-
-
-
-
-
-=======
-
-module.exports = Room; 
->>>>>>> d031dbd8773ab07cd257f9851181f0649c627a54

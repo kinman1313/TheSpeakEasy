@@ -136,15 +136,3 @@ export const ThemeProvider = ({ children }) => {
 };
 
 export default ThemeContext;
-
-
-<<<<<<< HEAD
-
-
-
-
-
-
-
-=======
->>>>>>> d031dbd8773ab07cd257f9851181f0649c627a54

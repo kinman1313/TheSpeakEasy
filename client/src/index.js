@@ -2,10 +2,12 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
+import { ThemeProvider } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import theme from './theme'; // Assuming you have a theme.js file
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
-<<<<<<< HEAD
     <React.StrictMode>
         <ThemeProvider theme={theme}>
             <CssBaseline />
@@ -13,14 +15,3 @@ root.render(
         </ThemeProvider>
     </React.StrictMode>
 );
-
-
-
-
-
-=======
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
->>>>>>> d031dbd8773ab07cd257f9851181f0649c627a54

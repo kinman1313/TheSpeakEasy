@@ -99,19 +99,6 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (email, password) => {
         try {
-<<<<<<< HEAD
-            const response = await axios.post(`${config.API_URL}/api/users/login`, {
-                email,
-                password
-            });
-            const { token, user } = response.data;
-            localStorage.setItem('token', token);
-            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-            setUser(user);
-            return user;
-        } catch (error) {
-            console.error('Login failed:', error);
-=======
             console.log('Attempting login to:', `${config.API_URL}/api/users/login`);
 
             // Add retry logic
@@ -150,7 +137,6 @@ export const AuthProvider = ({ children }) => {
             if (error.response?.status === 401) {
                 throw new Error('Invalid email or password');
             }
->>>>>>> d031dbd8773ab07cd257f9851181f0649c627a54
             throw error;
         }
     };
@@ -164,20 +150,13 @@ export const AuthProvider = ({ children }) => {
             });
             const { token, user } = response.data;
             localStorage.setItem('token', token);
-<<<<<<< HEAD
-            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-=======
->>>>>>> d031dbd8773ab07cd257f9851181f0649c627a54
             setUser(user);
             return user;
         } catch (error) {
             console.error('Registration failed:', error);
-<<<<<<< HEAD
-=======
             if (error.response?.status === 409) {
                 throw new Error('Email already exists');
             }
->>>>>>> d031dbd8773ab07cd257f9851181f0649c627a54
             throw error;
         }
     };
@@ -203,13 +182,4 @@ export const AuthProvider = ({ children }) => {
     );
 };
 
-<<<<<<< HEAD
-
-
-
-
-
-
-
-=======
->>>>>>> d031dbd8773ab07cd257f9851181f0649c627a54
+export default AuthContext;

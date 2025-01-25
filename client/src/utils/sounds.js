@@ -27,18 +27,6 @@ export const playSound = (type, variant = 'default', volume = 0.5) => {
         return;
     }
 
-<<<<<<< HEAD
-    if (sound.paused) {
-        sound.currentTime = 0;
-        sound.play().catch(err => console.log('Sound play failed:', err));
-    }
-};
-
-
-
-
-
-=======
     const sound = new Howl({
         src: [soundFile],
         volume
@@ -46,4 +34,3 @@ export const playSound = (type, variant = 'default', volume = 0.5) => {
 
     sound.play();
 };
->>>>>>> d031dbd8773ab07cd257f9851181f0649c627a54

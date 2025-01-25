@@ -3,14 +3,17 @@ import io from 'socket.io-client';
 import { config } from '../config';
 import { useAuth } from './AuthContext';
 
+// Create SocketContext
 const SocketContext = createContext();
 
+// SocketProvider component
 export function SocketProvider({ children }) {
     const [socket, setSocket] = useState(null);
     const [isConnected, setIsConnected] = useState(false);
     const { user } = useAuth();
 
-    const handleSocketEvents = (newSocket) => {
+    // Handle socket events
+    const handleSocketEvents = useCallback((newSocket) => {
         newSocket.on('connect', () => {
             console.log('Socket connected:', newSocket.id);
             setIsConnected(true);
@@ -28,7 +31,6 @@ export function SocketProvider({ children }) {
 
         newSocket.on('error', (error) => {
             console.error('Socket error:', error);
-            // Don't disconnect on error, let reconnection handle it
         });
 
         newSocket.on('reconnect', (attemptNumber) => {
@@ -42,17 +44,17 @@ export function SocketProvider({ children }) {
 
         newSocket.on('reconnect_failed', () => {
             console.error('Socket reconnection failed');
-            // Attempt to create a new socket connection
-            setTimeout(connectSocket, 5000);
+            setTimeout(connectSocket, 5000); // Retry connection after 5 seconds
         });
-    };
+    }, []);
 
+    // Connect to the socket
     const connectSocket = useCallback(() => {
         if (!user?.token) return;
 
-        const newSocket = io(config.API_URL, {
+        const newSocket = io(config.SOCKET_URL, {
             auth: {
-                token: user.token
+                token: user.token,
             },
             transports: ['websocket'],
             reconnection: true,
@@ -63,62 +65,69 @@ export function SocketProvider({ children }) {
         });
 
         handleSocketEvents(newSocket);
-
         setSocket(newSocket);
 
+        // Cleanup function
         return () => {
             if (newSocket) {
                 newSocket.disconnect();
             }
         };
-    }, [user?.token]);
+    }, [user?.token, handleSocketEvents]);
 
+    // Establish socket connection on mount or token change
     useEffect(() => {
         const cleanup = connectSocket();
         return cleanup;
     }, [connectSocket]);
 
-    const joinRoom = useCallback((roomId) => {
-        if (!socket?.connected || !roomId) return;
+    // Join a room
+    const joinRoom = useCallback(
+        (roomId) => {
+            if (!socket?.connected || !roomId) return;
 
-        return new Promise((resolve, reject) => {
-            socket.emit('join_room', { roomId }, (response) => {
-                if (response?.error) {
-                    console.error('Failed to join room:', response.error);
-                    reject(response.error);
-                } else {
-                    console.log('Successfully joined room:', roomId);
+            return new Promise((resolve, reject) => {
+                socket.emit('join_room', { roomId }, (response) => {
+                    if (response?.error) {
+                        console.error('Failed to join room:', response.error);
+                        reject(response.error);
+                    } else {
+                        console.log('Successfully joined room:', roomId);
+                        resolve(response);
+                    }
+                });
+            });
+        },
+        [socket]
+    );
+
+    // Leave a room
+    const leaveRoom = useCallback(
+        (roomId) => {
+            if (!socket?.connected || !roomId) return;
+
+            return new Promise((resolve) => {
+                socket.emit('leave_room', { roomId }, (response) => {
+                    console.log('Left room:', roomId);
                     resolve(response);
-                }
+                });
             });
-        });
-    }, [socket]);
+        },
+        [socket]
+    );
 
-    const leaveRoom = useCallback((roomId) => {
-        if (!socket?.connected || !roomId) return;
-
-        return new Promise((resolve) => {
-            socket.emit('leave_room', { roomId }, (response) => {
-                console.log('Left room:', roomId);
-                resolve(response);
-            });
-        });
-    }, [socket]);
-
+    // Context value
     const value = {
         socket,
         isConnected,
         joinRoom,
-        leaveRoom
+        leaveRoom,
     };
 
-    return (
-        <SocketContext.Provider value={value}>
-            {children}
-        </SocketContext.Provider>
-    );
+    return <SocketContext.Provider value={value}>{children}</SocketContext.Provider>;
 }
 
+// Custom hook to use SocketContext
 export function useSocket() {
     const context = useContext(SocketContext);
     if (!context) {
@@ -126,4 +135,3 @@ export function useSocket() {
     }
     return context;
 }
-

@@ -8,6 +8,7 @@ import { ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
 import AppRoutes from './routes/AppRoutes';
 import { CssBaseline } from '@mui/material';
 
+// Wrap all providers into a single component
 const Providers = ({ children }) => (
     <AuthProvider>
         <SocketProvider>
@@ -18,6 +19,7 @@ const Providers = ({ children }) => (
     </AuthProvider>
 );
 
+// ThemedApp component to apply the theme
 const ThemedApp = () => {
     const { theme } = useTheme();
 
@@ -33,6 +35,7 @@ const ThemedApp = () => {
     );
 };
 
+// Main App component
 function App() {
     return (
         <ThemeProvider>
@@ -41,14 +44,4 @@ function App() {
     );
 }
 
-<<<<<<< HEAD
 export default App;
-
-
-
-
-
-
-=======
-export default App;
->>>>>>> d031dbd8773ab07cd257f9851181f0649c627a54

@@ -28,11 +28,7 @@ const TypingIndicator = ({ users }) => {
     if (!users.size) return null;
 
     return (
-<<<<<<< HEAD
-        <Box sx={{ p: 1, display: 'flex', alignItems: 'center', gap: 1 }} aria-label="typing indicator">
-=======
         <AnimatePresence>
->>>>>>> d031dbd8773ab07cd257f9851181f0649c627a54
             <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -61,14 +57,8 @@ const TypingIndicator = ({ users }) => {
     );
 };
 
-<<<<<<< HEAD
-export default TypingIndicator;
-
-
-=======
 TypingIndicator.propTypes = {
     users: PropTypes.instanceOf(Set).isRequired,
 };
 
 export default TypingIndicator;
->>>>>>> d031dbd8773ab07cd257f9851181f0649c627a54
