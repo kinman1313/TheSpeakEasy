@@ -1,10 +1,12 @@
+import theme from './theme'; // Assuming you have a theme.js file
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import theme from './theme'; // Assuming you have a theme.js file
+import MediaRecorder from 'audio-recorder-polyfill';
+window.MediaRecorder = MediaRecorder;
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

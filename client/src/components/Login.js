@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import {
@@ -8,8 +8,7 @@ import {
     Typography,
     Link,
     Box,
-    Alert,
-    CircularProgress
+    Alert
 } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
 import { config } from '../config';
@@ -23,7 +22,7 @@ export default function Login() {
     const { login } = useAuth();
     const navigate = useNavigate();
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = useCallback(async (e) => {
         e.preventDefault();
         setError('');
         setLoading(true);
@@ -57,7 +56,7 @@ export default function Login() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [email, password, retryCount, login, navigate]);
 
     return (
         <Container maxWidth="sm">
@@ -86,12 +85,8 @@ export default function Login() {
                             onChange={(e) => setEmail(e.target.value)}
                             required
                             autoComplete="email"
-<<<<<<< HEAD
-                            aria-label="email"
-=======
                             disabled={loading}
                             error={!!error && !error.includes('Retrying')}
->>>>>>> d031dbd8773ab07cd257f9851181f0649c627a54
                         />
 
                         <TextField
@@ -103,12 +98,8 @@ export default function Login() {
                             onChange={(e) => setPassword(e.target.value)}
                             required
                             autoComplete="current-password"
-<<<<<<< HEAD
-                            aria-label="password"
-=======
                             disabled={loading}
                             error={!!error && !error.includes('Retrying')}
->>>>>>> d031dbd8773ab07cd257f9851181f0649c627a54
                         />
 
                         <LoadingButton
@@ -128,10 +119,10 @@ export default function Login() {
                         </LoadingButton>
 
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Link component={RouterLink} to="/register" variant="body2" aria-label="register">
+                            <Link component={RouterLink} to="/register" variant="body2">
                                 {"Don't have an account? Sign Up"}
                             </Link>
-                            <Link component={RouterLink} to="/reset-password" variant="body2" aria-label="reset password">
+                            <Link component={RouterLink} to="/reset-password" variant="body2">
                                 {"Forgot Password?"}
                             </Link>
                         </Box>
@@ -140,4 +131,4 @@ export default function Login() {
             </Box>
         </Container>
     );
-} 
+}

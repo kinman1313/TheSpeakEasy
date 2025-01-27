@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+/* eslint-disable no-unused-vars */
+import React, { useState, useEffect } from 'react';
 import {
     Box,
     Paper,
@@ -11,15 +12,14 @@ import {
     DialogTitle,
     DialogContent,
     DialogActions,
-    Chip,
     Divider,
     List,
     ListItem,
     ListItemIcon,
     ListItemText,
     ListItemButton,
-    Tab,
     Tabs,
+    Tab,
     Badge,
     Switch,
     FormControlLabel,
@@ -35,7 +35,6 @@ import {
     Translate as TranslateIcon,
     Palette as PaletteIcon,
     Notifications as NotificationsIcon,
-    Lock as LockIcon,
     EmojiEmotions as EmojiIcon
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
@@ -68,6 +67,25 @@ const UserProfile = ({
         linkedin: user.profile?.linkedin || '',
         website: user.profile?.website || ''
     });
+
+    // Update local state when the `user` prop changes
+    useEffect(() => {
+        setPreferences({
+            theme: user.preferences?.theme || 'light',
+            language: user.preferences?.language || 'en',
+            notifications: user.preferences?.notifications || true,
+            messageColor: user.preferences?.messageColor || '#7C4DFF',
+            bubbleStyle: user.preferences?.bubbleStyle || 'modern'
+        });
+        setProfile({
+            bio: user.profile?.bio || '',
+            location: user.profile?.location || '',
+            github: user.profile?.github || '',
+            twitter: user.profile?.twitter || '',
+            linkedin: user.profile?.linkedin || '',
+            website: user.profile?.website || ''
+        });
+    }, [user]);
 
     const handleSaveProfile = () => {
         onUpdateProfile(profile);
@@ -163,15 +181,11 @@ const UserProfile = ({
                     value={activeTab}
                     onChange={(_, newValue) => setActiveTab(newValue)}
                     variant="fullWidth"
+                    aria-label="profile tabs"
                 >
-<<<<<<< HEAD
                     <Tab label="Profile" aria-label="profile tab" />
                     <Tab label="Preferences" aria-label="preferences tab" />
-=======
-                    <Tab label="Profile" />
-                    <Tab label="Preferences" />
-                    <Tab label="Notifications" />
->>>>>>> d031dbd8773ab07cd257f9851181f0649c627a54
+                    <Tab label="Notifications" aria-label="notifications tab" />
                 </Tabs>
             </Box>
 
@@ -468,5 +482,3 @@ const UserProfile = ({
 };
 
 export default UserProfile;
-
-

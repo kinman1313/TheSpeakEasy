@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useCallback } from 'react';
 import {
     Box,
@@ -16,7 +17,6 @@ import {
 } from '@mui/icons-material';
 
 const GIPHY_API_KEY = 'DO7ARGJtRRks2yxeAvolAIBFJqM74EPV';
-const GIPHY_API_URL = 'https://api.giphy.com/v1/gifs';
 
 const GifPicker = ({ onSelect, onClose }) => {
     const [gifs, setGifs] = useState([]);
@@ -38,15 +38,7 @@ const GifPicker = ({ onSelect, onClose }) => {
             }
 
             const data = await response.json();
-<<<<<<< HEAD
-            if (response.ok) {
-                setGifs(data.data);
-            } else {
-                setError(data.message || 'Failed to load GIFs');
-            }
-=======
             setGifs(data.data || []);
->>>>>>> d031dbd8773ab07cd257f9851181f0649c627a54
         } catch (err) {
             console.error('Error fetching GIFs:', err);
             setError('Failed to load GIFs. Please try again.');
@@ -101,12 +93,33 @@ const GifPicker = ({ onSelect, onClose }) => {
             borderRadius: 2,
             border: '1px solid rgba(255, 255, 255, 0.125)'
         }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Typography variant="h6" color="white">
+                    Select a GIF
+                </Typography>
+                <IconButton onClick={onClose} size="small" aria-label="close">
+                    <CloseIcon />
+                </IconButton>
+            </Box>
+
             <TextField
                 fullWidth
                 variant="outlined"
                 placeholder="Search GIFs..."
                 value={searchQuery}
                 onChange={handleSearch}
+                InputProps={{
+                    endAdornment: (
+                        <IconButton
+                            size="small"
+                            onClick={() => fetchGifs(searchQuery)}
+                            disabled={loading}
+                            aria-label="search"
+                        >
+                            <SearchIcon />
+                        </IconButton>
+                    )
+                }}
                 sx={{
                     '& .MuiOutlinedInput-root': {
                         color: 'white',
@@ -118,83 +131,6 @@ const GifPicker = ({ onSelect, onClose }) => {
                         }
                     }
                 }}
-<<<<<<< HEAD
-            >
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <Typography variant="h6">
-                        Select a GIF
-                    </Typography>
-                    <IconButton onClick={onClose} size="small" aria-label="close">
-                        <CloseIcon />
-                    </IconButton>
-                </Box>
-
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                    <TextField
-                        fullWidth
-                        size="small"
-                        placeholder="Search GIFs..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        onKeyPress={handleKeyPress}
-                        InputProps={{
-                            endAdornment: (
-                                <IconButton
-                                    size="small"
-                                    onClick={handleSearch}
-                                    disabled={loading}
-                                    aria-label="search"
-                                >
-                                    <SearchIcon />
-                                </IconButton>
-                            )
-                        }}
-                    />
-                </Box>
-
-                {error && (
-                    <Typography color="error" variant="body2" align="center">
-                        {error}
-                    </Typography>
-                )}
-
-                <Box sx={{ overflow: 'auto', flexGrow: 1 }}>
-                    {loading ? (
-                        <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-                            <CircularProgress />
-                        </Box>
-                    ) : (
-                        <ImageList cols={3} gap={8} sx={{ m: 0 }}>
-                            {gifs.map((gif) => (
-                                <ImageListItem
-                                    key={gif.id}
-                                    sx={{
-                                        cursor: 'pointer',
-                                        '&:hover': {
-                                            opacity: 0.8,
-                                            transform: 'scale(1.02)',
-                                            transition: 'all 0.2s ease-in-out'
-                                        }
-                                    }}
-                                    onClick={() => handleGifSelect(gif)}
-                                    aria-label={`select ${gif.title}`}
-                                >
-                                    <img
-                                        src={gif.images.fixed_height.url}
-                                        alt={gif.title}
-                                        loading="lazy"
-                                        style={{
-                                            width: '100%',
-                                            height: '100%',
-                                            objectFit: 'cover',
-                                            borderRadius: '4px'
-                                        }}
-                                    />
-                                </ImageListItem>
-                            ))}
-                        </ImageList>
-                    )}
-=======
             />
 
             {error && (
@@ -203,44 +139,45 @@ const GifPicker = ({ onSelect, onClose }) => {
                 </Alert>
             )}
 
-            {loading ? (
-                <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-                    <CircularProgress />
->>>>>>> d031dbd8773ab07cd257f9851181f0649c627a54
-                </Box>
-            ) : (
-                <Box sx={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
-                    gap: 2,
-                    overflowY: 'auto',
-                    maxHeight: 'calc(70vh - 100px)',
-                    p: 1
-                }}>
-                    {gifs.map((gif) => (
-                        <Box
-                            key={gif.id}
-                            component="img"
-                            src={gif.images.fixed_height.url}
-                            alt={gif.title}
-                            onClick={() => handleGifSelect(gif)}
-                            sx={{
-                                width: '100%',
-                                height: 'auto',
-                                cursor: 'pointer',
-                                borderRadius: 1,
-                                transition: 'transform 0.2s',
-                                '&:hover': {
-                                    transform: 'scale(1.05)'
-                                }
-                            }}
-                        />
-                    ))}
-                </Box>
-            )}
+            <Box sx={{ overflow: 'auto', flexGrow: 1 }}>
+                {loading ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+                        <CircularProgress />
+                    </Box>
+                ) : (
+                    <ImageList cols={3} gap={8} sx={{ m: 0 }}>
+                        {gifs.map((gif) => (
+                            <ImageListItem
+                                key={gif.id}
+                                sx={{
+                                    cursor: 'pointer',
+                                    '&:hover': {
+                                        opacity: 0.8,
+                                        transform: 'scale(1.02)',
+                                        transition: 'all 0.2s ease-in-out'
+                                    }
+                                }}
+                                onClick={() => handleGifSelect(gif)}
+                                aria-label={`select ${gif.title}`}
+                            >
+                                <img
+                                    src={gif.images.fixed_height.url}
+                                    alt={gif.title}
+                                    loading="lazy"
+                                    style={{
+                                        width: '100%',
+                                        height: '100%',
+                                        objectFit: 'cover',
+                                        borderRadius: '4px'
+                                    }}
+                                />
+                            </ImageListItem>
+                        ))}
+                    </ImageList>
+                )}
+            </Box>
         </Box>
     );
 };
 
 export default GifPicker;
-
