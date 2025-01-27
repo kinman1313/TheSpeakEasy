@@ -32,10 +32,7 @@
         "test": "react-scripts test",
         "eject": "react-scripts eject",
         "lint": "eslint src/**/*.{js,jsx}",
-        "format": "prettier --write src/**/*.{js,jsx}",
-        "postinstall": "npm install --save-dev @types/socket.io-client",
-        "prepare": "npm run install:clean",
-        "install:clean": "rm -rf node_modules/ && npm install"
+        "format": "prettier --write src/**/*.{js,jsx}"
     },
     "eslintConfig": {
         "extends": [
