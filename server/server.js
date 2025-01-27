@@ -2,6 +2,7 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const mongoose = require('mongoose');
+const sanitize = require('sanitize-filename');
 const path = require('path');
 const cors = require('cors');
 const securityMiddleware = require('./middleware/security');
